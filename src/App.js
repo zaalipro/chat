@@ -1,28 +1,23 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, {useState} from 'react';
+import { Container } from 'semantic-ui-react'
+import CreateChat from './CreateChat'
+import store from 'store2'
+import ChatContainer from './ChatContainer'
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
+const App = () => {
+  const [showCreate, setCreate] = useState(true)
+  const activeChat = store('activeChat')
+
+  return(
+    <Container>
+      {!activeChat &&
+        <CreateChat show={showCreate} setCreate={setCreate}/>
+      }
+      { activeChat &&
+        <ChatContainer />
+      }
+    </Container>
+  )
 }
 
 export default App;
