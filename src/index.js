@@ -2,18 +2,17 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import * as serviceWorker from './serviceWorker';
 import 'semantic-ui-css/semantic.min.css'
-import './index.css';
-import ApolloClient from "apollo-boost";
-import { Dimmer, Loader, Segment } from 'semantic-ui-react'
+import ApolloClient from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 import { ApolloProvider as ApolloProviderHooks } from 'react-apollo-hooks';
-import App from './App';
-import store from 'store2'
-import { InMemoryCache } from 'apollo-boost';
 import { createHttpLink } from 'apollo-link-http'
+import { InMemoryCache } from 'apollo-boost';
 import { split } from 'apollo-link';
 import { WebSocketLink } from 'apollo-link-ws';
 import { getMainDefinition } from 'apollo-utilities';
+import { Dimmer, Loader, Segment } from 'semantic-ui-react'
+import App from './App';
+import store from 'store2'
 
 const httpLink = createHttpLink({ uri: `https://api.graph.cool/simple/v1/kodala` })
 

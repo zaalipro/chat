@@ -2,6 +2,7 @@ import React from 'react'
 import { Mutation } from 'react-apollo'
 import { Formik } from 'formik'
 import TextField from './Components/TextField'
+import TextAreaField from './Components/TextAreaField'
 import { Segment, Form, Button } from 'semantic-ui-react'
 import { CREATE_CHAT, CREATE_MESSAGE } from './queries'
 import store from 'store2'
@@ -9,9 +10,9 @@ import store from 'store2'
 const CreateChat = ({setCreate}) => {
   const contractId = store('contractId')
   return (
-    <Segment>
-      <Mutation mutation={CREATE_CHAT}>
-        {(createChat) => (
+    <Mutation mutation={CREATE_CHAT}>
+      {(createChat) => (
+        <Segment>
           <Mutation mutation={CREATE_MESSAGE}>
             {(createMessage) => (
               <div className="row">
@@ -27,6 +28,7 @@ const CreateChat = ({setCreate}) => {
                       headLine: values.headLine,
                       contractId: contractId
                     }}).then(resp => {
+                      console.log('createmessage start', resp)
                       store('activeChat', resp.data.createChat)
                       store('customerName', values.customerName)
                       createMessage({variables: {
@@ -47,7 +49,7 @@ const CreateChat = ({setCreate}) => {
                   render={(form) => (
                     <Form onSubmit={form.handleSubmit} error={form.errors !== {}}>
                       <TextField form={form} name="customerName" label="Customer name" placeholder="John" />
-                      <TextField form={form} name="headLine" label="Head line" />
+                      <TextAreaField form={form} name="headLine" label="Head line" />
                       <br />
                       <Button loading={form.isSubmitting} type='submit'>Start Chat</Button>
                     </Form>
@@ -56,9 +58,9 @@ const CreateChat = ({setCreate}) => {
               </div>
             )}
           </Mutation>
-        )}
-      </Mutation>
-    </Segment>
+        </Segment>
+      )}
+    </Mutation>
   );
 };
 
