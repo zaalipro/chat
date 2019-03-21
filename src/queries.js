@@ -8,8 +8,7 @@ mutation createChat($customerName: String!, $headLine: String!, $contractId: ID!
     headLine
     status
   }
-}
-`
+}`
 
 export const MESSAGE_SUBSCRIPTION = gql`
   subscription ($chatId: ID!) {
@@ -36,6 +35,30 @@ export const GET_MESSAGES = gql`
 `;
 
 
+export const GET_CHAT = gql`
+  query ($chatId: ID!) {
+    Chat(id: $chatId) {
+      id
+      status
+      customerName
+      headLine
+      contract {
+        agent {
+          id
+        }
+      }
+    }
+  }
+`;
+
+export const RATE_AGENT = gql`
+  mutation createRate($chatId: ID!, $rating: Int!) {
+    createRate(rating: $rating, chatId: $chatId) {
+      id
+    }
+  }
+`;
+
 export const CREATE_MESSAGE = gql`
   mutation createMessage($text: String!, $author: String!, $chatId: ID!) {
     createMessage(text: $text, isAgent: false, author: $author, chatId: $chatId) {
@@ -43,6 +66,18 @@ export const CREATE_MESSAGE = gql`
       text
       author
       isAgent
+    }
+  }
+`;
+
+export const END_CHAT = gql`
+  mutation takeChat($chatId: ID!) {
+    updateChat(
+      id: $chatId
+      status: Finished
+    ) {
+      id
+      status
     }
   }
 `;

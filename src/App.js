@@ -1,22 +1,36 @@
 import React, {useState} from 'react';
-import { Container } from 'semantic-ui-react'
+import { Segment } from 'semantic-ui-react'
+import { useMutation } from 'react-apollo-hooks'
 import CreateChat from './CreateChat'
 import store from 'store2'
+import Query from './Components/Query'
 import ChatContainer from './ChatContainer'
+import { GET_CHAT } from './queries'
+import Rate from './Rate'
 
 const App = () => {
-  const [showCreate, setCreate] = useState(true)
   const activeChat = store('activeChat')
+  const [showCreate, setCreate] = useState(!activeChat)
 
-  return(
-    <Container>
-      {!activeChat &&
-        <CreateChat show={showCreate} setCreate={setCreate}/>
-      }
-      { activeChat &&
-        <ChatContainer />
-      }
-    </Container>
+  if (showCreate) {
+    return (
+      <CreateChat show={showCreate} setCreate={setCreate}/>
+    )
+  }
+
+  return (
+    <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
+      {({ data}) => (
+        <Segment>
+          { data.Chat.status === "Finished" &&
+            <Rate chat={data.Chat} setCreate={setCreate} />
+          }
+          { data.Chat.status !== "Finished" &&
+            <ChatContainer chat={data.Chat} />
+          }
+        </Segment>
+      )}
+    </Query>
   )
 }
 
