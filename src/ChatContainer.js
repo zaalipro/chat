@@ -3,6 +3,7 @@ import Query from './Components/Query'
 import { GET_MESSAGES, MESSAGE_SUBSCRIPTION } from './queries'
 import store from 'store2'
 import Chat from './Chat'
+import ChatHeader from './ChatHeader'
 
 const ChatContainer = () => {
   const chat = store('activeChat')
@@ -11,23 +12,26 @@ const ChatContainer = () => {
     <Query query={GET_MESSAGES} variables={{ chatId: chat.id }}>
       {({ subscribeToMore, ...rest}) => {
         return (
-          <Chat
-            {...rest}
-            chatId={chat.id}
-            subscribeToNewMessages={() =>
-              subscribeToMore({
-                document: MESSAGE_SUBSCRIPTION,
-                variables: { chatId: chat.id },
-                updateQuery: (prev, { subscriptionData }) => {
-                  console.log('subscribeToNewMessages', prev, subscriptionData)
-                  if (!subscriptionData.data.Message) return prev;
-                  return Object.assign({}, prev, {
-                    allMessages: [...prev.allMessages, subscriptionData.data.Message.node]
-                  });
-                }
-              })
-            }
-          />
+          <span>
+            <ChatHeader />
+            <Chat
+              {...rest}
+              chatId={chat.id}
+              subscribeToNewMessages={() =>
+                subscribeToMore({
+                  document: MESSAGE_SUBSCRIPTION,
+                  variables: { chatId: chat.id },
+                  updateQuery: (prev, { subscriptionData }) => {
+                    console.log('subscribeToNewMessages', prev, subscriptionData)
+                    if (!subscriptionData.data.Message) return prev;
+                    return Object.assign({}, prev, {
+                      allMessages: [...prev.allMessages, subscriptionData.data.Message.node]
+                    });
+                  }
+                })
+              }
+            />
+          </span>
         )
       }}
     </Query>

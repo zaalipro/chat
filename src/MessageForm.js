@@ -1,42 +1,59 @@
-import React from 'react'
-import { Formik, Form } from 'formik'
+import React, {useState} from 'react'
 import { Mutation } from 'react-apollo'
-import { Button, Input } from 'semantic-ui-react'
 import store from 'store2'
+import './ChatInput.css'
 import { CREATE_MESSAGE } from './queries'
+import Textarea from 'react-textarea-autosize'
 
 const MessageForm = ({chatId}) => {
+  const [inputHasFocus, setInputFocus] = useState(true)
+  const [message, setMessage] = useState('')
+
   return (
-    <Mutation mutation={CREATE_MESSAGE}>
-      {(createMessage, { data }) => (
-        <Formik
-          initialValues={{message: '' }}
-          onSubmit={(values, {setValues, setSubmitting}) => {
-            createMessage({ variables: {
-              text: values.message,
-              author: store('customerName'),
-              chatId
-            } });
-            setValues({message: ''})
-            setSubmitting(false)
-          }}
-          render={({ values, handleChange, handleBlur, handleSubmit, isSubmitting }) => (
-            <Form onSubmit={handleSubmit}>
-              <Input
-                type="text"
-                name="message"
-                onChange={handleChange}
-                onBlur={handleBlur}
-                value={values.message}
-              />
-              <Button type="submit" disabled={isSubmitting} style={{marginLeft: '10px'}}>
-                Search
-              </Button>
-            </Form>
-          )}
-        />
-      )}
-    </Mutation>
+    <div className={`chat-input flex items-center radius-bottom
+            ${inputHasFocus ? 'chat-input-shadow' : 'light-background'}`}>
+      <Mutation mutation={CREATE_MESSAGE}>
+        {(createMessage, { data }) => {
+          const onKeyDown = (e) => {
+            if (e.keyCode === 13) { // ENTER
+              if (e.shiftKey) { // allow new lines with ENTER + SHIFT
+                return
+              }
+              if (message.length < 1) {
+                return
+              }
+
+              createMessage({ variables: {
+                text: message,
+                author: store('customerName'),
+                chatId
+              }}).then( resp => {
+                setMessage('')
+              });
+              e.preventDefault()
+            }
+          }
+          return(
+            <Textarea
+    					minRows={1}
+    					maxRows={5}
+              className={`InputField ${!inputHasFocus && 'light-background'}`}
+              placeholder='Send a message ...'
+              value={message}
+              autoFocus={true}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={onKeyDown}
+              onFocus={() => {
+                setInputFocus(true)
+              }}
+              onBlur={() => {
+                setInputFocus(false)
+              }}
+            />
+          )
+        }}
+      </Mutation>
+    </div>
   );
 }
 
