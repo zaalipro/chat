@@ -7,6 +7,9 @@ const ChatHeader = () => (
     style={{backgroundColor: mainColor}}
     className='header flex header-padding-chat items-center header-shadow'
   >
+    <div className='radius fadeInLeft flex flex-center back-button pointer'>
+      <i className='material-icons'>keyboard_arrow_left</i>
+    </div>
     <div className='padding-10 flex'>
       <img
         src={companyLogoURL}
@@ -16,6 +19,9 @@ const ChatHeader = () => (
         Company Name
         <p className='fadeInLeft text-opaque'>Started</p>
       </div>
+    </div>
+    <div className='radius fadeInLeft flex flex-center back-button pointer'>
+      <i className='material-icons'>clear</i>
     </div>
   </div>
 )
