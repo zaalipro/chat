@@ -5,6 +5,7 @@ import { Segment, Button } from 'semantic-ui-react'
 import store from 'store2'
 
 const EndChat = ({chatId}) => {
+  // TODO: create message with content "user ended chat"
   const endChat = useMutation(END_CHAT, {
     variables: { chatId },
     refetchQueries: [

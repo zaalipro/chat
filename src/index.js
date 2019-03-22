@@ -48,7 +48,7 @@ const ClientApp = () => (
   </ApolloProvider>
 );
 
-store('contractId', 'cjthncbu00grt0177kaupd8fp');
+store('contractId', 'cjtk28juv0n9o01401ry7stw0');
 store('websiteId', 'cjta33b8c0rnv01162lvt55xo')
 ReactDOM.render(<ClientApp />, document.getElementById('root'));
 
