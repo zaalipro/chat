@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import MessageBox from './MessageBox'
 import MessageForm from './MessageForm'
-import EndChat from './EndChat'
 import './Chat.css'
 
 class Chat extends Component {

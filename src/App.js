@@ -13,14 +13,27 @@ const App = () => {
   const activeChat = store('activeChat')
   const [showCreate, setCreate] = useState(!activeChat)
   const [isOpen, setOpen] = useState(true)
+  const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
 
   if (showCreate) {
     return (
-      <CreateChat show={showCreate} setCreate={setCreate}/>
+      <div className='App'>
+        <div>
+          <div className='container'>
+            <div className={panelStyles}>
+              <CreateChat show={showCreate} setCreate={setCreate}/>
+            </div>
+            <ToggleOpeningStateButton
+              isOpen={isOpen}
+              togglePanel={() => setOpen(!isOpen)}
+              mainColor={'rgba(39,175,96,1)'}
+            />
+          </div>
+        </div>
+      </div>
     )
   }
 
-  const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
   return (
       <div className='App'>
         <div>

@@ -4,13 +4,7 @@ import store from 'store2'
 import './ChatInput.css'
 import { CREATE_MESSAGE } from './queries'
 import Textarea from 'react-textarea-autosize'
-import cx from 'classnames'
 
-const mainColor = 'rgba(39,175,96,1)'
-
-const buttonStyles = cx('button drop-shadow-hover pointer flex-center flex border-radius: 10px', {
-  'drop-shadow-hover-active': true
-})
 const MessageForm = ({chatId}) => {
   const [inputHasFocus, setInputFocus] = useState(true)
   const [message, setMessage] = useState('')
@@ -57,17 +51,6 @@ const MessageForm = ({chatId}) => {
               }}
             />
 
-            <div className="input-dropzone">
-              <div className='attachment-container h100'>
-                <div
-                  style={{backgroundColor: mainColor}}
-                  className={buttonStyles}
-                  onClick={() => console.log(1)}
-                >
-                  End chat
-                </div>
-              </div>
-            </div>
           </div>
         )
       }}
