@@ -5,6 +5,7 @@
   "dependencies": {
     "apollo-boost": "^0.3.1",
     "apollo-link-ws": "^1.0.17",
+    "classnames": "^2.2.6",
     "formik": "^1.5.1",
     "graphql": "^14.1.1",
     "graphql-tag": "^2.10.1",
@@ -14,6 +15,7 @@
     "react-dom": "^16.8.4",
     "react-router-dom": "^5.0.0",
     "react-scripts": "2.1.8",
+    "react-textarea-autosize": "^7.1.0",
     "semantic-ui-css": "^2.4.1",
     "semantic-ui-react": "^0.86.0",
     "store2": "^2.7.1",

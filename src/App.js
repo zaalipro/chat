@@ -1,36 +1,63 @@
 import React, {useState} from 'react';
-import { Segment } from 'semantic-ui-react'
-import { useMutation } from 'react-apollo-hooks'
+import './App.css'
+import cx from 'classnames'
 import CreateChat from './CreateChat'
 import store from 'store2'
 import Query from './Components/Query'
 import ChatContainer from './ChatContainer'
 import { GET_CHAT } from './queries'
+import ToggleOpeningStateButton from './ToggleOpeningStateButton'
 import Rate from './Rate'
 
 const App = () => {
   const activeChat = store('activeChat')
   const [showCreate, setCreate] = useState(!activeChat)
+  const [isOpen, setOpen] = useState(true)
+  const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
 
   if (showCreate) {
     return (
-      <CreateChat show={showCreate} setCreate={setCreate}/>
+      <div className='App'>
+        <div>
+          <div className='container'>
+            <div className={panelStyles}>
+              <CreateChat show={showCreate} setCreate={setCreate}/>
+            </div>
+            <ToggleOpeningStateButton
+              isOpen={isOpen}
+              togglePanel={() => setOpen(!isOpen)}
+              mainColor={'rgba(39,175,96,1)'}
+            />
+          </div>
+        </div>
+      </div>
     )
   }
 
   return (
-    <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
-      {({ data}) => (
-        <Segment>
-          { data.Chat.status === "Finished" &&
-            <Rate chat={data.Chat} setCreate={setCreate} />
-          }
-          { data.Chat.status !== "Finished" &&
-            <ChatContainer chat={data.Chat} />
-          }
-        </Segment>
-      )}
-    </Query>
+      <div className='App'>
+        <div>
+          <div className='container'>
+            <div className={panelStyles}>
+              <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
+                {({ data}) => {
+                  if (data.Chat.status === "Finished") {
+                    return(<Rate chat={data.Chat} setCreate={setCreate} />)
+                  }
+                  return (
+                    <ChatContainer chat={data.Chat} />
+                  )
+                }}
+              </Query>
+            </div>
+            <ToggleOpeningStateButton
+              isOpen={isOpen}
+              togglePanel={() => setOpen(!isOpen)}
+              mainColor={'rgba(39,175,96,1)'}
+            />
+          </div>
+        </div>
+      </div>
   )
 }
 
