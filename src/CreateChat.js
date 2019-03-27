@@ -39,7 +39,6 @@ const CreateChat = ({setCreate}) => {
                           headLine: values.headLine,
                           contractId: contractId
                         }}).then(resp => {
-                          console.log('createmessage start', resp)
                           store('activeChat', resp.data.createChat)
                           store('customerName', values.customerName)
                           createMessage({variables: {
@@ -58,7 +57,6 @@ const CreateChat = ({setCreate}) => {
                         });
                       }}
                       render={(form) =>  {
-                        console.log(form)
                         return(
                         <Form onSubmit={form.handleSubmit} error={form.errors !== {}}>
                           <TextField form={form} name="customerName" label="Customer name" placeholder="John" />
