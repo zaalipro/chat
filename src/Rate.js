@@ -20,7 +20,7 @@ const Rate = ({chat, setCreate}) => {
         {(createRate) => (
           <Segment>
             chat finished, Please rate an agent:
-            <Rating icon='star' defaultRating={5} maxRating={10} onRate={(e, {rating}) => {
+            <Rating icon='star' defaultRating={3} maxRating={5} onRate={(e, {rating}) => {
               createRate({variables: {
                 chatId: chat.id,
                 rating: rating

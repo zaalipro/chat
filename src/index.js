@@ -2,7 +2,7 @@ import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import './index.css'
 import * as serviceWorker from './serviceWorker';
-import 'semantic-ui-css/semantic.min.css'
+import 'semantic-ui-css/semantic.min.css';
 import ApolloClient from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 import { ApolloProvider as ApolloProviderHooks } from 'react-apollo-hooks';
@@ -49,8 +49,8 @@ const ClientApp = () => (
   </ApolloProvider>
 );
 
-store('contractId', 'cjtk28juv0n9o01401ry7stw0');
-store('websiteId', 'cjta33b8c0rnv01162lvt55xo')
+store('contractId', 'cjtrefcrj0gnm01129imzf2hu');
+store('websiteId', 'cjtre30tg0dms0133sjegas2x')
 ReactDOM.render(<ClientApp />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change

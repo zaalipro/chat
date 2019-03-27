@@ -23,6 +23,16 @@ export const MESSAGE_SUBSCRIPTION = gql`
   }
 `
 
+export const GET_CONTRACT = gql`
+  query ($id: ID!) {
+    Contract(id: $id) {
+      id
+      status
+      session
+    }
+  }
+`;
+
 export const GET_MESSAGES = gql`
   query ($chatId: ID!) {
     allMessages(filter: {chat: {id: $chatId}}) {
