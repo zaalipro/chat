@@ -6,6 +6,7 @@ import store from 'store2'
 
 const EndChat = ({chatId}) => {
   // TODO: create message with content "user ended chat"
+  console.log(chatId)
   const endChat = useMutation(END_CHAT, {
     variables: { chatId },
     refetchQueries: [

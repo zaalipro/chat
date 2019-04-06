@@ -29,11 +29,7 @@ const ChatContainer = () => {
                   document: MESSAGE_SUBSCRIPTION,
                   variables: { chatId: chat.id },
                   updateQuery: (prev, { subscriptionData }) => {
-                    console.log('subscribeToNewMessages', prev, subscriptionData)
-                    if (!subscriptionData.data.Message) return prev;
-                    return Object.assign({}, prev, {
-                      allMessages: [...prev.allMessages, subscriptionData.data.Message.node]
-                    });
+                    return subscriptionData.data
                   }
                 })
               }

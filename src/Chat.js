@@ -14,7 +14,7 @@ class Chat extends Component {
     return (
       <div className="dropzone relative">
         <div className='message-body chat-container'>
-          <MessageBox messages={data.allMessages}/>
+          <MessageBox messages={data.messages}/>
           <MessageForm chatId={chatId} />
         </div>
       </div>

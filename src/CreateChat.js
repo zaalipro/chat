@@ -30,22 +30,23 @@ const CreateChat = ({setCreate}) => {
                     <Formik
                       initialValues={{
                         customerName: '',
-                        headLine: '',
+                        headline: '',
                       }}
                       validate={validate}
                       onSubmit={(values, { setSubmitting }) => {
                         createChat({variables: {
                           customerName: values.customerName,
-                          headLine: values.headLine,
+                          headline: values.headline,
                           contractId: contractId
                         }}).then(resp => {
-                          store('activeChat', resp.data.createChat)
+                          store('activeChat', resp.data.createChat.chat)
                           store('customerName', values.customerName)
+                          console.log(resp)
                           createMessage({variables: {
-                            text: resp.data.createChat.headLine,
-                            author: resp.data.createChat.customerName,
+                            text: resp.data.createChat.chat.headline,
+                            author: resp.data.createChat.chat.customerName,
                             isAgent: false,
-                            chatId: resp.data.createChat.id
+                            chatId: resp.data.createChat.chat.id
                           }}).then(resp => {
                             setSubmitting(false);
                             setCreate(false)
@@ -60,7 +61,7 @@ const CreateChat = ({setCreate}) => {
                         return(
                         <Form onSubmit={form.handleSubmit} error={form.errors !== {}}>
                           <TextField form={form} name="customerName" label="Customer name" placeholder="John" />
-                          <TextAreaField form={form} name="headLine" label="Head line" />
+                          <TextAreaField form={form} name="headline" label="Head line" />
                           <br />
                           <br />
                           <br />
@@ -92,13 +93,13 @@ const validate = (values) => values => {
   let errors = {};
   if (!values.customerName) {
     errors.customerName = 'Required';
-  } else if (values.headLine.length < 1) {
+  } else if (values.headline.length < 1) {
     errors.customerName = 'Customer name should be more than 1 character';
   }
-  if (!values.headLine) {
-    errors.headLine = 'Required';
-  } else if (values.headLine.length < 10) {
-    errors.headLine = 'headLine length should be more than 100 characters';
+  if (!values.headline) {
+    errors.headline = 'Required';
+  } else if (values.headline.length < 10) {
+    errors.headline = 'headline length should be more than 100 characters';
   }
   return errors;
 }

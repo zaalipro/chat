@@ -15,10 +15,10 @@ import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
 
-const httpLink = createHttpLink({ uri: `https://api.graph.cool/simple/v1/kodala` })
+const httpLink = createHttpLink({ uri: `http://localhost:5000/graphql` })
 
 const wsLink = new WebSocketLink({
-  uri: `wss://subscriptions.graph.cool/v1/kodala`,
+  uri: `ws://localhost:5000/graphql`,
   options: {
     reconnect: true
   }
@@ -49,8 +49,8 @@ const ClientApp = () => (
   </ApolloProvider>
 );
 
-store('contractId', 'cjtrefcrj0gnm01129imzf2hu');
-store('websiteId', 'cjtre30tg0dms0133sjegas2x')
+store('contractId', 'e25c5cb4-6b53-4b91-83dc-9a39a68d1f5b');
+store('websiteId', 'b127b7fd-1512-44dc-9c90-7fc5789e351e')
 ReactDOM.render(<ClientApp />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change

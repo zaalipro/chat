@@ -51,9 +51,8 @@ const App = () => {
             <div className={panelStyles}>
               <Query query={GET_CONTRACT} variables={{ id: contractId }}>
                 {({data}) => {
-                  console.log(data)
-                  checkWorkingHours(data.Contract.session)
-                  if (data.Contract.status !== "Active" || showOffline) {
+                  checkWorkingHours(data.contract.session)
+                  if (data.contract.status !== "active" || showOffline) {
                     return(<Offline />)
                   }
 
@@ -80,11 +79,11 @@ const App = () => {
             <div className={panelStyles}>
               <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
                 {({ data}) => {
-                  if (data.Chat.status === "Finished") {
-                    return(<Rate chat={data.Chat} setCreate={setCreate} />)
+                  if (data.chat.status === "finished") {
+                    return(<Rate chat={data.chat} setCreate={setCreate} />)
                   }
                   return (
-                    <ChatContainer chat={data.Chat} />
+                    <ChatContainer chat={data.chat} />
                   )
                 }}
               </Query>
