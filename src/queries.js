@@ -19,7 +19,7 @@ mutation createChat($customerName: String!, $headline: String!, $contractId: UUI
 
 export const MESSAGE_SUBSCRIPTION = gql`
   subscription ($chatId: UUID!) {
-    messages(condition: {chatId: $chatId} ) {
+    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC ) {
       id
       text
       author
@@ -40,7 +40,7 @@ export const GET_CONTRACT = gql`
 
 export const GET_MESSAGES = gql`
   query ($chatId: UUID!) {
-    messages(condition: {chatId: $chatId}) {
+    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
       id
       author
       isAgent
