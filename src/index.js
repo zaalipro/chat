@@ -15,10 +15,10 @@ import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
 
-const httpLink = createHttpLink({ uri: `https://kodala-server.herokuapp.com/graphql` })
+const httpLink = createHttpLink({ uri: `http://localhost:5000/graphql` })
 
 const wsLink = new WebSocketLink({
-  uri: `wss://kodala-server.herokuapp.com/graphql`,
+  uri: `ws://localhost:5000/graphql`,
   options: {
     reconnect: true
   }
