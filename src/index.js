@@ -1,7 +1,8 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom';
+import './index.css'
 import * as serviceWorker from './serviceWorker';
-import 'semantic-ui-css/semantic.min.css'
+import 'semantic-ui-css/semantic.min.css';
 import ApolloClient from "apollo-client";
 import { ApolloProvider } from "react-apollo";
 import { ApolloProvider as ApolloProviderHooks } from 'react-apollo-hooks';
@@ -14,10 +15,10 @@ import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
 
-const httpLink = createHttpLink({ uri: `https://api.graph.cool/simple/v1/kodala` })
+const httpLink = createHttpLink({ uri: `https://kodala-server.herokuapp.com/graphql` })
 
 const wsLink = new WebSocketLink({
-  uri: `wss://subscriptions.graph.cool/v1/kodala`,
+  uri: `wss://kodala-server.herokuapp.com/graphql`,
   options: {
     reconnect: true
   }
@@ -48,8 +49,8 @@ const ClientApp = () => (
   </ApolloProvider>
 );
 
-store('contractId', 'cjtk28juv0n9o01401ry7stw0');
-store('websiteId', 'cjta33b8c0rnv01162lvt55xo')
+store('contractId', 'e25c5cb4-6b53-4b91-83dc-9a39a68d1f5b');
+store('websiteId', 'b127b7fd-1512-44dc-9c90-7fc5789e351e')
 ReactDOM.render(<ClientApp />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
