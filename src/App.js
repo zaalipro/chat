@@ -28,16 +28,17 @@ export const isWorkingHours = (session, currentTime) => {
 const App = () => {
   const activeChat = store('activeChat')
   const contractId = store('contractId')
+  console.log('contractId', contractId)
   const [showCreate, setCreate] = useState(!activeChat)
   const [isOpen, setOpen] = useState(true)
   const [showOffline, setOffline] = useState(false)
   const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
   const checkWorkingHours = (contractSession) => {
-    axios.get('http://kodala.herokuapp.com/api/time', {
+    axios.get('http://localhost:4000/api/time', {
       headers: {"Content-Type" : "application/json"}
     })
-    .then(function (time_resp) {
-      const now = moment(time_resp.current_time)
+    .then(function ({current_time}) {
+      const now = moment(current_time)
       console.log(isWorkingHours(contractSession, now))
       setOffline(!isWorkingHours(contractSession, now))
     })

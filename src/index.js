@@ -49,8 +49,8 @@ const ClientApp = () => (
   </ApolloProvider>
 );
 
-store('contractId', 'e25c5cb4-6b53-4b91-83dc-9a39a68d1f5b');
-store('websiteId', 'b127b7fd-1512-44dc-9c90-7fc5789e351e')
+store('contractId', '867b4c0e-f142-4700-892d-ec01c10d57e4');
+store('websiteId', '1dea3ca3-fe42-467d-a969-488658a423fb')
 ReactDOM.render(<ClientApp />, document.getElementById('root'));
 
 // If you want your app to work offline and load faster, you can change
