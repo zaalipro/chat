@@ -1,9 +1,9 @@
 import React from 'react'
 import { Message, Dimmer, Loader, Segment } from 'semantic-ui-react'
-import { Query } from 'react-apollo'
+import { Query as ApolloQuery } from '@apollo/client/react/components'
 
-export default ({ children, ...props }) => (
-  <Query {...props}>
+const Query = ({ children, ...props }) => (
+  <ApolloQuery {...props}>
     {(props) => {
       if (props.loading) return <Segment><Dimmer active><Loader /></Dimmer></Segment>
       if (props.error) return <Message error><Message.Content>{props.error}</Message.Content></Message>
@@ -11,5 +11,7 @@ export default ({ children, ...props }) => (
 
       return children(props)
     }}
-  </Query>
+  </ApolloQuery>
 )
+
+export default Query;

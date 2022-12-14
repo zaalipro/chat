@@ -1,6 +1,6 @@
 import React from 'react'
 import Query from './Components/Query'
-import { useMutation } from 'react-apollo-hooks'
+import { useMutation } from '@apollo/client'
 import { GET_MESSAGES, MESSAGE_SUBSCRIPTION, END_CHAT, GET_CHAT } from './queries'
 import store from 'store2'
 import Chat from './Chat'

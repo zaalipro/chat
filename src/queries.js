@@ -1,4 +1,4 @@
-import { gql } from 'apollo-boost'
+import { gql } from '@apollo/client'
 
 export const CREATE_CHAT = gql`
 mutation createChat($customerName: String!, $headline: String!, $contractId: UUID!) {

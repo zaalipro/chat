@@ -1,5 +1,5 @@
 import React from 'react'
-import { useMutation } from 'react-apollo-hooks'
+import { useMutation } from '@apollo/client'
 import { END_CHAT, GET_CHAT } from './queries'
 import { Segment, Button } from 'semantic-ui-react'
 import store from 'store2'

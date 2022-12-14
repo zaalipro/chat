@@ -1,28 +1,33 @@
 import React, { Suspense } from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from "react-dom/client";
 import './index.css'
 import * as serviceWorker from './serviceWorker';
 import 'semantic-ui-css/semantic.min.css';
-import ApolloClient from "apollo-client";
-import { ApolloProvider } from "react-apollo";
-import { ApolloProvider as ApolloProviderHooks } from 'react-apollo-hooks';
-import { createHttpLink } from 'apollo-link-http'
-import { InMemoryCache } from 'apollo-boost';
-import { split } from 'apollo-link';
-import { WebSocketLink } from 'apollo-link-ws';
-import { getMainDefinition } from 'apollo-utilities';
+import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split } from "@apollo/client";
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from "@apollo/client/utilities";
+import { createClient } from 'graphql-ws';
 import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
 
 const httpLink = createHttpLink({ uri: `http://localhost:5000/graphql` })
 
-const wsLink = new WebSocketLink({
-  uri: `ws://localhost:5000/graphql`,
+// const wsLink = new WebSocketLink({
+//   uri: `ws://localhost:5000/graphql`,
+//   options: {
+//     reconnect: true
+//   }
+// });
+const wsLink = new GraphQLWsLink(createClient({
+  url: 'ws://localhost:5000/graphql',
   options: {
-    reconnect: true
+    reconnect: true,
+    connectionParams: {
+      authToken: store("token")
+    }
   }
-});
+}));
 
 const link = split(
   ({ query }) => {
@@ -41,17 +46,21 @@ const client = new ApolloClient({
 
 const ClientApp = () => (
   <ApolloProvider client={client}>
-    <ApolloProviderHooks client={client}>
-      <Suspense fallback={<Segment><Dimmer active><Loader /></Dimmer></Segment>}>
-        <App />
-      </Suspense>
-    </ApolloProviderHooks>
+    <Suspense fallback={<Segment><Dimmer active><Loader /></Dimmer></Segment>}>
+      <App />
+    </Suspense>
   </ApolloProvider>
 );
 
-store('contractId', '867b4c0e-f142-4700-892d-ec01c10d57e4');
-store('websiteId', '1dea3ca3-fe42-467d-a969-488658a423fb')
-ReactDOM.render(<ClientApp />, document.getElementById('root'));
+store('contractId', '53bacb9a-ccbe-41ca-8d56-59ae092be826');
+store('websiteId', 'e02427c6-fcb1-4e77-8d23-0f63ba67e678')
+const root = ReactDOM.createRoot(document.getElementById("root"));
+
+root.render(
+  <React.StrictMode>
+    <ClientApp />
+  </React.StrictMode>
+);
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

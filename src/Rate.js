@@ -1,6 +1,6 @@
 import React from 'react';
 import { Segment, Rating } from 'semantic-ui-react'
-import { Mutation } from 'react-apollo'
+import { Mutation } from '@apollo/client/react/components'
 import { RATE_AGENT } from './queries'
 
 const Rate = ({chat, setCreate}) => {
