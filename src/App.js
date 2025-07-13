@@ -34,7 +34,7 @@ const App = () => {
   const [showOffline, setOffline] = useState(false)
   const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
   const checkWorkingHours = (contractSession) => {
-    axios.get('http://localhost:4000/api/time', {
+    axios.get('http://localhost:5001/api/time', {
       headers: {"Content-Type" : "application/json"}
     })
     .then(function ({current_time}) {
