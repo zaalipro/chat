@@ -1,6 +1,5 @@
 import React, { Component } from 'react'
-import './ChatMessages.css'
-import ReactDOM from 'react-dom'
+import './css/ChatMessages.css'
 import ChatMessage from './ChatMessage'
 
 const mainColor = 'rgba(39,175,96,1)'
@@ -35,8 +34,9 @@ class MessageBox extends Component {
   }
 
   _scrollToBottom = () => {
-    const node = ReactDOM.findDOMNode(this._messagesEnd)
-    node.scrollIntoView({behavior: 'smooth'})
+    if (this._messagesEnd) {
+      this._messagesEnd.scrollIntoView({behavior: 'smooth'})
+    }
   }
 
 }

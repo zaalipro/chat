@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import ReactDOM from "react-dom/client";
-import './index.css'
+import './css/index.css'
 import * as serviceWorker from './serviceWorker';
 import 'semantic-ui-css/semantic.min.css';
 import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split } from "@apollo/client";

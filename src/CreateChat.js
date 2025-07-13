@@ -63,11 +63,12 @@ const CreateChat = ({ setCreate }) => {
                           }
                         );
                       }}
-                      render={form => {
+                    >
+                      {form => {
                         return (
                           <Form
                             onSubmit={form.handleSubmit}
-                            error={form.errors !== {}}
+                            error={Object.keys(form.errors).length > 0}
                           >
                             <TextField
                               form={form}
@@ -96,7 +97,7 @@ const CreateChat = ({ setCreate }) => {
                           </Form>
                         );
                       }}
-                    />
+                    </Formik>
                   </div>
                 )}
               </Mutation>

@@ -24,6 +24,8 @@ export const MESSAGE_SUBSCRIPTION = gql`
       text
       author
       isAgent
+      insertedAt
+      updatedAt
     }
   }
 `
@@ -45,6 +47,8 @@ export const GET_MESSAGES = gql`
       author
       isAgent
       text
+      insertedAt
+      updatedAt
     }
   }
 `;
@@ -90,6 +94,8 @@ export const CREATE_MESSAGE = gql`
         text
         author
         isAgent
+        insertedAt
+        updatedAt
       }
     }
   }

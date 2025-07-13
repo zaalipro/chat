@@ -1,7 +1,7 @@
 import React, {useState} from 'react'
 import { Mutation } from '@apollo/client/react/components'
 import store from 'store2'
-import './ChatInput.css'
+import './css/ChatInput.css'
 import { CREATE_MESSAGE } from './queries'
 import Textarea from 'react-textarea-autosize'
 

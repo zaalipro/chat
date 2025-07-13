@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import './ChatMessage.css'
+import './css/ChatMessage.css'
 import { timeDifferenceForDate } from './utils'
 const imageUrl = 'http://imgur.com/qPjLkW0.png'
 
@@ -57,7 +57,7 @@ class ChatMessage extends Component {
   }
 
   _generateChatMessageInfo = () => {
-    const ago = timeDifferenceForDate(this.props.message.createdAt)
+    const ago = timeDifferenceForDate(this.props.message.insertedAt)
     const textWithLineBreaks = this.props.message.text.split('\n').map((line, index) => (
       <span key={index}>
         {line}

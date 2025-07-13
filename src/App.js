@@ -1,5 +1,5 @@
 import React, {useState} from 'react';
-import './App.css'
+import './css/App.css'
 import cx from 'classnames'
 import CreateChat from './CreateChat'
 import Offline from './Offline'
@@ -28,7 +28,6 @@ export const isWorkingHours = (session, currentTime) => {
 const App = () => {
   const activeChat = store('activeChat')
   const contractId = store('contractId')
-  console.log('contractId', contractId)
   const [showCreate, setCreate] = useState(!activeChat)
   const [isOpen, setOpen] = useState(true)
   const [showOffline, setOffline] = useState(false)

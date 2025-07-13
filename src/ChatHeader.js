@@ -4,7 +4,7 @@ import store from 'store2'
 const  mainColor = 'rgba(39,175,96,1)'
 const companyLogoURL = 'http://imgur.com/qPjLkW0.png'
 
-const ChatHeader = ({endChat}) => (
+const ChatHeader = ({endChat = () => Promise.resolve()}) => (
   <div
     style={{backgroundColor: mainColor}}
     className='header flex header-padding-chat items-center header-shadow'

@@ -8,7 +8,7 @@ import ChatHeader from './ChatHeader'
 
 const ChatContainer = () => {
   const chat = store('activeChat')
-  const endChat = useMutation(END_CHAT, {
+  const [endChat] = useMutation(END_CHAT, {
     variables: { chatId: chat.id },
     refetchQueries: [
       { query: GET_CHAT, variables: { chatId: chat.id } },
