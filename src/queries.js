@@ -101,6 +101,17 @@ export const CREATE_MESSAGE = gql`
   }
 `;
 
+export const CHAT_STATUS_SUBSCRIPTION = gql`
+  subscription ($chatId: UUID!) {
+    chat(id: $chatId) {
+      id
+      status
+      customerName
+      headline
+    }
+  }
+`;
+
 export const END_CHAT = gql`
   mutation endChat($chatId: UUID!) {
     updateChat(
