@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { WORKING_SESSION, WORKING_HOURS, API } from './constants'
 
 // shamelessly copied from:
 // http://stackoverflow.com/questions/6108819/javascript-timestamp-to-relative-time-eg-2-seconds-ago-one-week-ago-etc-best
@@ -80,14 +81,17 @@ export const isWorkingHours = (session, currentTime) => {
   let isWorking = false;
   
   switch (sessionNum) {
-    case 1:
-      isWorking = currentTime.hours() >= 0 && currentTime.hours() < 8;
+    case WORKING_SESSION.NIGHT:
+      isWorking = currentTime.hours() >= WORKING_HOURS[WORKING_SESSION.NIGHT].start && 
+                  currentTime.hours() < WORKING_HOURS[WORKING_SESSION.NIGHT].end;
       break;
-    case 2:
-      isWorking = currentTime.hours() >= 8 && currentTime.hours() < 16;
+    case WORKING_SESSION.DAY:
+      isWorking = currentTime.hours() >= WORKING_HOURS[WORKING_SESSION.DAY].start && 
+                  currentTime.hours() < WORKING_HOURS[WORKING_SESSION.DAY].end;
       break;
-    case 3:
-      isWorking = currentTime.hours() >= 16 && currentTime.hours() < 24;
+    case WORKING_SESSION.EVENING:
+      isWorking = currentTime.hours() >= WORKING_HOURS[WORKING_SESSION.EVENING].start && 
+                  currentTime.hours() < WORKING_HOURS[WORKING_SESSION.EVENING].end;
       break;
     default:
       console.warn(`Unknown session value: ${sessionNum} (original: ${session})`);
@@ -108,7 +112,7 @@ export const getCurrentTime = () => {
     return Promise.reject(new Error('REACT_APP_API_URL is not set'));
   }
   
-  return axios.get(`${apiUrl}/api/time`, {
+  return axios.get(`${apiUrl}${API.TIME}`, {
     headers: {"Content-Type" : "application/json"}
   })
 }

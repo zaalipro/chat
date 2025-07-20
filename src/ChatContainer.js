@@ -6,9 +6,11 @@ import store from 'store2'
 import Chat from './Chat'
 import ChatHeader from './ChatHeader'
 import EndedChat from './EndedChat'
+import ErrorBoundary from './ErrorBoundary'
+import { CHAT_STATUS, STORAGE_KEYS, ERROR_MESSAGES, BUTTON_LABELS } from './constants'
 
 const ChatContainer = () => {
-  const chat = store('activeChat')
+  const chat = store(STORAGE_KEYS.ACTIVE_CHAT)
   const [chatEnded, setChatEnded] = useState(false)
   
   // Always declare hooks at the top level, regardless of conditions
@@ -27,7 +29,7 @@ const ChatContainer = () => {
   })
 
   useEffect(() => {
-    if (chatStatusData?.chat?.status === 'ended') {
+    if (chatStatusData?.chat?.status === CHAT_STATUS.ENDED) {
       setChatEnded(true)
     }
   }, [chatStatusData])
@@ -37,10 +39,10 @@ const ChatContainer = () => {
     return (
       <div style={{ padding: '20px', textAlign: 'center' }}>
         <h3>Chat Error</h3>
-        <p>Unable to load chat information. Please try again.</p>
+        <p>{ERROR_MESSAGES.CHAT_ERROR}</p>
         <button
           onClick={() => {
-            store.remove('activeChat')
+            store.remove(STORAGE_KEYS.ACTIVE_CHAT)
             window.location.reload()
           }}
           style={{
@@ -52,7 +54,7 @@ const ChatContainer = () => {
             cursor: 'pointer'
           }}
         >
-          Start New Chat
+          {BUTTON_LABELS.START_NEW_CHAT}
         </button>
       </div>
     )
@@ -63,28 +65,81 @@ const ChatContainer = () => {
   }
 
   return (
-    <Query query={GET_MESSAGES} variables={{ chatId: chat.id }}>
-      {({ subscribeToMore, ...rest }) => {
-        return (
-          <span>
-            <ChatHeader endChat={endChat} />
-            <Chat
-              {...rest}
-              chatId={chat.id}
-              subscribeToNewMessages={() =>
-                subscribeToMore({
-                  document: MESSAGE_SUBSCRIPTION,
-                  variables: { chatId: chat.id },
-                  updateQuery: (_, { subscriptionData }) => {
-                    return subscriptionData.data
+    <ErrorBoundary
+      fallback={(error, errorInfo) => (
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <h3>Error Loading Messages</h3>
+          <p>We're sorry, but there was an error loading the chat messages.</p>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '10px 20px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            Reload
+          </button>
+        </div>
+      )}
+    >
+      <Query query={GET_MESSAGES} variables={{ chatId: chat.id }}>
+        {({ subscribeToMore, ...rest }) => {
+          return (
+            <span>
+              <ErrorBoundary
+                fallback={(error, errorInfo) => (
+                  <div style={{ padding: '10px', color: 'red' }}>
+                    Error loading chat header. <button onClick={() => window.location.reload()}>Reload</button>
+                  </div>
+                )}
+              >
+                <ChatHeader endChat={endChat} />
+              </ErrorBoundary>
+              
+              <ErrorBoundary
+                fallback={(error, errorInfo) => (
+                  <div style={{ padding: '20px', textAlign: 'center' }}>
+                    <h3>Error in Chat</h3>
+                    <p>We're sorry, but there was an error displaying the chat.</p>
+                    <button
+                      onClick={() => window.location.reload()}
+                      style={{
+                        padding: '10px 20px',
+                        backgroundColor: '#007bff',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Reload
+                    </button>
+                  </div>
+                )}
+              >
+                <Chat
+                  {...rest}
+                  chatId={chat.id}
+                  subscribeToNewMessages={() =>
+                    subscribeToMore({
+                      document: MESSAGE_SUBSCRIPTION,
+                      variables: { chatId: chat.id },
+                      updateQuery: (_, { subscriptionData }) => {
+                        return subscriptionData.data
+                      }
+                    })
                   }
-                })
-              }
-            />
-          </span>
-        )
-      }}
-    </Query>
+                />
+              </ErrorBoundary>
+            </span>
+          )
+        }}
+      </Query>
+    </ErrorBoundary>
   )
 }
 

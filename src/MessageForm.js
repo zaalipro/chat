@@ -4,6 +4,8 @@ import store from 'store2'
 import './css/ChatInput.css'
 import { CREATE_MESSAGE } from './queries'
 import Textarea from 'react-textarea-autosize'
+import ErrorBoundary from './ErrorBoundary'
+import { STORAGE_KEYS, MESSAGE, ERROR_MESSAGES } from './constants'
 
 const MessageForm = ({ chatId }) => {
   const [inputHasFocus, setInputFocus] = useState(true)
@@ -13,7 +15,7 @@ const MessageForm = ({ chatId }) => {
   // Set error if chatId is invalid, but don't return early (would violate hooks rules)
   useEffect(() => {
     if (!chatId) {
-      setError('Error: Cannot send messages (invalid chat)')
+      setError(ERROR_MESSAGES.INVALID_CHAT)
     } else {
       setError('')
     }
@@ -35,15 +37,15 @@ const MessageForm = ({ chatId }) => {
   }
 
   const onKeyDown = (e) => {
-    if (e.keyCode === 13) { // ENTER
+    if (e.keyCode === MESSAGE.ENTER_KEY_CODE) { // ENTER
       if (e.shiftKey) { // allow new lines with ENTER + SHIFT
         return
       }
-      if (message.length < 1) {
+      if (message.length < MESSAGE.MIN_LENGTH) {
         return
       }
 
-      const customerName = store('customerName') || 'Anonymous'
+      const customerName = store(STORAGE_KEYS.CUSTOMER_NAME) || MESSAGE.DEFAULT_AUTHOR
 
       createMessage({
         variables: {
@@ -56,7 +58,7 @@ const MessageForm = ({ chatId }) => {
           setMessage('')
         })
         .catch(error => {
-          console.error('Error sending message:', error)
+          console.error(ERROR_MESSAGES.SEND_ERROR, error)
           // Could add UI feedback here
         });
       e.preventDefault()
@@ -64,24 +66,34 @@ const MessageForm = ({ chatId }) => {
   }
 
   return (
-    <div className={`chat-input flex items-center radius-bottom ${inputHasFocus ? 'chat-input-shadow' : 'light-background'}`}>
-      <Textarea
-        minRows={1}
-        maxRows={5}
-        className={`InputField ${!inputHasFocus && 'light-background'}`}
-        placeholder='Send a message ...'
-        value={message}
-        autoFocus={true}
-        onChange={(e) => setMessage(e.target.value)}
-        onKeyDown={onKeyDown}
-        onFocus={() => {
-          setInputFocus(true)
-        }}
-        onBlur={() => {
-          setInputFocus(false)
-        }}
-      />
-    </div>
+    <ErrorBoundary
+      fallback={(error, errorInfo) => (
+        <div className="chat-input flex items-center radius-bottom light-background">
+          <div style={{ padding: '10px', color: 'red' }}>
+            Error in message form. Please reload the page.
+          </div>
+        </div>
+      )}
+    >
+      <div className={`chat-input flex items-center radius-bottom ${inputHasFocus ? 'chat-input-shadow' : 'light-background'}`}>
+        <Textarea
+          minRows={1}
+          maxRows={5}
+          className={`InputField ${!inputHasFocus && 'light-background'}`}
+          placeholder='Send a message ...'
+          value={message}
+          autoFocus={true}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={onKeyDown}
+          onFocus={() => {
+            setInputFocus(true)
+          }}
+          onBlur={() => {
+            setInputFocus(false)
+          }}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }
 
