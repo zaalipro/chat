@@ -10,16 +10,20 @@ import EndedChat from './EndedChat'
 const ChatContainer = () => {
   const chat = store('activeChat')
   const [chatEnded, setChatEnded] = useState(false)
+  
+  // Always declare hooks at the top level, regardless of conditions
   const [endChat] = useMutation(END_CHAT, {
-    variables: { chatId: chat.id },
+    variables: { chatId: chat?.id || '' },
     refetchQueries: [
-      { query: GET_CHAT, variables: { chatId: chat.id } },
-    ]
+      { query: GET_CHAT, variables: { chatId: chat?.id || '' } },
+    ],
+    skip: !chat?.id // Skip the mutation if chat.id is not available
   })
 
   // Subscribe to chat status changes
   const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { chatId: chat.id }
+    variables: { chatId: chat?.id || '' },
+    skip: !chat?.id // Skip the subscription if chat.id is not available
   })
 
   useEffect(() => {
@@ -27,6 +31,32 @@ const ChatContainer = () => {
       setChatEnded(true)
     }
   }, [chatStatusData])
+  
+  // Handle case where chat is missing - AFTER all hooks are called
+  if (!chat?.id) {
+    return (
+      <div style={{ padding: '20px', textAlign: 'center' }}>
+        <h3>Chat Error</h3>
+        <p>Unable to load chat information. Please try again.</p>
+        <button
+          onClick={() => {
+            store.remove('activeChat')
+            window.location.reload()
+          }}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Start New Chat
+        </button>
+      </div>
+    )
+  }
 
   if (chatEnded) {
     return <EndedChat />
@@ -45,7 +75,7 @@ const ChatContainer = () => {
                 subscribeToMore({
                   document: MESSAGE_SUBSCRIPTION,
                   variables: { chatId: chat.id },
-                  updateQuery: (prev, { subscriptionData }) => {
+                  updateQuery: (_, { subscriptionData }) => {
                     return subscriptionData.data
                   }
                 })

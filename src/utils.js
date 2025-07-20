@@ -47,27 +47,6 @@ export function timeDifferenceForDate(date) {
   return timeDifference(now, updated)
 }
 
-export function sortConversationByDateCreated(conversation1, conversation2) {
-
-  const lastMessage1 = conversation1.messages[0]
-  const lastMessage2 = conversation2.messages[0]
-
-  if (!lastMessage1 || !lastMessage2) {
-    return 0
-  }
-
-  const date1 = new Date(lastMessage1.createdAt).getTime()
-  const date2 = new Date(lastMessage2.createdAt).getTime()
-  if (date1 > date2) {
-    return -1
-  }
-  if (date1 < date2) {
-    return 1
-  }
-  return 0
-
-}
-
 export function generateShortStupidName(maxLength) {
   const username = "john"
   if (username.length > maxLength) {
@@ -78,20 +57,58 @@ export function generateShortStupidName(maxLength) {
 }
 
 export const isWorkingHours = (session, currentTime) => {
-  switch (session) {
-    case 1:
-      return currentTime.hours() >= 0 && currentTime.hours() < 8
-    case 2:
-      return currentTime.hours() >= 8 && currentTime.hours() < 16
-    case 3:
-      return currentTime.hours() >= 16 && currentTime.hours() < 24
-    default:
-      return "non existing"
+  // Add null check for currentTime
+  if (!currentTime || typeof currentTime.hours !== 'function') {
+    console.error('Invalid currentTime provided to isWorkingHours')
+    return false
   }
+
+  // Convert session to number if it's a string
+  const sessionNum = typeof session === 'string' ? parseInt(session, 10) : session;
+  
+  // Debug info
+  console.log('isWorkingHours check:', {
+    session: sessionNum,
+    currentHour: currentTime.hours(),
+    currentTimeObj: currentTime.format('YYYY-MM-DD HH:mm:ss')
+  });
+
+  // TEMPORARY FIX: Always return true for testing
+  // return true;
+  
+  // Check if the current hour is within the working hours for the given session
+  let isWorking = false;
+  
+  switch (sessionNum) {
+    case 1:
+      isWorking = currentTime.hours() >= 0 && currentTime.hours() < 8;
+      break;
+    case 2:
+      isWorking = currentTime.hours() >= 8 && currentTime.hours() < 16;
+      break;
+    case 3:
+      isWorking = currentTime.hours() >= 16 && currentTime.hours() < 24;
+      break;
+    default:
+      console.warn(`Unknown session value: ${sessionNum} (original: ${session})`);
+      isWorking = false;
+  }
+  
+  console.log(`Session ${sessionNum}, hour ${currentTime.hours()}, isWorking: ${isWorking}`);
+  return isWorking;
 }
 
 export const getCurrentTime = () => {
-  return axios.get(process.env.REACT_APP_API_URL + '/api/time', {
+  const apiUrl = process.env.REACT_APP_API_URL || '';
+  console.log('API URL:', apiUrl);
+  
+  if (!apiUrl) {
+    // If API URL is not set, return a rejected promise to trigger the fallback
+    console.warn('REACT_APP_API_URL is not set, using local time');
+    return Promise.reject(new Error('REACT_APP_API_URL is not set'));
+  }
+  
+  return axios.get(`${apiUrl}/api/time`, {
     headers: {"Content-Type" : "application/json"}
   })
 }

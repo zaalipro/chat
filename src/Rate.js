@@ -2,12 +2,13 @@ import React from 'react';
 import { Segment, Rating } from 'semantic-ui-react'
 import { Mutation } from '@apollo/client/react/components'
 import { RATE_AGENT } from './queries'
+import store from 'store2'
 
-const Rate = ({chat, setCreate}) => {
-  return(
+const Rate = ({ chat, setCreate }) => {
+  return (
     <span>
       <div
-        style={{backgroundColor: 'rgba(39,175,96,1)'}}
+        style={{ backgroundColor: 'rgba(39,175,96,1)' }}
         className='header header-padding header-shadow'
       >
         <div className='conversation-header gutter-left'>
@@ -17,22 +18,32 @@ const Rate = ({chat, setCreate}) => {
       </div>
       <div className='body overflow-y-scroll overflow-x-hidden'>
         <Mutation mutation={RATE_AGENT}>
-        {(createRate) => (
-          <Segment>
-            chat finished, Please rate an agent:
-            <Rating icon='star' defaultRating={3} maxRating={5} onRate={(e, {rating}) => {
-              createRate({variables: {
-                chatId: chat.id,
-                rating: rating
-              }}).then(resp => setCreate(true))
-            }}/>
-          </Segment>
-        )}
+          {(createRate) => (
+            <Segment>
+              chat finished, Please rate an agent:
+              <Rating icon='star' defaultRating={3} maxRating={5} onRate={(e, { rating }) => {
+                createRate({
+                  variables: {
+                    chatId: chat.id,
+                    rating: rating
+                  }
+                }).then(resp => {
+                  // Remove the finished chat from localStorage
+                  store.remove('activeChat')
+                  setCreate(true)
+                })
+              }} />
+            </Segment>
+          )}
         </Mutation>
         <div className='flex flex-hcenter full-width conversation-button-wrapper pointer-events-none'>
           <div
             className='conversation-button background-darkgray drop-shadow-hover pointer flex-center flex pointer-events-initial'
-            onClick={() => setCreate(true)}
+            onClick={() => {
+              // Remove the finished chat from localStorage
+              store.remove('activeChat')
+              setCreate(true)
+            }}
           >
             <p>New Conversation</p>
           </div>

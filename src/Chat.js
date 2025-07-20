@@ -10,6 +10,20 @@ class Chat extends Component {
 
   render() {
     const { data, chatId } = this.props
+    
+    // Add null check for data and messages
+    if (!data || !data.messages) {
+      return (
+        <div className="dropzone relative">
+          <div className='message-body chat-container'>
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <p>Loading messages...</p>
+            </div>
+            <MessageForm chatId={chatId} />
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="dropzone relative">
