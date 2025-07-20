@@ -1,3 +1,4 @@
+import axios from 'axios'
 
 // shamelessly copied from:
 // http://stackoverflow.com/questions/6108819/javascript-timestamp-to-relative-time-eg-2-seconds-ago-one-week-ago-etc-best
@@ -74,4 +75,23 @@ export function generateShortStupidName(maxLength) {
   }
   const usernameWithoutSpace = username.replace(' ', '-')
   return usernameWithoutSpace
+}
+
+export const isWorkingHours = (session, currentTime) => {
+  switch (session) {
+    case 1:
+      return currentTime.hours() >= 0 && currentTime.hours() < 8
+    case 2:
+      return currentTime.hours() >= 8 && currentTime.hours() < 16
+    case 3:
+      return currentTime.hours() >= 16 && currentTime.hours() < 24
+    default:
+      return "non existing"
+  }
+}
+
+export const getCurrentTime = () => {
+  return axios.get(process.env.REACT_APP_API_URL + '/api/time', {
+    headers: {"Content-Type" : "application/json"}
+  })
 }

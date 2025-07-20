@@ -3,7 +3,6 @@ import './css/App.css'
 import cx from 'classnames'
 import CreateChat from './CreateChat'
 import Offline from './Offline'
-import axios from 'axios'
 import moment from 'moment'
 import store from 'store2'
 import Query from './Components/Query'
@@ -11,19 +10,7 @@ import ChatContainer from './ChatContainer'
 import { GET_CHAT, GET_CONTRACT } from './queries'
 import ToggleOpeningStateButton from './ToggleOpeningStateButton'
 import Rate from './Rate'
-
-export const isWorkingHours = (session, currentTime) => {
-  switch (session) {
-    case 1:
-      return currentTime.hours() >= 0 && currentTime.hours() < 8
-    case 2:
-      return currentTime.hours() >= 8 && currentTime.hours() < 16
-    case 3:
-      return currentTime.hours() >= 16 && currentTime.hours() < 24
-    default:
-      return "non existing"
-  }
-}
+import { isWorkingHours, getCurrentTime } from './utils';
 
 const App = () => {
   const activeChat = store('activeChat')
@@ -33,14 +20,24 @@ const App = () => {
   const [showOffline, setOffline] = useState(false)
   const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
   const checkWorkingHours = (contractSession) => {
-    axios.get('http://localhost:5001/api/time', {
-      headers: {"Content-Type" : "application/json"}
-    })
-    .then(function ({current_time}) {
-      const now = moment(current_time)
-      console.log(isWorkingHours(contractSession, now))
+    getCurrentTime()
+    .then(function (response) {
+      const now = moment(response.data, 'YYYY-MM-DDTHH:mm:ss.SSSSZ').utc()
       setOffline(!isWorkingHours(contractSession, now))
     })
+    .catch(function (err) {
+      // Fallback to local time if API fails
+      const now = moment()
+      setOffline(!isWorkingHours(contractSession, now))
+    })
+    // axios.get('http://localhost:5001/api/time', {
+    //   headers: {"Content-Type" : "application/json"}
+    // })
+    // .then(function ({current_time}) {
+    //   const now = moment(current_time)
+    //   console.log(isWorkingHours(contractSession, now))
+    //   setOffline(!isWorkingHours(contractSession, now))
+    // })
   };
 
   if (showCreate) {
