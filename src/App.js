@@ -10,20 +10,21 @@ import ChatContainer from './ChatContainer'
 import { GET_CHAT, GET_CONTRACT } from './queries'
 import ToggleOpeningStateButton from './ToggleOpeningStateButton'
 import Rate from './Rate'
+import ContractNotFound from './ContractNotFound'
 import { isWorkingHours, getCurrentTime } from './utils';
 
 const App = () => {
   // Get activeChat from localStorage
   let activeChat = store('activeChat')
   console.log('Active chat from localStorage:', activeChat)
-  
+
   // If activeChat exists and its status is "finished", reset it
   if (activeChat && activeChat.status === "finished") {
     console.log('Resetting finished chat on page load')
     store.remove('activeChat')
     activeChat = null
   }
-  
+
   const contractId = store('contractId')
   const [showCreate, setCreate] = useState(!activeChat)
   const [isOpen, setOpen] = useState(true)
@@ -34,16 +35,16 @@ const App = () => {
   // Use useCallback to memoize the function - DEFINE BEFORE USING IT
   const checkWorkingHours = useCallback((contractSession) => {
     console.log('checkWorkingHours called with session:', contractSession);
-    
+
     getCurrentTime()
       .then(function (response) {
         console.log('getCurrentTime response:', response);
         const now = moment(response.data, 'YYYY-MM-DDTHH:mm:ss.SSSSZ').utc()
         console.log('Current time (UTC):', now.format('YYYY-MM-DD HH:mm:ss'));
-        
+
         const isWorking = isWorkingHours(contractSession, now);
         console.log('isWorkingHours result:', isWorking);
-        
+
         setOffline(!isWorking);
       })
       .catch(function (error) {
@@ -51,10 +52,10 @@ const App = () => {
         // Fallback to local time if API fails
         const now = moment()
         console.log('Fallback to local time:', now.format('YYYY-MM-DD HH:mm:ss'));
-        
+
         const isWorking = isWorkingHours(contractSession, now);
         console.log('isWorkingHours result (fallback):', isWorking);
-        
+
         setOffline(!isWorking);
       })
   }, [setOffline]) // Only depends on setOffline
@@ -64,7 +65,7 @@ const App = () => {
     if (contractSession) {
       console.log('Contract session changed to:', contractSession);
       checkWorkingHours(contractSession);
-      
+
       // For testing: Force online status after a short delay
       // setTimeout(() => {
       //   console.log('Forcing online status for testing');
@@ -75,37 +76,9 @@ const App = () => {
 
   // Handle case where contractId is missing
   if (!contractId) {
-    return (
-      <div className='App'>
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          <h3>Configuration Error</h3>
-          <p>Contract ID not found. Please check your configuration.</p>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#007bff',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Reload
-          </button>
-        </div>
-      </div>
-    )
+    return <ContractNotFound />
   }
   const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
-  // axios.get('http://localhost:5001/api/time', {
-  //   headers: {"Content-Type" : "application/json"}
-  // })
-  // .then(function ({current_time}) {
-  //   const now = moment(current_time)
-  //   console.log(isWorkingHours(contractSession, now))
-  //   setOffline(!isWorkingHours(contractSession, now))
-  // })
 
   if (showCreate) {
     return (
@@ -119,22 +92,22 @@ const App = () => {
                     return <div>Loading contract...</div>
                   }
 
-                                  // Update the session in the parent component using a ref to track updates
+                  // Update the session in the parent component using a ref to track updates
                   // This prevents state updates during render
                   const sessionKey = `${data?.contract?.id}-${data?.contract?.session}`;
                   if (data?.contract?.session && !sessionUpdatedRef.current[sessionKey]) {
                     // Mark this session as processed to avoid repeated state updates
                     sessionUpdatedRef.current[sessionKey] = true;
-                    
+
                     console.log('Contract session from API:', data.contract.session, 'type:', typeof data.contract.session);
 
                     // Schedule the state update after render
                     setTimeout(() => {
                       // Convert session to number if it's a string
-                      const sessionNum = typeof data.contract.session === 'string' 
-                        ? parseInt(data.contract.session, 10) 
+                      const sessionNum = typeof data.contract.session === 'string'
+                        ? parseInt(data.contract.session, 10)
                         : data.contract.session;
-                        
+
                       console.log('Setting contract session to:', sessionNum);
                       setContractSession(sessionNum);
                     }, 0);
