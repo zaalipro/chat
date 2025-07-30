@@ -1,16 +1,17 @@
 import { gql } from '@apollo/client'
 
 export const CREATE_CHAT = gql`
-mutation createChat($customerName: String!, $headline: String!, $contractId: UUID!) {
+mutation createChat($customerName: String!, $headline: String!, $contractId: UUID!, $ipAddress: InternetAddress) {
   createChat(input: {
     chat: {
-      customerName: $customerName, headline: $headline,  contractId: $contractId
+      customerName: $customerName, headline: $headline,  contractId: $contractId, ipAddress: $ipAddress
     }
   }) {
     chat {
       id
       customerName
       headline
+      ipAddress
       status
     }
   }
@@ -61,6 +62,7 @@ export const GET_CHAT = gql`
       status
       customerName
       headline
+      ipAddress
       contract {
         agent {
           id
@@ -108,6 +110,7 @@ export const CHAT_STATUS_SUBSCRIPTION = gql`
       status
       customerName
       headline
+      ipAddress
     }
   }
 `;

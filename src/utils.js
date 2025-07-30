@@ -95,3 +95,47 @@ export const getCurrentTime = () => {
     headers: {"Content-Type" : "application/json"}
   })
 }
+
+/**
+ * Detects the client's IP address using a third-party service
+ * @param {number} timeout - Timeout in milliseconds (default: 3000)
+ * @returns {Promise<string|null>} - IP address string or null on failure
+ */
+export const detectIPAddress = async (timeout = 3000) => {
+  try {
+    const response = await axios.get('https://api.ipify.org?format=json', {
+      timeout: timeout,
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+
+    // Validate response structure
+    if (!response.data || typeof response.data.ip !== 'string') {
+      console.error('IP detection failed: Invalid response format', response.data)
+      return null
+    }
+
+    // Basic IP address validation (IPv4 or IPv6)
+    const ipAddress = response.data.ip.trim()
+    if (!ipAddress) {
+      console.error('IP detection failed: Empty IP address received')
+      return null
+    }
+
+    return ipAddress
+  } catch (error) {
+    // Handle different types of errors
+    if (error.code === 'ECONNABORTED') {
+      console.error('IP detection failed: Request timeout after', timeout, 'ms')
+    } else if (error.response) {
+      console.error('IP detection failed: HTTP error', error.response.status, error.response.statusText)
+    } else if (error.request) {
+      console.error('IP detection failed: Network error - no response received')
+    } else {
+      console.error('IP detection failed: Unexpected error', error.message)
+    }
+    
+    return null
+  }
+}

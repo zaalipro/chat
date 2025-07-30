@@ -5,6 +5,7 @@ import TextField from "./Components/TextField";
 import TextAreaField from "./Components/TextAreaField";
 import { Segment, Form } from "semantic-ui-react";
 import { CREATE_CHAT, CREATE_MESSAGE } from "./queries";
+import { detectIPAddress } from "./utils";
 import store from "store2";
 
 const CreateChat = ({ setCreate }) => {
@@ -33,12 +34,16 @@ const CreateChat = ({ setCreate }) => {
                         headline: ""
                       }}
                       validate={validate}
-                      onSubmit={(values, { setSubmitting }) => {
+                      onSubmit={async (values, { setSubmitting }) => {
+                        // Detect IP address before creating chat
+                        const ipAddress = await detectIPAddress();
+                        
                         createChat({
                           variables: {
                             customerName: values.customerName,
                             headline: values.headline,
-                            contractId: contractId
+                            contractId: contractId,
+                            ipAddress: ipAddress
                           }
                         }).then(
                           resp => {
