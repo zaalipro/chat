@@ -52,8 +52,13 @@ const ClientApp = () => (
   </ApolloProvider>
 );
 
-store('contractId', '9f12e91d-b3f1-4c38-b6fe-75051f64de7c');
-store('websiteId', 'fe926e90-0704-43e6-ac57-e9a866d5b4ae')
+// store('contractId', '9f12e91d-b3f1-4c38-b6fe-75051f64de7c');
+// store('websiteId', 'fe926e90-0704-43e6-ac57-e9a866d5b4ae')
+
+
+// european agent
+store('contractId', '4fa5a942-c64a-4ef5-8114-4aa0b32df1c1')
+store('websiteId', 'dace1a1f-237e-4feb-9ed9-a85555a39aee')
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
