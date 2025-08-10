@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import './css/ChatMessage.css'
 import { timeDifferenceForDate } from './utils'
-const imageUrl = 'http://imgur.com/qPjLkW0.png'
+const imageUrl = process.env.REACT_APP_COMPANY_LOGO_URL
 
 class ChatMessage extends Component {
 

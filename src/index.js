@@ -11,7 +11,7 @@ import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
 
-const httpLink = createHttpLink({ uri: `http://localhost:5001/graphql` })
+const httpLink = createHttpLink({ uri: process.env.REACT_APP_GRAPHQL_HTTP_URL })
 
 // const wsLink = new WebSocketLink({
 //   uri: `ws://localhost:5000/graphql`,
@@ -20,7 +20,7 @@ const httpLink = createHttpLink({ uri: `http://localhost:5001/graphql` })
 //   }
 // });
 const wsLink = new GraphQLWsLink(createClient({
-  url: 'ws://localhost:5001/graphql',
+  url: process.env.REACT_APP_GRAPHQL_WS_URL,
   options: {
     reconnect: true,
     connectionParams: {
@@ -57,8 +57,8 @@ const ClientApp = () => (
 
 
 // european agent
-store('contractId', '4fa5a942-c64a-4ef5-8114-4aa0b32df1c1')
-store('websiteId', 'dace1a1f-237e-4feb-9ed9-a85555a39aee')
+store('contractId', process.env.REACT_APP_DEFAULT_CONTRACT_ID)
+store('websiteId', process.env.REACT_APP_DEFAULT_WEBSITE_ID)
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(

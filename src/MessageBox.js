@@ -3,7 +3,7 @@ import './css/ChatMessages.css'
 import ChatMessage from './ChatMessage'
 
 const mainColor = 'rgba(39,175,96,1)'
-const companyLogoURL = 'https://i.imgur.com/qPjLkW0.png'
+const companyLogoURL = process.env.REACT_APP_COMPANY_LOGO_URL
 
 class MessageBox extends Component {
   componentDidMount() {

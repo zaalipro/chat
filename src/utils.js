@@ -103,7 +103,7 @@ export const getCurrentTime = () => {
  */
 export const detectIPAddress = async (timeout = 3000) => {
   try {
-    const response = await axios.get('https://api.ipify.org?format=json', {
+    const response = await axios.get(process.env.REACT_APP_IPIFY_URL, {
       timeout: timeout,
       headers: {
         'Content-Type': 'application/json'

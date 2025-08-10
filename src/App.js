@@ -30,7 +30,7 @@ const App = () => {
       const now = moment()
       setOffline(!isWorkingHours(contractSession, now))
     })
-    // axios.get('http://localhost:5001/api/time', {
+    // axios.get(process.env.REACT_APP_API_URL + '/api/time', {
     //   headers: {"Content-Type" : "application/json"}
     // })
     // .then(function ({current_time}) {
