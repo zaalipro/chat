@@ -12,6 +12,20 @@ import App from './App';
 import store from 'store2'
 
 const httpLink = createHttpLink({ uri: process.env.REACT_APP_GRAPHQL_HTTP_URL })
+const authLink = setContext((_, { headers }) => {
+  // get the authentication token from local storage if it exists
+  const token = store("token");
+  if (token === null) {
+    return headers;
+  }
+  // return the headers to the context so httpLink can read them
+  return {
+    headers: {
+      ...headers,
+      authorization: `Bearer ${token}`
+    }
+  };
+});
 
 // const wsLink = new WebSocketLink({
 //   uri: `ws://localhost:5000/graphql`,
@@ -35,7 +49,7 @@ const link = split(
     return kind === 'OperationDefinition' && operation === 'subscription'
   },
   wsLink,
-  httpLink,
+  authLink.concat(httpLink),
 )
 
 const client = new ApolloClient({
