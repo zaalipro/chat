@@ -3,13 +3,15 @@ import ReactDOM from "react-dom/client";
 import './css/index.css'
 import * as serviceWorker from './serviceWorker';
 import 'semantic-ui-css/semantic.min.css';
-import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split } from "@apollo/client";
+import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split, gql } from "@apollo/client";
+import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from 'graphql-ws';
 import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
+import { jwtDecode } from 'jwt-decode'
 
 const httpLink = createHttpLink({ uri: process.env.REACT_APP_GRAPHQL_HTTP_URL })
 const authLink = setContext((_, { headers }) => {
@@ -37,9 +39,9 @@ const wsLink = new GraphQLWsLink(createClient({
   url: process.env.REACT_APP_GRAPHQL_WS_URL,
   options: {
     reconnect: true,
-    connectionParams: {
+    connectionParams: () => ({
       authToken: store("token")
-    }
+    })
   }
 }));
 
@@ -73,13 +75,52 @@ const ClientApp = () => (
 // european agent
 store('contractId', process.env.REACT_APP_DEFAULT_CONTRACT_ID)
 store('websiteId', process.env.REACT_APP_DEFAULT_WEBSITE_ID)
+
+const CONSUMER_LOGIN = gql`
+  mutation consumerLogin($publicKey: UUID!) {
+    consumerLogin(input: {
+      publicKey: $publicKey
+    }) {
+      jwtToken
+    }
+  }
+`;
+
+const loginClient = new ApolloClient({
+  link: httpLink,
+  cache: new InMemoryCache(),
+});
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-root.render(
-  <React.StrictMode>
-    <ClientApp />
-  </React.StrictMode>
-);
+const renderApp = (token) => {
+  if (token) {
+    const decodedToken = jwtDecode(token);
+    console.log('decodedToken', decodedToken)
+    console.log('websiteId', decodedToken.user_id)
+    store("token", token);
+  }
+
+  root.render(
+    <React.StrictMode>
+      <ClientApp />
+    </React.StrictMode>
+  );
+}
+
+loginClient.mutate({
+  mutation: CONSUMER_LOGIN,
+  variables: {
+    publicKey: process.env.REACT_APP_PUBLIC_KEY
+  }
+}).then(response => {
+  const token = response?.data?.consumerLogin?.jwtToken;
+  renderApp(token);
+}).catch(error => {
+  console.error("Login mutation failed", error);
+  renderApp(null); // Render the app even if login fails
+});
+
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
