@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery } from '@apollo/client';
 import { Formik } from "formik";
 import TextField from "./Components/TextField";
@@ -12,17 +12,24 @@ import store from "store2";
 
 const CreateChat = ({ setCreate }) => {
   const websiteId = store("websiteId");
-  
+
   // Multi-chat state management
   const [chatCreationState, setChatCreationState] = useState('form'); // 'form', 'creating', 'waiting', 'connected'
   const [pendingChats, setPendingChats] = useState([]);
   const [activeContracts, setActiveContracts] = useState([]);
+  const [contractsProcessing, setContractsProcessing] = useState(true); // Start as true to prevent premature offline check
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [chatsWithInitialMessage, setChatsWithInitialMessage] = useState(new Set());
+  const [chatStartedCallCount, setChatStartedCallCount] = useState(0);
   const [error, setError] = useState(null);
+
+  // Use a ref to track message creation synchronously within function calls
+  const chatsWithInitialMessageRef = useRef(new Set());
 
   // GraphQL hooks
   const [createChat] = useMutation(CREATE_CHAT);
   const [createMessage] = useMutation(CREATE_MESSAGE);
-  
+
   // Fetch website contracts
   const { data: contractsData, loading: contractsLoading, error: contractsError } = useQuery(
     GET_WEBSITE_CONTRACTS,
@@ -37,19 +44,58 @@ const CreateChat = ({ setCreate }) => {
   useEffect(() => {
     const getActiveContracts = async () => {
       try {
-        if (contractsData?.website?.contracts) {
-          const sessionContracts = await processContractsForCurrentSession(contractsData.website.contracts);
-          console.log(`Found ${sessionContracts.length} active contracts for current session`);
-          setActiveContracts(sessionContracts);
+        console.log('Starting contract processing...');
+        setContractsProcessing(true);
+
+        if (contractsData?.website?.contracts && Array.isArray(contractsData.website.contracts)) {
+          const allContracts = contractsData.website.contracts;
+          console.log('Raw contracts data:', allContracts);
+
+          if (allContracts.length === 0) {
+            console.log('No contracts available from API');
+            setActiveContracts([]);
+            return;
+          }
+
+          try {
+            // Try session-based filtering first
+            const sessionContracts = await processContractsForCurrentSession(allContracts);
+            console.log(`Session filtering result: ${sessionContracts.length} contracts for current session`);
+
+            if (sessionContracts.length > 0) {
+              console.log('Using session-filtered contracts:', sessionContracts);
+              setActiveContracts(sessionContracts);
+            } else {
+              // Fallback: use all active contracts if session filtering returns empty
+              console.log('Session filtering returned no contracts, using all active contracts as fallback');
+              setActiveContracts(allContracts);
+            }
+          } catch (sessionError) {
+            console.error('Session filtering failed, using all contracts as fallback:', sessionError);
+            setActiveContracts(allContracts);
+          }
+        } else {
+          console.log('No valid contracts data available');
+          setActiveContracts([]);
         }
       } catch (error) {
         console.error('Failed to get active contracts:', error);
         setError('Failed to load available agents');
+        setActiveContracts([]);
+      } finally {
+        console.log('Contract processing complete');
+        setContractsProcessing(false);
+        setInitialLoadComplete(true);
       }
     };
 
     if (contractsData && !contractsLoading) {
+      console.log('Contracts data available, starting processing');
       getActiveContracts();
+    } else if (!contractsLoading && !contractsData) {
+      console.log('No contracts data and not loading, setting processing to false');
+      setContractsProcessing(false);
+      setInitialLoadComplete(true);
     }
   }, [contractsData, contractsLoading]);
 
@@ -64,7 +110,7 @@ const CreateChat = ({ setCreate }) => {
   // Multi-chat creation logic
   const createMultipleChats = async (contracts, formData, ipAddress) => {
     const key = crypto.randomUUID()
-    const chatPromises = contracts.map(contract => 
+    const chatPromises = contracts.map(contract =>
       createChat({
         variables: {
           customerName: formData.customerName,
@@ -90,14 +136,17 @@ const CreateChat = ({ setCreate }) => {
   const handleFormSubmit = async (values, { setSubmitting }) => {
     try {
       setError(null);
+      chatsWithInitialMessageRef.current = new Set(); // Reset ref for new chat creation
+      setChatsWithInitialMessage(new Set()); // Reset set for new chat creation
+      setChatStartedCallCount(0); // Reset call count
       setChatCreationState('creating');
-      
+
       // Detect IP address
       const ipAddress = await detectIPAddress();
-      
+
       // Determine which contracts to use
       let contractsToUse = activeContracts;
-      
+
       // Fallback to single contract if no active contracts found
       if (contractsToUse.length === 0) {
         console.warn('No active contracts found, falling back to single contract');
@@ -125,7 +174,7 @@ const CreateChat = ({ setCreate }) => {
           });
 
           const chat = response.data.createChat.chat;
-          
+
           // Store customer info (backward compatibility format)
           const activeChat = {
             id: chat.id,
@@ -134,26 +183,21 @@ const CreateChat = ({ setCreate }) => {
             headline: chat.headline,
             ipAddress: chat.ipAddress
           };
-          
+
           store("activeChat", activeChat);
           store("customerName", values.customerName);
-          
+
           // Verify backward compatibility
           console.log('Single chat mode: activeChat stored successfully', activeChat);
-          
-          // Create initial message
-          await createMessage({
-            variables: {
-              text: chat.headline,
-              author: chat.customerName,
-              isAgent: false,
-              chatId: chat.id
-            }
-          });
 
-          // Complete the flow
+          // For single contract mode, don't create message here - let ChatStatusMonitor handle it
+          // Set up as pending chat for monitoring (even though it's just one)
+          setPendingChats([{
+            ...chat,
+            contract: contract
+          }]);
+          setChatCreationState('waiting');
           setSubmitting(false);
-          setCreate(false);
           return;
 
         } catch (error) {
@@ -167,12 +211,12 @@ const CreateChat = ({ setCreate }) => {
 
       // Multi-chat creation
       const results = await createMultipleChats(contractsToUse, values, ipAddress);
-      
+
       console.log(results, 'results')
       // Process results
       const successfulChats = [];
       const failedChats = [];
-      
+
       results.forEach((result, index) => {
         if (result.status === 'fulfilled' && result.value.success) {
           successfulChats.push({
@@ -200,7 +244,7 @@ const CreateChat = ({ setCreate }) => {
 
       // Store customer info
       store("customerName", values.customerName);
-      
+
       // Set up pending chats for monitoring
       setPendingChats(successfulChats);
       setChatCreationState('waiting');
@@ -221,8 +265,13 @@ const CreateChat = ({ setCreate }) => {
 
   const handleChatStarted = async (chatData) => {
     try {
+      setChatStartedCallCount(prev => prev + 1);
+      console.log('=== HANDLE CHAT STARTED ===');
+      console.log('Call count:', chatStartedCallCount + 1);
       console.log('Agent responded! Chat started:', chatData);
-      
+      console.log('Current chatsWithInitialMessage:', chatsWithInitialMessage);
+      console.log('Current pendingChats:', pendingChats);
+
       // Set this chat as the active chat (maintaining backward compatibility)
       const activeChat = {
         id: chatData.id,
@@ -231,51 +280,67 @@ const CreateChat = ({ setCreate }) => {
         headline: chatData.headline,
         ipAddress: chatData.ipAddress
       };
-      
+
       store("activeChat", activeChat);
-      
+
       // Verify localStorage structure for backward compatibility
       const storedChat = store("activeChat");
       if (!storedChat || !storedChat.id) {
         console.error('localStorage activeChat structure validation failed');
         throw new Error('Failed to store active chat properly');
       }
-      
+
       // Find the full chat data from pending chats to get contract info
       const fullChatData = pendingChats.find(chat => chat.id === chatData.id);
-      
+
       if (fullChatData) {
         console.log(`Connected to agent via contract ${fullChatData.contract.id}`);
-        
-        // Create initial message for this chat
-        try {
-          await createMessage({
-            variables: {
-              text: chatData.headline,
-              author: chatData.customerName,
-              isAgent: false,
-              chatId: chatData.id
-            }
-          });
-          
-          console.log('Initial message created successfully');
-        } catch (messageError) {
-          console.error('Failed to create initial message:', messageError);
-          // Continue anyway, the chat is still active
+
+        // Create initial message for this chat only if not already created for this specific chat
+        // Use ref for synchronous check within the same function execution
+        if (!chatsWithInitialMessageRef.current.has(chatData.id)) {
+          console.log('Creating initial message for chat:', chatData.id);
+
+          // Mark as creating immediately to prevent race conditions
+          chatsWithInitialMessageRef.current.add(chatData.id);
+          setChatsWithInitialMessage(new Set(chatsWithInitialMessageRef.current));
+
+          try {
+            await createMessage({
+              variables: {
+                text: chatData.headline,
+                author: chatData.customerName,
+                isAgent: false,
+                chatId: chatData.id
+              }
+            });
+            console.log('Initial message created successfully for chat:', chatData.id);
+          } catch (messageError) {
+            console.error('Failed to create initial message:', messageError);
+            // Remove from ref if creation failed
+            chatsWithInitialMessageRef.current.delete(chatData.id);
+            setChatsWithInitialMessage(new Set(chatsWithInitialMessageRef.current));
+          }
+        } else {
+          console.log('Initial message already created for this chat, skipping:', chatData.id);
         }
+      } else {
+        console.log('No matching pending chat found for:', chatData.id);
       }
-      
+
       // Clean up pending chats and change state
       setPendingChats([]);
       setChatCreationState('connected');
-      
+
       // Hide the create form and show the chat interface
       setCreate(false);
-      
+
+      console.log('=== END HANDLE CHAT STARTED ===');
+
     } catch (error) {
       console.error('Error handling chat started:', error);
       setError('Connected to agent but failed to initialize chat properly');
-      
+
       // Still try to proceed with the chat
       store("activeChat", chatData);
       setPendingChats([]);
@@ -286,42 +351,42 @@ const CreateChat = ({ setCreate }) => {
 
   const handleChatMissed = (chatId, contractId) => {
     console.log(`Chat ${chatId} missed for contract ${contractId} - marked as missed but continuing to monitor`);
-    
+
     // Update the pending chats to reflect the missed status
-    setPendingChats(prevChats => 
-      prevChats.map(chat => 
-        chat.id === chatId 
+    setPendingChats(prevChats =>
+      prevChats.map(chat =>
+        chat.id === chatId
           ? { ...chat, missed: true }
           : chat
       )
     );
-    
+
     // Log the current state for debugging
     console.log(`Chat ${chatId} marked as missed. Still monitoring for agent response.`);
   };
 
   const handleMonitorError = (error, chatId) => {
     console.error(`Monitor error for chat ${chatId}:`, error);
-    
+
     // Implement retry logic or fallback behavior
     if (error.networkError) {
       console.log('Network error detected, subscription will retry automatically');
-      
+
       // If we have persistent network issues, show a warning
       setTimeout(() => {
         if (chatCreationState === 'waiting') {
           setError('Connection issues detected. Retrying...');
         }
       }, 5000);
-      
+
     } else if (error.graphQLErrors && error.graphQLErrors.length > 0) {
       console.error('GraphQL errors in subscription:', error.graphQLErrors);
-      
+
       // Handle specific GraphQL errors
-      const hasAuthError = error.graphQLErrors.some(err => 
+      const hasAuthError = error.graphQLErrors.some(err =>
         err.message.includes('authentication') || err.message.includes('unauthorized')
       );
-      
+
       if (hasAuthError) {
         setError('Authentication error. Please refresh the page and try again.');
         setChatCreationState('form');
@@ -345,7 +410,7 @@ const CreateChat = ({ setCreate }) => {
   // Timeout handler for waiting too long
   useEffect(() => {
     let waitingTimeout;
-    
+
     if (chatCreationState === 'waiting') {
       // Set a maximum waiting time (e.g., 5 minutes)
       waitingTimeout = setTimeout(() => {
@@ -355,7 +420,7 @@ const CreateChat = ({ setCreate }) => {
         setPendingChats([]);
       }, 5 * 60 * 1000); // 5 minutes
     }
-    
+
     return () => {
       if (waitingTimeout) {
         clearTimeout(waitingTimeout);
@@ -365,11 +430,20 @@ const CreateChat = ({ setCreate }) => {
 
   // Check for offline state
   useEffect(() => {
-    if (activeContracts.length === 0 && contractsData && !contractsLoading && !contractsError) {
-      // No active contracts found, but data loaded successfully
+    const shouldShowOffline = activeContracts.length === 0 &&
+      contractsData &&
+      !contractsLoading &&
+      !contractsError &&
+      !contractsProcessing &&
+      initialLoadComplete;
+
+    console.log('shouldShowOffline:', shouldShowOffline);
+
+    if (shouldShowOffline) {
+      console.log('Triggering offline state');
       handleNoActiveContracts();
     }
-  }, [activeContracts, contractsData, contractsLoading, contractsError]);
+  }, [activeContracts, contractsData, contractsLoading, contractsError, contractsProcessing, initialLoadComplete]);
 
   // Cleanup function for component unmount
   useEffect(() => {
@@ -386,9 +460,12 @@ const CreateChat = ({ setCreate }) => {
   // Enhanced error recovery
   const handleRetry = () => {
     setError(null);
+    chatsWithInitialMessageRef.current = new Set(); // Reset ref on retry
+    setChatsWithInitialMessage(new Set()); // Reset set on retry
+    setChatStartedCallCount(0); // Reset call count
     setChatCreationState('form');
     setPendingChats([]);
-    
+
     // Refetch contracts if needed
     if (contractsError) {
       window.location.reload(); // Simple recovery for contract loading errors
@@ -415,11 +492,13 @@ const CreateChat = ({ setCreate }) => {
         chatCreationState,
         pendingChats,
         activeContracts,
+        contractsProcessing,
+        initialLoadComplete,
         error,
         websiteId
       };
     }
-  }, [chatCreationState, pendingChats, activeContracts, error, websiteId]);
+  }, [chatCreationState, pendingChats, activeContracts, contractsProcessing, initialLoadComplete, error, websiteId]);
 
   return (
     <span>
@@ -436,15 +515,18 @@ const CreateChat = ({ setCreate }) => {
         {/* Show waiting state when creating or waiting for agents */}
         {(chatCreationState === 'creating' || chatCreationState === 'waiting') && (
           <>
-            <WaitingForAgent 
+            <WaitingForAgent
               pendingChatsCount={pendingChats.length}
               onCancel={() => {
                 setChatCreationState('form');
                 setPendingChats([]);
+                chatsWithInitialMessageRef.current = new Set(); // Reset ref on cancel
+                setChatsWithInitialMessage(new Set()); // Reset set on cancel
+                setChatStartedCallCount(0); // Reset call count
                 setError(null);
               }}
             />
-            
+
             {/* Monitor chat statuses when waiting */}
             {chatCreationState === 'waiting' && pendingChats.length > 0 && (
               <ChatStatusMonitor
@@ -486,11 +568,11 @@ const CreateChat = ({ setCreate }) => {
                         name="headline"
                         label="Head line"
                       />
-                      
+
                       {error && (
-                        <div style={{ 
-                          color: 'red', 
-                          marginTop: '10px', 
+                        <div style={{
+                          color: 'red',
+                          marginTop: '10px',
                           fontSize: '14px',
                           padding: '10px',
                           backgroundColor: '#fff2f2',
@@ -516,7 +598,7 @@ const CreateChat = ({ setCreate }) => {
                           </button>
                         </div>
                       )}
-                      
+
                       <br />
                       <br />
                       <br />
@@ -542,17 +624,17 @@ const CreateChat = ({ setCreate }) => {
   );
 };
 
-const validate = values => values => {
+const validate = values => {
   let errors = {};
   if (!values.customerName) {
     errors.customerName = "Required";
-  } else if (values.headline.length < 1) {
+  } else if (values.customerName.length < 1) {
     errors.customerName = "Customer name should be more than 1 character";
   }
   if (!values.headline) {
     errors.headline = "Required";
   } else if (values.headline.length < 10) {
-    errors.headline = "headline length should be more than 100 characters";
+    errors.headline = "headline length should be more than 10 characters";
   }
   return errors;
 };

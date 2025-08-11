@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useSubscription, useMutation } from '@apollo/client';
 import { CHAT_STATUS_SUBSCRIPTION, UPDATE_CHAT_MISSED } from './queries';
 import { createChatTimeouts, clearChatTimeouts, clearChatTimeout } from './utils';
@@ -91,15 +91,23 @@ const ChatStatusMonitor = ({
 
 // Individual chat subscription component
 const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
+  const [hasNotifiedStarted, setHasNotifiedStarted] = useState(false);
+  
+  const handleChatStarted = useCallback((chatData) => {
+    if (!hasNotifiedStarted && chatData && chatData.status === 'started') {
+      console.log(`Chat ${chatId} status changed to started - notifying parent`);
+      setHasNotifiedStarted(true);
+      onChatStarted(chatData);
+    } else if (hasNotifiedStarted) {
+      console.log(`Chat ${chatId} already notified as started, skipping duplicate notification`);
+    }
+  }, [chatId, onChatStarted, hasNotifiedStarted]);
+
   const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
     variables: { chatId },
     onSubscriptionData: ({ subscriptionData }) => {
       const chatData = subscriptionData?.data?.chat;
-      
-      if (chatData && chatData.status === 'started') {
-        console.log(`Chat ${chatId} status changed to started`);
-        onChatStarted(chatData);
-      }
+      handleChatStarted(chatData);
     },
     onSubscriptionComplete: () => {
       console.log(`Subscription completed for chat ${chatId}`);
@@ -118,11 +126,10 @@ const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
 
   // Check initial data in case chat is already started
   useEffect(() => {
-    if (data?.chat?.status === 'started') {
-      console.log(`Chat ${chatId} already started on subscription init`);
-      onChatStarted(data.chat);
+    if (data?.chat) {
+      handleChatStarted(data.chat);
     }
-  }, [data, chatId, onChatStarted]);
+  }, [data, handleChatStarted]);
 
   // This component doesn't render anything visible
   return null;
