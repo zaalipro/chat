@@ -11,7 +11,6 @@ import ChatStatusMonitor from "./ChatStatusMonitor";
 import store from "store2";
 
 const CreateChat = ({ setCreate }) => {
-  const contractId = store("contractId");
   const websiteId = store("websiteId");
   
   // Multi-chat state management
@@ -102,21 +101,10 @@ const CreateChat = ({ setCreate }) => {
       // Fallback to single contract if no active contracts found
       if (contractsToUse.length === 0) {
         console.warn('No active contracts found, falling back to single contract');
-        if (contractId) {
-          // Use the current contractId as fallback
-          contractsToUse = [{
-            id: contractId,
-            session: 2, // Default session
-            status: 'active',
-            color: '#27af60',
-            chatMissTime: 30 // Default timeout
-          }];
-        } else {
-          setError('No agents available at this time');
-          setChatCreationState('form');
-          setSubmitting(false);
-          return;
-        }
+        setError('No agents available at this time');
+        setChatCreationState('form');
+        setSubmitting(false);
+        return;
       }
 
       console.log(`Creating ${contractsToUse.length} chats for contracts:`, contractsToUse.map(c => c.id));
@@ -410,14 +398,14 @@ const CreateChat = ({ setCreate }) => {
   // Backward compatibility verification
   useEffect(() => {
     // Log the current mode for debugging
-    if (activeContracts.length === 0 && contractId) {
-      console.log('Running in backward compatibility mode with single contract:', contractId);
+    if (activeContracts.length === 0) {
+      console.log('Running in backward compatibility no contracts found');
     } else if (activeContracts.length === 1) {
       console.log('Running in single contract mode with active contract:', activeContracts[0].id);
     } else if (activeContracts.length > 1) {
       console.log(`Running in multi-chat mode with ${activeContracts.length} active contracts`);
     }
-  }, [activeContracts, contractId]);
+  }, [activeContracts]);
 
   // Integration testing helper (only in development)
   useEffect(() => {
@@ -428,11 +416,10 @@ const CreateChat = ({ setCreate }) => {
         pendingChats,
         activeContracts,
         error,
-        contractId,
         websiteId
       };
     }
-  }, [chatCreationState, pendingChats, activeContracts, error, contractId, websiteId]);
+  }, [chatCreationState, pendingChats, activeContracts, error, websiteId]);
 
   return (
     <span>
