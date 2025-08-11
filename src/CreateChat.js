@@ -25,7 +25,7 @@ const CreateChat = ({ setCreate }) => {
 
   // Custom hooks
   const { contracts, loading, error: contractError, processing, loadComplete } = useContracts(websiteId);
-  const { createChats, creating } = useChatCreation();
+  const { createChats } = useChatCreation();
   const { handleStarted, handleMissed, handleError: monitorError, reset } = useChatMonitor();
   const { error, handleError, clearError } = useError();
 
