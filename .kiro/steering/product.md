@@ -1,6 +1,6 @@
 # Product Overview
 
-This is a real-time chat application that enables customer support conversations between customers and agents. The application features:
+This is a real-time chat application that enables customer support conversations between customers and agents. This is a widget can be embedded into website HTML code. Key role of this app is to start new chat with multiple contract based agents. The application features:
 
 - **Live Chat Interface**: Real-time messaging with WebSocket subscriptions
 - **Session Management**: Working hours validation and contract-based chat sessions

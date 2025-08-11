@@ -1,8 +1,8 @@
-# Kiro Chat Application - Comprehensive Analysis & Recommendations
+# Kodala Chat Widget - Comprehensive Analysis & Recommendations
 
 ## Executive Summary
 
-The Kiro chat application is a real-time customer support chat widget built with React 18, Apollo Client, and GraphQL. While functional, the application has several architectural and code quality issues that impact maintainability, performance, and developer experience. This document provides a comprehensive analysis and actionable recommendations based on modern React best practices.
+The Kodala Chat widget is a lightweight, real-time customer support chat widget built with React 18, Apollo Client, and GraphQL. Designed for seamless embedding into third-party websites, the widget must maintain minimal footprint while providing robust functionality. While currently functional, the application has several architectural and code quality issues that impact maintainability, performance, and most critically - the lightweight requirements essential for website embedding. This document provides a comprehensive analysis and actionable recommendations based on modern React best practices and widget optimization strategies.
 
 ## Current Architecture Overview
 
@@ -58,42 +58,44 @@ src/
 ### 3. **Performance Issues**
 
 #### Problems:
-- **No code splitting**: Entire app loads at once
+- **No code splitting**: Entire widget loads at once when embedded
 - **Unnecessary re-renders**: Components re-render without optimization
-- **Large bundle size**: All dependencies loaded upfront
+- **Large bundle size**: All dependencies loaded upfront, impacting host website
 - **No memoization**: Expensive operations run repeatedly
+- **Widget isolation**: No CSS/JS isolation from host website
 
 #### Impact:
-- Slow initial load times
+- Slow widget initialization on host websites
 - Poor performance on low-end devices
-- High bandwidth usage
+- High bandwidth usage for host websites
+- Potential conflicts with host website styles/scripts
 
 ### 4. **Error Handling**
 
 #### Problems:
 - **Inconsistent error handling**: Different patterns across components
-- **Poor error boundaries**: No graceful error recovery
-- **Limited error reporting**: Insufficient error context
-- **User experience**: Generic error messages
+- **Widget crashes**: Errors can break host website experience
+- **Verbose error messages**: Too much error feedback for a widget
+- **No silent fallbacks**: Widget should degrade gracefully
 
 #### Impact:
+- **Host website disruption** (critical for widgets)
 - Poor user experience during errors
 - Difficult debugging in production
-- Application crashes
 
-### 5. **Testing & Quality**
+### 5. **Code Quality & Dependencies**
 
 #### Problems:
-- **No test coverage**: No unit, integration, or e2e tests
-- **No TypeScript**: Missing type safety
+- **Heavy dependencies**: Semantic UI adds ~500KB to bundle
 - **Inconsistent code style**: No enforced standards
 - **No CI/CD**: Manual deployment process
+- **Bundle bloat**: Unused code and dependencies
 
 #### Impact:
-- High bug risk
-- Difficult refactoring
+- **Widget too heavy for embedding** (critical issue)
 - Poor code quality
 - Slow development cycle
+- Difficult deployment process
 
 ## Detailed Recommendations
 
@@ -190,81 +192,143 @@ export const useChat = () => {
 };
 ```
 
-### 4. **Error Handling Strategy**
+### 4. **Silent Error Handling Strategy (Widget-Specific)**
 
-#### Implement Error Boundaries
+#### Minimal Error Boundary (Silent Fallback)
 ```javascript
-// components/ErrorBoundary.js
-class ErrorBoundary extends Component {
+// components/WidgetErrorBoundary.js - Minimal, silent error handling
+class WidgetErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
   
   static getDerivedStateFromError(error) {
-    return { hasError: true, error };
+    return { hasError: true };
   }
   
   componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-    // Send to error reporting service
+    // Silent logging only - don't disrupt host website
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('Kodala Chat Widget Error:', error);
+    }
+    
+    // Optional: Send to error reporting service silently
+    // errorReportingService.report({ error, context: 'widget' });
   }
   
   render() {
     if (this.state.hasError) {
-      return <ErrorFallback error={this.state.error} />;
+      // Return minimal fallback or nothing - don't show error UI
+      return null; // Widget disappears silently
     }
     return this.props.children;
   }
 }
 ```
 
-#### Centralized Error Handling
+#### Silent Error Handling
 ```javascript
-// hooks/useErrorHandler.js
-export const useErrorHandler = () => {
-  const { dispatch } = useContext(ChatContext);
-  
+// hooks/useWidgetError.js - Minimal error handling for widgets
+export const useWidgetError = () => {
   const handleError = useCallback((error, context) => {
-    const errorInfo = {
-      message: error.message,
-      context,
-      timestamp: new Date().toISOString(),
-      userAgent: navigator.userAgent
-    };
+    // Silent error handling - don't show errors to users
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`Kodala Chat ${context}:`, error);
+    }
     
-    // Log to console
-    console.error('Error:', errorInfo);
+    // Optional: Silent error reporting
+    // errorReportingService.report({ error, context, widget: 'kodala-chat' });
     
-    // Send to error reporting service
-    errorReportingService.report(errorInfo);
-    
-    // Update UI state
-    dispatch({ type: 'SET_ERROR', payload: errorInfo });
-  }, [dispatch]);
+    // Don't update UI state - let widget continue or fail silently
+  }, []);
   
   return { handleError };
 };
 ```
 
+#### Graceful Degradation Pattern
+```javascript
+// components/ChatWidget.js - Fail gracefully
+const ChatWidget = () => {
+  const [isAvailable, setIsAvailable] = useState(true);
+  
+  const handleConnectionError = useCallback(() => {
+    // Silently disable widget instead of showing errors
+    setIsAvailable(false);
+  }, []);
+  
+  // If widget fails, don't render anything
+  if (!isAvailable) {
+    return null;
+  }
+  
+  return (
+    <WidgetErrorBoundary>
+      <ChatInterface onError={handleConnectionError} />
+    </WidgetErrorBoundary>
+  );
+};
+```
+
 ### 5. **Performance Optimization**
 
-#### Implement Code Splitting
+#### Implement Code Splitting for Widget Components
 ```javascript
-// App.js
+// App.js - Widget-specific code splitting
 const CreateChat = lazy(() => import('./components/CreateChat'));
 const ChatContainer = lazy(() => import('./containers/ChatContainer'));
+const Rate = lazy(() => import('./components/Rate'));
 
-const App = () => (
-  <Suspense fallback={<LoadingSpinner />}>
-    <Router>
-      <Routes>
-        <Route path="/chat" element={<CreateChat />} />
-        <Route path="/chat/:id" element={<ChatContainer />} />
-      </Routes>
-    </Router>
-  </Suspense>
-);
+const App = () => {
+  const activeChat = store('activeChat');
+  const [showCreate, setCreate] = useState(!activeChat);
+
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <div className="kodala-chat-widget">
+        {showCreate ? (
+          <CreateChat setCreate={setCreate} />
+        ) : activeChat?.status === 'finished' ? (
+          <Rate chat={activeChat} setCreate={setCreate} />
+        ) : (
+          <ChatContainer />
+        )}
+      </div>
+    </Suspense>
+  );
+};
+```
+
+#### Widget-Specific Bundle Optimization
+```javascript
+// webpack.config.js (if ejected) or craco.config.js
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+        },
+        widget: {
+          name: 'widget',
+          chunks: 'all',
+          enforce: true
+        }
+      }
+    }
+  },
+  output: {
+    // Ensure widget can be embedded with minimal footprint
+    library: 'KodalaChat',
+    libraryTarget: 'umd',
+    globalObject: 'this',
+    filename: 'kodala-chat.min.js'
+  }
+};
 ```
 
 #### Add Memoization
@@ -288,98 +352,25 @@ const MessageList = memo(({ messages }) => {
 });
 ```
 
-### 6. **TypeScript Migration**
-
-#### Gradual TypeScript Adoption
-```typescript
-// types/chat.ts
-export interface Chat {
-  id: string;
-  status: 'pending' | 'active' | 'ended';
-  customerName: string;
-  headline: string;
-  messages: Message[];
-}
-
-export interface Message {
-  id: string;
-  text: string;
-  author: string;
-  isAgent: boolean;
-  timestamp: string;
-}
-
-// hooks/useChat.ts
-export const useChat = (): {
-  chat: Chat | null;
-  loading: boolean;
-  error: Error | null;
-  startChat: (data: ChatFormData) => Promise<void>;
-} => {
-  // Implementation
-};
-```
-
-### 7. **Testing Strategy**
-
-#### Unit Testing Setup
+#### Widget Embedding Optimization
 ```javascript
-// __tests__/hooks/useChat.test.js
-import { renderHook, act } from '@testing-library/react';
-import { useChat } from '../../hooks/useChat';
-
-describe('useChat', () => {
-  it('should start chat successfully', async () => {
-    const { result } = renderHook(() => useChat());
-    
-    await act(async () => {
-      await result.current.startChat({
-        customerName: 'John Doe',
-        headline: 'Need help'
-      });
+// public/widget-loader.js - Async widget loading
+(function() {
+  const script = document.createElement('script');
+  script.src = 'https://your-domain.com/static/js/kodala-chat.min.js';
+  script.async = true;
+  script.onload = function() {
+    window.KodalaChat.init({
+      websiteId: 'your-website-id',
+      position: 'bottom-right',
+      theme: 'light'
     });
-    
-    expect(result.current.chat).toBeDefined();
-    expect(result.current.loading).toBe(false);
-  });
-});
+  };
+  document.head.appendChild(script);
+})();
 ```
 
-#### Integration Testing
-```javascript
-// __tests__/integration/ChatFlow.test.js
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MockedProvider } from '@apollo/client/testing';
-import App from '../App';
-
-const mocks = [
-  {
-    request: { query: CREATE_CHAT, variables: { /* ... */ } },
-    result: { data: { createChat: { /* ... */ } } }
-  }
-];
-
-test('complete chat flow', async () => {
-  render(
-    <MockedProvider mocks={mocks}>
-      <App />
-    </MockedProvider>
-  );
-  
-  // Test chat creation flow
-  fireEvent.change(screen.getByLabelText('Customer name'), {
-    target: { value: 'John Doe' }
-  });
-  
-  fireEvent.click(screen.getByText('Start Conversation'));
-  
-  await waitFor(() => {
-    expect(screen.getByText('Waiting for agent')).toBeInTheDocument();
-  });
-});
-```
-
-### 8. **Build & Deployment Optimization**
+### 6. **Build & Deployment Optimization**
 
 #### Webpack Bundle Analysis
 ```json
@@ -434,10 +425,10 @@ src/
 ## Migration Strategy
 
 ### Phase 1: Foundation (Weeks 1-2)
-- [ ] Set up TypeScript configuration
-- [ ] Implement error boundaries
-- [ ] Add basic testing setup
-- [ ] Create centralized error handling
+- [ ] Implement silent error boundaries (widget-specific)
+- [ ] Create minimal, silent error handling
+- [ ] Bundle size optimization setup
+- [ ] Remove heavy dependencies
 
 ### Phase 2: State Management (Weeks 3-4)
 - [ ] Implement Context + Reducer pattern
@@ -451,11 +442,11 @@ src/
 - [ ] Add component memoization
 - [ ] Optimize re-renders
 
-### Phase 4: Performance & Testing (Weeks 7-8)
+### Phase 4: Performance Optimization (Weeks 7-8)
 - [ ] Implement code splitting
-- [ ] Add comprehensive test coverage
 - [ ] Performance optimization
 - [ ] Bundle size optimization
+- [ ] Memory usage optimization
 
 ### Phase 5: Production Readiness (Weeks 9-10)
 - [ ] Add monitoring and analytics
@@ -465,12 +456,12 @@ src/
 
 ## Immediate Quick Wins (This Week)
 
-### High Impact, Low Effort
-1. **Add Error Boundaries** - Prevent app crashes
-2. **Implement useCallback/useMemo** - Reduce unnecessary re-renders
-3. **Extract Constants** - Centralize configuration
-4. **Add PropTypes/TypeScript** - Catch type errors early
-5. **Implement Code Splitting** - Improve initial load time
+### High Impact, Low Effort - Lightweight Priorities
+1. **Remove unused dependencies** - Immediate bundle size reduction
+2. **Enable tree shaking** - Eliminate dead code automatically
+3. **Replace Semantic UI** - Use lightweight CSS framework or custom styles
+4. **Implement silent error handling** - Widget fails gracefully without disrupting host
+5. **Implement aggressive code splitting** - Load components on demand
 
 ### Code Quality Improvements
 1. **ESLint + Prettier Setup** - Enforce code standards
@@ -480,17 +471,236 @@ src/
 
 ## Performance Metrics & Goals
 
-### Current State (Estimated)
-- **Bundle Size**: ~2.5MB (uncompressed)
-- **Initial Load**: ~3-5 seconds
-- **Time to Interactive**: ~4-6 seconds
-- **Lighthouse Score**: ~60-70
+### Current State (Estimated) - Too Heavy for Widget
+- **Bundle Size**: ~2.5MB (uncompressed) / ~800KB (gzipped) - **4x too large**
+- **Initial Load**: ~3-5 seconds - **3-5x too slow**
+- **Time to Interactive**: ~4-6 seconds - **3-4x too slow**
+- **Memory Usage**: ~25-30MB - **3x too heavy**
+- **Lighthouse Score**: ~60-70 - **Below acceptable standards**
 
-### Target Goals
-- **Bundle Size**: <1MB (compressed)
-- **Initial Load**: <2 seconds
-- **Time to Interactive**: <3 seconds
-- **Lighthouse Score**: >90
+### Target Goals (Lightweight Widget Requirements)
+- **Bundle Size**: <200KB (gzipped) - Critical for embedding
+- **Initial Load**: <1 second - Must not slow down host websites
+- **Time to Interactive**: <1.5 seconds - Fast user interaction
+- **Memory Usage**: <10MB - Minimal impact on host page
+- **Lighthouse Score**: >95 - Excellent performance standards
+
+## Lightweight Widget Requirements
+
+### Critical Performance Constraints
+As an embeddable widget, Kodala Chat must meet strict performance requirements:
+
+#### Bundle Size Optimization
+```javascript
+// webpack.config.js - Aggressive optimization for widgets
+module.exports = {
+  optimization: {
+    usedExports: true,
+    sideEffects: false,
+    splitChunks: {
+      chunks: 'all',
+      minSize: 0,
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all',
+          priority: 10
+        },
+        common: {
+          minChunks: 2,
+          chunks: 'all',
+          priority: 5
+        }
+      }
+    },
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true, // Remove console.logs in production
+            drop_debugger: true,
+            pure_funcs: ['console.log', 'console.info']
+          }
+        }
+      })
+    ]
+  },
+  resolve: {
+    alias: {
+      // Use lighter alternatives
+      'react': 'preact/compat',
+      'react-dom': 'preact/compat'
+    }
+  }
+};
+```
+
+#### Dependency Optimization Strategy
+```json
+// package.json - Optimized for widget embedding
+{
+  "dependencies": {
+    // Core React (optimize with tree shaking)
+    "react": "^18.2.0",           // Required for current architecture
+    "react-dom": "^18.2.0",      // Required for current architecture
+    
+    // GraphQL with subscriptions (MUST keep for real-time chat)
+    "graphql": "^16.x.x",        // Core GraphQL (required)
+    "graphql-ws": "^5.x.x",      // WebSocket subscriptions (critical for chat)
+    "@apollo/client": "^3.7.2",  // Keep but optimize imports (see below)
+    
+    // Major bundle reduction opportunities:
+    // ❌ Remove: "semantic-ui-react" (~500KB) 
+    // ❌ Remove: "semantic-ui-css" (~200KB)
+    // ✅ Replace with: Custom lightweight components
+    
+    // Lightweight utilities
+    "clsx": "^2.x.x",            // 1KB vs classnames (2KB)
+    "date-fns": "^2.x.x"         // Tree-shakeable vs moment.js (200KB → 20KB)
+  }
+}
+```
+
+#### Apollo Client Optimization (Keep Subscriptions)
+```javascript
+// Optimize Apollo imports - only import what's needed
+import { 
+  ApolloClient, 
+  InMemoryCache, 
+  createHttpLink,
+  split 
+} from '@apollo/client/core'; // Core only
+
+import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
+import { getMainDefinition } from '@apollo/client/utilities';
+
+// This approach keeps subscriptions while reducing bundle size by ~30%
+```
+
+#### Semantic UI Replacement Strategy
+```javascript
+// Replace heavy Semantic UI components with lightweight alternatives
+// Before: import { Button, Form, Input } from 'semantic-ui-react'; // ~500KB
+// After: Custom lightweight components // ~20KB
+
+const Button = ({ children, onClick, disabled, className }) => (
+  <button 
+    className={`kodala-btn ${className}`}
+    onClick={onClick}
+    disabled={disabled}
+  >
+    {children}
+  </button>
+);
+
+const Input = ({ placeholder, value, onChange, className }) => (
+  <input
+    className={`kodala-input ${className}`}
+    placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+  />
+);
+```
+
+#### Runtime Performance
+```javascript
+// Lightweight component patterns
+const ChatWidget = memo(() => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Lazy load heavy components only when needed
+  const ChatInterface = useMemo(() => 
+    isOpen ? lazy(() => import('./ChatInterface')) : null
+  , [isOpen]);
+  
+  return (
+    <div className="kodala-chat-widget">
+      <ChatTrigger onClick={() => setIsOpen(true)} />
+      {isOpen && (
+        <Suspense fallback={<MinimalLoader />}>
+          <ChatInterface onClose={() => setIsOpen(false)} />
+        </Suspense>
+      )}
+    </div>
+  );
+});
+```
+
+## Widget-Specific Considerations
+
+### Embedding & Isolation
+Since Kodala Chat is embedded into third-party websites, special lightweight considerations apply:
+
+#### CSS Isolation
+```javascript
+// Use CSS-in-JS or scoped styles to prevent conflicts
+const WidgetContainer = styled.div`
+  /* Reset all styles to prevent inheritance from host */
+  all: initial;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  
+  /* Scoped widget styles */
+  .kodala-chat-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 999999;
+    max-width: 400px;
+    max-height: 600px;
+    /* Minimal, lightweight styling */
+  }
+`;
+```
+
+#### JavaScript Isolation
+```javascript
+// Wrap widget in IIFE to prevent global pollution
+(function(window, document) {
+  'use strict';
+  
+  // Lightweight widget code - no global variables
+  const KodalaWidget = {
+    init: function(config) {
+      // Initialize lightweight widget
+    },
+    destroy: function() {
+      // Clean up resources when needed
+    }
+  };
+  
+  // Only expose minimal necessary API
+  window.KodalaChat = KodalaWidget;
+})(window, document);
+```
+
+#### Performance for Host Websites
+```javascript
+// Ultra-lightweight lazy loading
+const loadWidget = () => {
+  return import('./KodalaWidget').then(module => {
+    return module.default;
+  });
+};
+
+// Only load when needed (user interaction) - Critical for performance
+document.addEventListener('click', (e) => {
+  if (e.target.matches('.kodala-chat-trigger')) {
+    loadWidget().then(Widget => {
+      Widget.init();
+    });
+  }
+}, { once: true });
+
+// Preload on hover for better UX (optional)
+document.addEventListener('mouseenter', (e) => {
+  if (e.target.matches('.kodala-chat-trigger')) {
+    loadWidget(); // Preload but don't initialize
+  }
+}, { once: true });
+```
 
 ## Security Considerations
 
@@ -499,13 +709,21 @@ src/
 2. **Token Storage**: JWT stored in localStorage
 3. **CORS Configuration**: Potential misconfiguration
 4. **Input Validation**: Limited client-side validation
+5. **Widget Injection**: Potential for malicious script injection
+
+### Widget-Specific Security
+1. **Content Security Policy**: Ensure widget works with strict CSP
+2. **Sandboxing**: Isolate widget from host website
+3. **Domain Validation**: Verify widget is loaded from authorized domains
+4. **Input Sanitization**: Extra important for embedded widgets
 
 ### Recommendations
 1. **Implement CSP Headers**
-2. **Use httpOnly Cookies for tokens**
+2. **Use httpOnly Cookies for tokens** (if possible with cross-domain)
 3. **Add input sanitization**
 4. **Implement rate limiting**
 5. **Regular security audits**
+6. **Widget integrity checks**
 
 ## Monitoring & Analytics
 
@@ -523,26 +741,25 @@ src/
 
 ## Task List
 
-### Immediate (This Week)
-- [ ] **Set up Error Boundaries** - Prevent app crashes
-- [ ] **Add ESLint + Prettier** - Code quality standards
-- [ ] **Implement useCallback/useMemo** - Performance optimization
-- [ ] **Extract configuration constants** - Better maintainability
-- [ ] **Add basic TypeScript setup** - Type safety foundation
+### Immediate (This Week) - Lightweight Focus
+- [ ] **Bundle size analysis** - Identify heavy dependencies (CRITICAL)
+- [ ] **Remove unused dependencies** - Reduce bundle size immediately
+- [ ] **Implement tree shaking** - Eliminate dead code
+- [ ] **Add silent error handling** - Prevent widget crashes without UI disruption
+- [ ] **Add webpack-bundle-analyzer** - Monitor bundle size continuously
 
-### Short Term (Next 2 Weeks)
+### Short Term (Next 2 Weeks) - Performance Critical
+- [ ] **Replace heavy dependencies** - Remove Semantic UI, optimize Apollo imports
+- [ ] **Implement aggressive code splitting** - Load only what's needed
+- [ ] **Add compression and minification** - Reduce bundle size
+- [ ] **Optimize CSS delivery** - Critical CSS inlining
 - [ ] **Complete custom hooks extraction** - Better code organization
-- [ ] **Implement Context + Reducer** - Centralized state management
-- [ ] **Add comprehensive error handling** - Better user experience
-- [ ] **Set up testing framework** - Quality assurance
-- [ ] **Implement code splitting** - Performance improvement
 
 ### Medium Term (Next Month)
-- [ ] **Full TypeScript migration** - Type safety
 - [ ] **Component architecture refactoring** - Better separation of concerns
 - [ ] **Performance optimization** - Bundle size and runtime performance
-- [ ] **Comprehensive test coverage** - Reliability
 - [ ] **Security audit and fixes** - Production readiness
+- [ ] **Memory usage optimization** - Minimal host website impact
 
 ### Long Term (Next Quarter)
 - [ ] **Monitoring and analytics setup** - Production insights
@@ -553,16 +770,18 @@ src/
 
 ## Conclusion
 
-The Kiro chat application has a solid foundation but requires significant architectural improvements to meet modern React standards. The recommended changes will improve:
+The Kodala Chat widget has a solid foundation but requires significant architectural improvements to meet modern React standards and critical lightweight requirements for website embedding. The recommended changes will improve:
 
 - **Maintainability**: Cleaner, more organized code
-- **Performance**: Faster load times and better user experience
+- **Performance**: Ultra-fast load times essential for widget embedding
+- **Lightweight Footprint**: Minimal impact on host websites
 - **Reliability**: Better error handling and testing
 - **Developer Experience**: Easier development and debugging
-- **Scalability**: Architecture that can grow with requirements
+- **Scalability**: Architecture that can grow while maintaining lightweight requirements
 
-The migration strategy provides a clear path forward with measurable milestones and immediate quick wins. Prioritizing the immediate tasks will provide the most impact with minimal risk, while the longer-term initiatives will establish a robust, scalable foundation for future development.
+The migration strategy provides a clear path forward with measurable milestones and immediate quick wins focused on achieving lightweight performance targets. Prioritizing bundle size reduction and performance optimization will provide the most critical impact for widget success, while the longer-term initiatives will establish a robust, scalable foundation that maintains the essential lightweight characteristics.
 
 **Estimated Total Effort**: 8-10 weeks with 1-2 developers
-**ROI**: Significant improvement in development velocity, reduced bugs, and better user experience
+**ROI**: Critical improvement in widget performance, reduced host website impact, and better user experience
 **Risk Level**: Low (incremental changes with backward compatibility)
+**Success Metrics**: <200KB bundle size, <1s load time, >95 Lighthouse score
