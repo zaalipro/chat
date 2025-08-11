@@ -21,23 +21,23 @@ export function timeDifference(current, previous) {
   }
 
   else if (elapsed < msPerHour) {
-    return Math.round(elapsed/msPerMinute) + ' min ago';
+    return Math.round(elapsed / msPerMinute) + ' min ago';
   }
 
-  else if (elapsed < msPerDay ) {
-    return Math.round(elapsed/msPerHour ) + ' h ago';
+  else if (elapsed < msPerDay) {
+    return Math.round(elapsed / msPerHour) + ' h ago';
   }
 
   else if (elapsed < msPerMonth) {
-    return Math.round(elapsed/msPerDay) + ' days ago';
+    return Math.round(elapsed / msPerDay) + ' days ago';
   }
 
   else if (elapsed < msPerYear) {
-    return Math.round(elapsed/msPerMonth) + ' mo ago';
+    return Math.round(elapsed / msPerMonth) + ' mo ago';
   }
 
   else {
-    return Math.round(elapsed/msPerYear ) + ' years ago';
+    return Math.round(elapsed / msPerYear) + ' years ago';
   }
 }
 
@@ -92,8 +92,203 @@ export const isWorkingHours = (session, currentTime) => {
 
 export const getCurrentTime = () => {
   return axios.get(process.env.REACT_APP_API_URL + '/api/time', {
-    headers: {"Content-Type" : "application/json"}
+    headers: { "Content-Type": "application/json" }
   })
+}
+
+/**
+ * Maps UTC hour to session number based on time zones
+ * @param {number} utcHour - UTC hour (0-23)
+ * @returns {number} - Session number (1, 2, or 3)
+ */
+export const getSessionForTime = (utcHour) => {
+  if (utcHour >= 0 && utcHour < 8) {
+    return 1 // Asian time zone (00:00-08:00 UTC)
+  } else if (utcHour >= 8 && utcHour < 16) {
+    return 2 // European time zone (08:00-16:00 UTC)
+  } else if (utcHour >= 16 && utcHour < 24) {
+    return 3 // American time zone (16:00-24:00 UTC)
+  } else {
+    // Invalid hour, default to session 1
+    return 1
+  }
+}
+
+/**
+ * Gets the current session based on UTC time from API or fallback to local time
+ * @returns {Promise<number>} - Promise that resolves to session number (1, 2, or 3)
+ */
+export const getCurrentSession = async () => {
+  try {
+    const response = await getCurrentTime()
+    const utcTime = new Date(response.data)
+    const utcHour = utcTime.getUTCHours()
+    return getSessionForTime(utcHour)
+  } catch (error) {
+    // Fallback to local browser time converted to UTC
+    console.warn('Failed to get time from API, falling back to local time:', error.message)
+    const localTime = new Date()
+    const utcHour = localTime.getUTCHours()
+    return getSessionForTime(utcHour)
+  }
+}
+
+/**
+ * Filters contracts to only include those with active status
+ * @param {Array} contracts - Array of contract objects
+ * @returns {Array} - Array of active contracts
+ */
+export const filterActiveContracts = (contracts) => {
+  if (!Array.isArray(contracts)) {
+    return []
+  }
+
+  return contracts.filter(contract => {
+    return contract &&
+      contract.status === 'active' &&
+      contract.id &&
+      typeof contract.session === 'number'
+  })
+}
+
+/**
+ * Filters contracts by session number
+ * @param {Array} contracts - Array of contract objects
+ * @param {number} session - Session number (1, 2, or 3)
+ * @returns {Array} - Array of contracts matching the session
+ */
+export const getContractsForSession = (contracts, session) => {
+  if (!Array.isArray(contracts) || typeof session !== 'number') {
+    return []
+  }
+
+  return contracts.filter(contract => {
+    return contract && contract.session === session
+  })
+}
+
+/**
+ * Selects the first available contract from a list (for backward compatibility)
+ * @param {Array} contracts - Array of contract objects
+ * @returns {Object|null} - First contract or null if none available
+ */
+export const selectContract = (contracts) => {
+  if (!Array.isArray(contracts) || contracts.length === 0) {
+    return null
+  }
+
+  return contracts[0]
+}
+
+/**
+ * Selects all contracts from a list (for multi-chat creation)
+ * @param {Array} contracts - Array of contract objects
+ * @returns {Array} - Array of all contracts or empty array if none available
+ */
+export const selectAllContracts = (contracts) => {
+  if (!Array.isArray(contracts)) {
+    return []
+  }
+
+  return contracts.filter(contract => contract && contract.id)
+}
+
+/**
+ * Gets all active contracts for the current session
+ * @param {string} websiteId - Website ID to fetch contracts for
+ * @returns {Promise<Array>} - Promise that resolves to array of active contracts for current session
+ */
+export const getActiveContractsForCurrentSession = async (websiteId) => {
+  try {
+    if (!websiteId) {
+      console.warn('No websiteId provided for getting active contracts')
+      return []
+    }
+
+    // This function would need to be called from a component with Apollo Client access
+    // We'll implement the actual fetching in the component
+    const currentSession = await getCurrentSession()
+    return { currentSession, websiteId }
+
+  } catch (error) {
+    console.error('Failed to get active contracts for current session:', error)
+    return []
+  }
+}
+
+/**
+ * Processes contracts to get active contracts for current session
+ * @param {Array} allContracts - Array of all contracts from GraphQL
+ * @returns {Promise<Array>} - Promise that resolves to array of active contracts for current session
+ */
+export const processContractsForCurrentSession = async (allContracts) => {
+  try {
+    if (!Array.isArray(allContracts)) {
+      return []
+    }
+
+    const currentSession = await getCurrentSession()
+    const activeContracts = filterActiveContracts(allContracts)
+    const sessionContracts = getContractsForSession(activeContracts, currentSession)
+
+    console.log(`Processed ${sessionContracts.length} active contracts for session ${currentSession}`)
+    return sessionContracts
+
+  } catch (error) {
+    console.error('Failed to process contracts for current session:', error)
+    return []
+  }
+}
+
+/**
+ * Creates timeout handlers for chat miss management
+ * @param {Array} chats - Array of chat objects with contractId and chatMissTime
+ * @param {Function} onChatMissed - Callback function when chat times out
+ * @returns {Object} - Object mapping chatId to timeout info
+ */
+export const createChatTimeouts = (chats, onChatMissed) => {
+  const timeouts = {}
+
+  chats.forEach(chat => {
+    if (chat.contract && chat.contract.chatMissTime > 0) {
+      const timeoutId = setTimeout(() => {
+        console.log(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`)
+        onChatMissed(chat.id, chat.contract.id)
+      }, chat.contract.chatMissTime * 1000) // Convert seconds to milliseconds
+
+      timeouts[chat.id] = {
+        timeoutId,
+        contractId: chat.contract.id,
+        missTime: chat.contract.chatMissTime
+      }
+    }
+  })
+
+  return timeouts
+}
+
+/**
+ * Clears all chat timeouts
+ * @param {Object} timeouts - Object mapping chatId to timeout info
+ */
+export const clearChatTimeouts = (timeouts) => {
+  Object.values(timeouts).forEach(timeout => {
+    if (timeout.timeoutId) {
+      clearTimeout(timeout.timeoutId)
+    }
+  })
+}
+
+/**
+ * Clears a specific chat timeout
+ * @param {Object} timeouts - Object mapping chatId to timeout info
+ * @param {string} chatId - Chat ID to clear timeout for
+ */
+export const clearChatTimeout = (timeouts, chatId) => {
+  if (timeouts[chatId] && timeouts[chatId].timeoutId) {
+    clearTimeout(timeouts[chatId].timeoutId)
+    delete timeouts[chatId]
+  }
 }
 
 /**
@@ -135,7 +330,7 @@ export const detectIPAddress = async (timeout = 3000) => {
     } else {
       console.error('IP detection failed: Unexpected error', error.message)
     }
-    
+
     return null
   }
 }

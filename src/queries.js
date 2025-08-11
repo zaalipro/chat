@@ -1,14 +1,27 @@
 import { gql } from '@apollo/client'
 
 export const CREATE_CHAT = gql`
-mutation createChat($customerName: String!, $headline: String!, $contractId: UUID!, $ipAddress: InternetAddress) {
-  createChat(input: {
-    chat: {
-      customerName: $customerName, headline: $headline,  contractId: $contractId, ipAddress: $ipAddress
+mutation createChat(
+  $customerName: String!
+  $headline: String!
+  $contractId: UUID!
+  $ipAddress: InternetAddress,
+  $key: UUID!
+) {
+  createChat(
+    input: {
+      chat: {
+        customerName: $customerName
+        headline: $headline
+        contractId: $contractId
+        ipAddress: $ipAddress
+        key: $key
+      }
     }
-  }) {
+  ) {
     chat {
       id
+      key
       customerName
       headline
       ipAddress
@@ -16,6 +29,7 @@ mutation createChat($customerName: String!, $headline: String!, $contractId: UUI
     }
   }
 }
+
 `
 
 export const MESSAGE_SUBSCRIPTION = gql`
@@ -129,6 +143,36 @@ export const END_CHAT = gql`
       chat {
         id
         status
+      }
+    }
+  }
+`;
+
+export const GET_WEBSITE_CONTRACTS = gql`
+  query GetWebsiteContracts($websiteId: UUID!) {
+    website(id: $websiteId) {
+      contracts(condition: {status: "active"}) {
+        id
+        session
+        status
+        color
+        chatMissTime
+      }
+    }
+  }
+`;
+
+export const UPDATE_CHAT_MISSED = gql`
+  mutation UpdateChatMissed($chatId: UUID!) {
+    updateChat(input: {
+      id: $chatId
+      patch: {
+        missed: true
+      }
+    }) {
+      chat {
+        id
+        missed
       }
     }
   }
