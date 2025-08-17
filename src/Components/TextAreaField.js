@@ -1,27 +1,25 @@
 import React from 'react'
-import { Message, Form, TextArea } from 'semantic-ui-react'
 
 const TextAreaField = ({form, name, label, placeholder = ''}) => (
-  <React.Fragment>
-    <Form.Field
-      control={TextArea}
-      type="text"
-      label={label}
+  <div className="form-field">
+    <label className="form-label" htmlFor={name}>{label}</label>
+    <textarea
+      id={name}
+      className={`form-textarea ${form.errors[name] ? 'error' : ''}`}
       name={name}
       placeholder={placeholder}
       onChange={form.handleChange}
       onBlur={form.handleBlur}
       value={form.values[name]}
-      error={form.errors[name] !== undefined}
+      rows={4}
     />
-    {form.touched[name] && form.errors[name] &&
-      <Message
-        error
-        header={label + ' is not valid'}
-        content={form.errors[name]}
-      />
-    }
-  </React.Fragment>
+    {form.touched[name] && form.errors[name] && (
+      <div className="form-error">
+        <div className="form-error-header">{label} is not valid</div>
+        <div>{form.errors[name]}</div>
+      </div>
+    )}
+  </div>
 )
 
 export default TextAreaField

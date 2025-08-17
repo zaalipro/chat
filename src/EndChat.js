@@ -1,7 +1,6 @@
 import React from 'react'
 import { useMutation } from '@apollo/client'
 import { END_CHAT, GET_CHAT } from './queries'
-import { Segment, Button } from 'semantic-ui-react'
 import store from 'store2'
 
 const EndChat = ({chatId}) => {
@@ -14,11 +13,17 @@ const EndChat = ({chatId}) => {
   })
 
   return(
-    <Segment inverted color='teal'>
-      <Button color="red" onClick={() => {
-        endChat().then(resp => store.remove('activeChat'))
-      }}>End Chat</Button>
-    </Segment>
+    <div className="segment" style={{ backgroundColor: 'var(--info-color)' }}>
+      <button 
+        className="btn" 
+        style={{ backgroundColor: 'var(--danger-color)', color: 'white' }}
+        onClick={() => {
+          endChat().then(resp => store.remove('activeChat'))
+        }}
+      >
+        End Chat
+      </button>
+    </div>
   )
 }
 

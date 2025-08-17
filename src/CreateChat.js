@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Formik } from "formik";
 import TextField from "./Components/TextField";
 import TextAreaField from "./Components/TextAreaField";
-import { Segment, Form } from "semantic-ui-react";
 import WaitingForAgent from "./WaitingForAgent";
 import ChatStatusMonitor from "./ChatStatusMonitor";
 import store from "store2";
@@ -257,7 +256,7 @@ const CreateChat = ({ setCreate }) => {
 
         {/* Show form */}
         {state === CHAT_STATES.FORM && (
-          <Segment padded>
+          <div className="segment padded">
             <div className="row">
               <Formik
                 initialValues={{
@@ -269,9 +268,9 @@ const CreateChat = ({ setCreate }) => {
               >
                 {form => {
                   return (
-                    <Form
+                    <form
+                      className="form"
                       onSubmit={form.handleSubmit}
-                      error={Object.keys(form.errors).length > 0 || !!error}
                     >
                       <TextField
                         form={form}
@@ -286,54 +285,38 @@ const CreateChat = ({ setCreate }) => {
                       />
 
                       {error && (
-                        <div style={{
-                          color: 'red',
-                          marginTop: '10px',
-                          fontSize: '14px',
-                          padding: '10px',
-                          backgroundColor: '#fff2f2',
-                          border: '1px solid #ffcdd2',
-                          borderRadius: '4px'
-                        }}>
+                        <div className="message error">
+                          <div className="message-header">Error</div>
                           <div>{error}</div>
                           <button
                             type="button"
+                            className="btn btn-sm mt-2"
                             onClick={handleRetry}
-                            style={{
-                              marginTop: '8px',
-                              padding: '4px 8px',
-                              fontSize: '12px',
-                              backgroundColor: '#f44336',
-                              color: 'white',
-                              border: 'none',
-                              borderRadius: '3px',
-                              cursor: 'pointer'
-                            }}
+                            style={{ backgroundColor: 'var(--danger-color)', color: 'white' }}
                           >
                             Retry
                           </button>
                         </div>
                       )}
 
-                      <br />
-                      <br />
-                      <br />
-                      <br />
-                      <br />
-                      <div className="flex flex-hcenter full-width conversation-button-wrapper pointer-events-none">
-                        <div
-                          className="conversation-button background-darkgray drop-shadow-hover pointer flex-center flex pointer-events-initial"
-                          onClick={() => form.submitForm()}
-                        >
-                          <p>Start Conversation</p>
+                      <div className="mt-5">
+                        <div className="flex flex-hcenter full-width conversation-button-wrapper pointer-events-none">
+                          <button
+                            type="button"
+                            className="btn btn-primary btn-lg conversation-button pointer-events-initial"
+                            onClick={() => form.submitForm()}
+                            disabled={form.isSubmitting}
+                          >
+                            {form.isSubmitting ? 'Starting...' : 'Start Conversation'}
+                          </button>
                         </div>
                       </div>
-                    </Form>
+                    </form>
                   );
                 }}
               </Formik>
             </div>
-          </Segment>
+          </div>
         )}
       </div>
     </span>

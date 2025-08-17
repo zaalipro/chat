@@ -1,53 +1,36 @@
 import React from 'react';
-import { Dimmer, Loader, Button, Segment } from 'semantic-ui-react';
 
 const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
   return (
-    <Segment padded>
-      <Dimmer active>
-        <Loader size="large">Waiting for agent response</Loader>
-      </Dimmer>
+    <div className="segment padded dimmer active">
+      <div className="loader-container">
+        <div className="loader large"></div>
+        <div className="loader-text">Waiting for agent response</div>
+      </div>
       
-      <div style={{ 
-        textAlign: 'center', 
-        padding: '40px 20px',
-        minHeight: '200px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        <div style={{ marginBottom: '20px' }}>
-          <p style={{ 
-            fontSize: '16px', 
-            color: '#666',
-            marginBottom: '10px'
-          }}>
+      <div className="text-center p-5" style={{ minHeight: '200px' }}>
+        <div className="mb-4">
+          <p className="text-secondary mb-2" style={{ fontSize: '16px' }}>
             {pendingChatsCount > 1 
               ? `Connecting to ${pendingChatsCount} available agents...`
               : 'Connecting to available agent...'
             }
           </p>
-          <p style={{ 
-            fontSize: '14px', 
-            color: '#999'
-          }}>
+          <p className="text-muted" style={{ fontSize: '14px' }}>
             You'll be connected to the first agent who responds
           </p>
         </div>
         
         {onCancel && (
-          <Button 
-            basic 
-            color="grey" 
+          <button 
+            className="btn btn-basic mt-4"
             onClick={onCancel}
-            style={{ marginTop: '20px' }}
           >
             Cancel
-          </Button>
+          </button>
         )}
       </div>
-    </Segment>
+    </div>
   );
 };
 

@@ -1,14 +1,13 @@
 import React, { Suspense } from 'react';
 import ReactDOM from "react-dom/client";
 import './css/index.css'
+import './css/design-system.css'
 import * as serviceWorker from './serviceWorker';
-import 'semantic-ui-css/semantic.min.css';
 import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split, gql } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';
 import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from 'graphql-ws';
-import { Dimmer, Loader, Segment } from 'semantic-ui-react'
 import App from './App';
 import store from 'store2'
 import { jwtDecode } from 'jwt-decode'
@@ -65,7 +64,7 @@ const client = new ApolloClient({
 
 const ClientApp = () => (
   <ApolloProvider client={client}>
-    <Suspense fallback={<Segment><Dimmer active><Loader /></Dimmer></Segment>}>
+    <Suspense fallback={<div className="segment dimmer active"><div className="loader-container"><div className="loader"></div></div></div>}>
       <App />
     </Suspense>
   </ApolloProvider>

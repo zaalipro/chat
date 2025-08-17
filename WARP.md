@@ -129,10 +129,16 @@ Required environment variables (create `.env` file):
 
 ### Styling System
 
-- Uses Semantic UI React for components
-- Custom CSS files in `src/css/` directory
-- Color theming centered around `rgba(39,175,96,1)` (green theme)
-- Responsive design with mobile-first approach
+- **Custom CSS Design System** in `src/css/design-system.css`
+- **CSS Custom Properties (Variables)** for consistent theming
+- **Lightweight and Modern** - no external UI framework dependencies
+- **Embeddable** - designed to work within any HTML page via script tag
+- **Primary Theme Color**: `rgba(39,175,96,1)` (green)
+- **Typography**: System fonts (-apple-system, BlinkMacSystemFont, Segoe UI)
+- **Responsive Design** with mobile-first approach
+- **Component Classes**: `.btn`, `.form-input`, `.segment`, `.loader`, `.rating`, etc.
+- **Utility Classes**: Spacing (`.mt-3`, `.p-4`), flexbox (`.flex`, `.flex-center`), text (`.text-center`)
+- **Widget Embedding**: `.chat-widget-embed` class for floating positioning
 
 ## Important Implementation Details
 
@@ -199,4 +205,90 @@ npm test -- --testNamePattern="specific test name"
 - Check authentication token is passed to WebSocket connection
 - Monitor subscription lifecycle in Apollo DevTools
 - Handle subscription cleanup in component unmount
+
+## Widget Embedding
+
+The chat application is designed to be embeddable in any HTML page as a lightweight widget.
+
+### Embed Script (`public/embed.js`)
+
+The widget can be embedded using a simple script tag:
+
+```html
+<!-- Simple floating widget -->
+<script src="https://yourdomain.com/embed.js"></script>
+<script>
+  ChatWidget.init({
+    apiUrl: 'https://your-api.com/graphql',
+    publicKey: 'your-public-key'
+  });
+</script>
+
+<!-- Auto-initialize with data attributes -->
+<script 
+  src="https://yourdomain.com/embed.js"
+  data-api-url="https://your-api.com/graphql"
+  data-public-key="your-public-key"
+  data-position="bottom-right">
+</script>
+
+<!-- Inline widget in container -->
+<div id="chat-container"></div>
+<script src="https://yourdomain.com/embed.js"></script>
+<script>
+  ChatWidget.init({
+    containerId: 'chat-container',
+    apiUrl: 'https://your-api.com/graphql',
+    publicKey: 'your-public-key'
+  });
+</script>
+```
+
+### Widget API Methods
+
+- `ChatWidget.init(options)` - Initialize the widget
+- `ChatWidget.show()` - Show the widget
+- `ChatWidget.hide()` - Hide the widget
+- `ChatWidget.destroy()` - Remove widget completely
+- `ChatWidget.updateConfig(newConfig)` - Update configuration
+
+### Widget Positioning
+
+- `bottom-right` (default)
+- `bottom-left`
+- `top-right`
+- `top-left`
+
+### Production Build for Embedding
+
+1. Run `npm run build` to create production bundle
+2. The built files in `build/` folder can be served statically
+3. Update `embed.js` paths to point to your CDN or static server
+4. The widget loads its CSS and JavaScript dynamically
+
+### Example Page
+
+See `public/embed-example.html` for a comprehensive demo of all embedding options.
+
+## Known Issues and Considerations
+
+### From cursor_tasks.md Analysis
+- Message keys use array index instead of message ID (affects React reconciliation)
+- State updates happen during render in some Query components
+- Legacy Apollo Query/Mutation components mixed with hooks
+- Clickable divs should be converted to semantic button elements
+- Need crypto.randomUUID() fallback for older browsers
+
+### Performance Considerations
+- Large message lists may need virtualization
+- Subscription updates replace entire message arrays (should be incremental)
+- Multiple chat monitoring creates multiple WebSocket subscriptions
+- Bundle size is optimized for embedding (~500KB gzipped including React)
+
+### Security Considerations
+- All message text is rendered as plain text (XSS protection)
+- Environment variables contain sensitive URLs and keys
+- JWT tokens are stored in localStorage (consider security implications)
+- Widget isolation: CSS is scoped to prevent conflicts with host page
+- CORS configuration needed for cross-origin embedding
 

@@ -36,7 +36,7 @@ const App = () => {
     if (!websiteId) {
       console.error('No websiteId found in local storage')
       return (
-        <div className='App'>
+        <div className='App chat-widget'>
           <div>
             <div className='container'>
               <div className={panelStyles}>
@@ -49,7 +49,7 @@ const App = () => {
     }
 
     return (
-      <div className='App'>
+      <div className='App chat-widget'>
         <div>
           <div className='container'>
             <div className={panelStyles}>
@@ -87,7 +87,7 @@ const App = () => {
   }
 
   return (
-      <div className='App'>
+      <div className='App chat-widget'>
         <div>
           <div className='container'>
             <div className={panelStyles}>

@@ -1,27 +1,25 @@
 import React from 'react'
-import { Message, Form } from 'semantic-ui-react'
 
 const TextField = ({form, name, label, placeholder = ''}) => (
-  <React.Fragment>
-    <Form.Field
-      control='input'
+  <div className="form-field">
+    <label className="form-label" htmlFor={name}>{label}</label>
+    <input
+      id={name}
+      className={`form-input ${form.errors[name] ? 'error' : ''}`}
       type="text"
-      label={label}
       name={name}
       placeholder={placeholder}
       onChange={form.handleChange}
       onBlur={form.handleBlur}
       value={form.values[name]}
-      error={form.errors[name] !== undefined}
     />
-    {form.touched[name] && form.errors[name] &&
-      <Message
-        error
-        header={label + ' is not valid'}
-        content={form.errors[name]}
-      />
-    }
-  </React.Fragment>
+    {form.touched[name] && form.errors[name] && (
+      <div className="form-error">
+        <div className="form-error-header">{label} is not valid</div>
+        <div>{form.errors[name]}</div>
+      </div>
+    )}
+  </div>
 )
 
 export default TextField

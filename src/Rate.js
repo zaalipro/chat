@@ -1,7 +1,7 @@
 import React from 'react';
-import { Segment, Rating } from 'semantic-ui-react'
 import { Mutation } from '@apollo/client/react/components'
 import { RATE_AGENT } from './queries'
+import Rating from './Components/Rating'
 
 const Rate = ({chat, setCreate}) => {
   return(
@@ -18,24 +18,29 @@ const Rate = ({chat, setCreate}) => {
       <div className='body overflow-y-scroll overflow-x-hidden'>
         <Mutation mutation={RATE_AGENT}>
         {(createRate) => (
-          <Segment>
-            chat finished, Please rate an agent:
-            <Rating icon='star' defaultRating={3} maxRating={5} onRate={(e, {rating}) => {
-              createRate({variables: {
-                chatId: chat.id,
-                rating: rating
-              }}).then(resp => setCreate(true))
-            }}/>
-          </Segment>
+          <div className="segment">
+            <p className="mb-3">Chat finished, Please rate the agent:</p>
+            <Rating 
+              icon='star' 
+              defaultRating={3} 
+              maxRating={5} 
+              onRate={(e, {rating}) => {
+                createRate({variables: {
+                  chatId: chat.id,
+                  rating: rating
+                }}).then(resp => setCreate(true))
+              }}
+            />
+          </div>
         )}
         </Mutation>
         <div className='flex flex-hcenter full-width conversation-button-wrapper pointer-events-none'>
-          <div
-            className='conversation-button background-darkgray drop-shadow-hover pointer flex-center flex pointer-events-initial'
+          <button
+            className='conversation-button background-darkgray drop-shadow-hover pointer flex-center flex pointer-events-initial btn btn-primary'
             onClick={() => setCreate(true)}
           >
-            <p>New Conversation</p>
-          </div>
+            New Conversation
+          </button>
         </div>
       </div>
     </span>
