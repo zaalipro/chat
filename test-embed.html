@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Widget Test</title>
+</head>
+<body>
+  <h1>Chat Widget Test</h1>
+  <div id="chat-widget-root"></div>
+
+  <script src="./dist/chat-widget.umd.js"></script>
+  <script>
+    console.log('Script loaded');
+    console.log('ChatWidget available:', typeof ChatWidget);
+    console.log('ChatWidget object:', ChatWidget);
+    
+    if (typeof ChatWidget !== 'undefined') {
+      console.log('ChatWidget keys:', Object.keys(ChatWidget));
+      
+      if (ChatWidget.initChatWidget) {
+        console.log('initChatWidget function found');
+        
+        // Initialize the widget
+        try {
+          ChatWidget.initChatWidget({
+            publicKey: '4754248e-63af-43bf-b023-15777d6d1dea',
+            apiUrl: 'http://localhost:5001',
+            graphqlHttpUrl: 'http://localhost:5001/graphql',
+            graphqlWsUrl: 'ws://localhost:5001/graphql',
+            containerId: 'chat-widget-root'
+          });
+          console.log('Widget initialized successfully');
+        } catch (error) {
+          console.error('Error initializing widget:', error);
+        }
+      } else {
+        console.error('initChatWidget function not found');
+      }
+    } else {
+      console.error('ChatWidget global not found');
+    }
+  </script>
+</body>
+</html>
