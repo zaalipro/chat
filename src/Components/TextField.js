@@ -1,11 +1,12 @@
 import React from 'react'
+import { FormField, FormLabel, FormInput, FormError, FormErrorHeader } from '../components/styled/DesignSystem';
 
 const TextField = ({form, name, label, placeholder = ''}) => (
-  <div className="form-field">
-    <label className="form-label" htmlFor={name}>{label}</label>
-    <input
+  <FormField>
+    <FormLabel htmlFor={name}>{label}</FormLabel>
+    <FormInput
       id={name}
-      className={`form-input ${form.errors[name] ? 'error' : ''}`}
+      $error={form.errors[name]}
       type="text"
       name={name}
       placeholder={placeholder}
@@ -14,12 +15,12 @@ const TextField = ({form, name, label, placeholder = ''}) => (
       value={form.values[name]}
     />
     {form.touched[name] && form.errors[name] && (
-      <div className="form-error">
-        <div className="form-error-header">{label} is not valid</div>
+      <FormError>
+        <FormErrorHeader>{label} is not valid</FormErrorHeader>
         <div>{form.errors[name]}</div>
-      </div>
+      </FormError>
     )}
-  </div>
+  </FormField>
 )
 
 export default TextField

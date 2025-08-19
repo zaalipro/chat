@@ -1,18 +1,32 @@
 import React from 'react'
+import { 
+  Header, 
+  HeaderPadding, 
+  HeaderShadow, 
+  ConversationHeader, 
+  GutterLeft, 
+  TextOpaque,
+  FadeInLeft,
+  OverflowYScroll,
+  OverflowXHidden
+} from './components/styled/App';
 
 const Offline = () => (
 <span>
-    <div
-    style={{backgroundColor: 'rgba(39,175,96,1)'}}
-    className='header header-padding header-shadow'
-    >
-        <div className='conversation-header gutter-left'>
-            <h3 className='fadeInLeft'>Offline</h3>
-            <p className='text-opaque fadeInLeft'>TeamViewer</p>
-        </div>
-    </div>
-    <div className='body overflow-y-scroll overflow-x-hidden'>
-    Customer Support is offline
+    <Header style={{backgroundColor: 'rgba(39,175,96,1)'}} className='header-shadow'>
+      <HeaderPadding>
+        <ConversationHeader className='gutter-left'>
+          <h3 className='fadeInLeft'>Offline</h3>
+          <TextOpaque className='fadeInLeft'>TeamViewer</TextOpaque>
+        </ConversationHeader>
+      </HeaderPadding>
+    </Header>
+    <div className='body'>
+      <OverflowYScroll>
+        <OverflowXHidden>
+          Customer Support is offline
+        </OverflowXHidden>
+      </OverflowYScroll>
     </div>
 </span>
 )

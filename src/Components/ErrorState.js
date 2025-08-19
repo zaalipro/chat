@@ -1,11 +1,17 @@
 import React from 'react';
+import { Message, MessageHeader, Button } from '../components/styled/DesignSystem';
 
 const ErrorState = ({ message, onRetry }) => {
   return (
-    <div className="error-state">
+    <Message $error>
+      <MessageHeader>Error</MessageHeader>
       <p>{message}</p>
-      <button onClick={onRetry}>Retry</button>
-    </div>
+      {onRetry && (
+        <Button $primary $small onClick={onRetry}>
+          Retry
+        </Button>
+      )}
+    </Message>
   );
 };
 

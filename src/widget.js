@@ -1,7 +1,5 @@
 import React from 'react';
 import ReactDOM from "react-dom/client";
-import './css/index.css'
-import './css/design-system.css'
 import * as serviceWorker from './serviceWorker';
 import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split, gql } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
@@ -11,6 +9,8 @@ import { createClient } from 'graphql-ws';
 import App from './App';
 import store from 'store2'
 import { jwtDecode } from 'jwt-decode'
+import ThemeProvider from './components/styled/design-system/ThemeProvider';
+import GlobalStyles from './components/styled/design-system/GlobalStyles';
 
 // Widget initialization function
 export function initChatWidget(config = {}) {
@@ -75,7 +75,10 @@ export function initChatWidget(config = {}) {
 
   const ClientApp = ({ error }) => (
     <ApolloProvider client={client}>
-      <App error={error} />
+      <ThemeProvider>
+        <GlobalStyles />
+        <App error={error} />
+      </ThemeProvider>
     </ApolloProvider>
   );
 

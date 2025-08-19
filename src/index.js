@@ -1,7 +1,5 @@
 import React, { Suspense } from 'react';
 import ReactDOM from "react-dom/client";
-import './css/index.css'
-import './css/design-system.css'
 import * as serviceWorker from './serviceWorker';
 import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split, gql } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
@@ -12,6 +10,8 @@ import App from './App';
 import store from 'store2'
 import { jwtDecode } from 'jwt-decode'
 import ErrorState from './components/ErrorState';
+import ThemeProvider from './components/styled/design-system/ThemeProvider';
+import GlobalStyles from './components/styled/design-system/GlobalStyles';
 
 const httpLink = createHttpLink({ uri: import.meta.env.VITE_GRAPHQL_HTTP_URL })
 const authLink = setContext((_, { headers }) => {
@@ -53,9 +53,18 @@ const client = new ApolloClient({
 
 const ClientApp = ({ error }) => (
   <ApolloProvider client={client}>
-    <Suspense fallback={<div className="segment dimmer active"><div className="loader-container"><div className="loader"></div></div></div>}>
-      <App error={error} />
-    </Suspense>
+    <ThemeProvider>
+      <GlobalStyles />
+      <Suspense fallback={
+        <div className="segment dimmer active">
+          <div className="loader-container">
+            <div className="loader"></div>
+          </div>
+        </div>
+      }>
+        <App error={error} />
+      </Suspense>
+    </ThemeProvider>
   </ApolloProvider>
 );
 

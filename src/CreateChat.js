@@ -15,6 +15,23 @@ import { useError } from "./hooks/useError";
 // Config
 import { CHAT_STATES, TIMEOUTS } from "./config/ChatConfig";
 
+// Styled Components
+import { 
+  Header, 
+  HeaderPadding, 
+  HeaderShadow, 
+  ConversationHeader, 
+  GutterLeft, 
+  TextOpaque,
+  FadeInLeft,
+  OverflowYScroll,
+  OverflowXHidden,
+  Row,
+  ConversationButtonWrapper,
+  FlexHCenter
+} from './components/styled/App';
+import { Segment, Message, MessageHeader, Button, Mt5, FullWidth } from './components/styled/DesignSystem';
+
 const CreateChat = ({ setCreate }) => {
   const websiteId = store("websiteId");
 
@@ -219,105 +236,111 @@ const CreateChat = ({ setCreate }) => {
 
   return (
     <span>
-      <div
-        style={{ backgroundColor: "rgba(39,175,96,1)" }}
-        className="header header-padding header-shadow"
-      >
-        <div className="conversation-header gutter-left">
-          <h3 className="fadeInLeft">Start conversation</h3>
-          <p className="text-opaque fadeInLeft">TeamViewer</p>
-        </div>
-      </div>
-      <div className="body overflow-y-scroll overflow-x-hidden">
-        {/* Show waiting state */}
-        {(state === CHAT_STATES.CREATING || state === CHAT_STATES.WAITING) && (
-          <>
-            <WaitingForAgent
-              pendingChatsCount={pending.length}
-              onCancel={() => {
-                setState(CHAT_STATES.FORM);
-                setPending([]);
-                reset();
-                clearError();
-              }}
-            />
+      <Header style={{ backgroundColor: "rgba(39,175,96,1)" }} className="header-shadow">
+        <HeaderPadding>
+          <ConversationHeader className="gutter-left">
+            <h3 className="fadeInLeft">Start conversation</h3>
+            <TextOpaque className="fadeInLeft">TeamViewer</TextOpaque>
+          </ConversationHeader>
+        </HeaderPadding>
+      </Header>
+      <div className="body">
+        <OverflowYScroll>
+          <OverflowXHidden>
+            {/* Show waiting state */}
+            {(state === CHAT_STATES.CREATING || state === CHAT_STATES.WAITING) && (
+              <>
+                <WaitingForAgent
+                  pendingChatsCount={pending.length}
+                  onCancel={() => {
+                    setState(CHAT_STATES.FORM);
+                    setPending([]);
+                    reset();
+                    clearError();
+                  }}
+                />
 
-            {/* Monitor chat statuses */}
-            {state === CHAT_STATES.WAITING && pending.length > 0 && (
-              <ChatStatusMonitor
-                pendingChats={pending}
-                onChatStarted={onChatStarted}
-                onChatMissed={onChatMissed}
-                onError={onMonitorError}
-              />
+                {/* Monitor chat statuses */}
+                {state === CHAT_STATES.WAITING && pending.length > 0 && (
+                  <ChatStatusMonitor
+                    pendingChats={pending}
+                    onChatStarted={onChatStarted}
+                    onChatMissed={onChatMissed}
+                    onError={onMonitorError}
+                  />
+                )}
+              </>
             )}
-          </>
-        )}
 
-        {/* Show form */}
-        {state === CHAT_STATES.FORM && (
-          <div className="segment padded">
-            <div className="row">
-              <Formik
-                initialValues={{
-                  customerName: "",
-                  headline: ""
-                }}
-                validate={validate}
-                onSubmit={handleSubmit}
-              >
-                {form => {
-                  return (
-                    <form
-                      className="form"
-                      onSubmit={form.handleSubmit}
-                    >
-                      <TextField
-                        form={form}
-                        name="customerName"
-                        label="Customer name"
-                        placeholder="John"
-                      />
-                      <TextAreaField
-                        form={form}
-                        name="headline"
-                        label="Head line"
-                      />
+            {/* Show form */}
+            {state === CHAT_STATES.FORM && (
+              <Segment $padded>
+                <Row>
+                  <Formik
+                    initialValues={{
+                      customerName: "",
+                      headline: ""
+                    }}
+                    validate={validate}
+                    onSubmit={handleSubmit}
+                  >
+                    {form => {
+                      return (
+                        <form
+                          onSubmit={form.handleSubmit}
+                        >
+                          <TextField
+                            form={form}
+                            name="customerName"
+                            label="Customer name"
+                            placeholder="John"
+                          />
+                          <TextAreaField
+                            form={form}
+                            name="headline"
+                            label="Head line"
+                          />
 
-                      {error && (
-                        <div className="message error">
-                          <div className="message-header">Error</div>
-                          <div>{error}</div>
-                          <button
-                            type="button"
-                            className="btn btn-sm mt-2"
-                            onClick={handleRetry}
-                            style={{ backgroundColor: 'var(--danger-color)', color: 'white' }}
-                          >
-                            Retry
-                          </button>
-                        </div>
-                      )}
+                          {error && (
+                            <Message error>
+                              <MessageHeader>Error</MessageHeader>
+                              <div>{error}</div>
+                              <Button
+                                $small
+                                onClick={handleRetry}
+                                style={{ backgroundColor: 'var(--danger-color)', color: 'white' }}
+                              >
+                                Retry
+                              </Button>
+                            </Message>
+                          )}
 
-                      <div className="mt-5">
-                        <div className="flex flex-hcenter full-width conversation-button-wrapper pointer-events-none">
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-lg conversation-button pointer-events-initial"
-                            onClick={() => form.submitForm()}
-                            disabled={form.isSubmitting}
-                          >
-                            {form.isSubmitting ? 'Starting...' : 'Start Conversation'}
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  );
-                }}
-              </Formik>
-            </div>
-          </div>
-        )}
+                          <Mt5>
+                            <FlexHCenter>
+                              <FullWidth>
+                                <ConversationButtonWrapper className="pointer-events-none">
+                                  <Button
+                                    $primary
+                                    $large
+                                    className="pointer-events-initial"
+                                    onClick={() => form.submitForm()}
+                                    disabled={form.isSubmitting}
+                                  >
+                                    {form.isSubmitting ? 'Starting...' : 'Start Conversation'}
+                                  </Button>
+                                </ConversationButtonWrapper>
+                              </FullWidth>
+                            </FlexHCenter>
+                          </Mt5>
+                        </form>
+                      );
+                    }}
+                  </Formik>
+                </Row>
+              </Segment>
+            )}
+          </OverflowXHidden>
+        </OverflowYScroll>
       </div>
     </span>
   );

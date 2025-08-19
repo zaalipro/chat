@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import MessageBox from './MessageBox'
 import MessageForm from './MessageForm'
-import './css/Chat.css'
+import { Dropzone, MessageBody, ChatContainer } from './components/styled/Chat'
 
 class Chat extends Component {
   componentDidMount() {
@@ -12,12 +12,14 @@ class Chat extends Component {
     const { data, chatId } = this.props
 
     return (
-      <div className="dropzone relative">
-        <div className='message-body chat-container'>
-          <MessageBox messages={data.messages}/>
-          <MessageForm chatId={chatId} />
-        </div>
-      </div>
+      <Dropzone>
+        <MessageBody>
+          <ChatContainer>
+            <MessageBox messages={data.messages}/>
+            <MessageForm chatId={chatId} />
+          </ChatContainer>
+        </MessageBody>
+      </Dropzone>
     );
   }
 }

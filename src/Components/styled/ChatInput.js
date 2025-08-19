@@ -1,18 +1,18 @@
-/* MessageForm component styles */
+import styled from 'styled-components';
 
-.chat-input {
+export const ChatInput = styled.div`
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-}
+`;
 
-.chat-input-shadow {
+export const ChatInputShadow = styled.div`
   box-shadow: 0px -3px 48px -1px rgba(0,0,0,0.10);
   background: #fff;
-}
+`;
 
-.chat-input .InputField {
+export const InputField = styled.textarea`
   width: calc(100% - 52px);
   height: auto;
   border: 0px;
@@ -23,9 +23,16 @@
   font-weight: 400;
   line-height: 1.33;
   color: #565867;
-}
+  
+  ${props => props.$minRows && `
+    min-height: ${props.$minRows * 20}px;
+  `}
+  
+  ${props => props.$maxRows && `
+    max-height: ${props.$maxRows * 20}px;
+  `}
+`;
 
-.light-background {
+export const LightBackground = styled.div`
   background-color: rgba(240,243,245,1);
-}
-
+`;

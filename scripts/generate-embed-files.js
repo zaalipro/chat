@@ -20,7 +20,7 @@ if (!fs.existsSync(distDir)) {
 
 // Get the CSS filename from the build (it has a hash)
 const assetsDir = path.join(distDir, 'assets');
-let cssFileName = 'chat.css'; // fallback
+let cssFileName = null; // No CSS file needed with styled-components
 if (fs.existsSync(assetsDir)) {
   const files = fs.readdirSync(assetsDir);
   const cssFile = files.find(file => file.startsWith('chat-') && file.endsWith('.css'));
@@ -141,13 +141,7 @@ const embedJs = `/**
   function loadViteWidget(container) {
     const baseUrl = getBaseUrl();
     
-    // Load CSS first
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = baseUrl + '/assets/${cssFileName}';
-    document.head.appendChild(cssLink);
-
-    // Load UMD bundle
+    // Load UMD bundle (CSS is now bundled with JS)
     const widgetScript = document.createElement('script');
     widgetScript.src = baseUrl + '/chat-widget.umd.js';
     widgetScript.onload = function() {
@@ -330,7 +324,6 @@ const embedExampleHtml = `<!DOCTYPE html>
             <p>The simplest integration - adds a floating chat widget to the bottom right corner of your page.</p>
             
             <div class="code">
-&lt;!-- Include the widget script --&gt;
 &lt;script src="https://yourdomain.com/embed.js"&gt;&lt;/script&gt;
 
 &lt;script&gt;
@@ -361,7 +354,6 @@ const embedExampleHtml = `<!DOCTYPE html>
             <p>For more control, use the UMD bundle directly:</p>
             
             <div class="code">
-&lt;link rel="stylesheet" href="https://yourdomain.com/assets/${cssFileName}"&gt;
 &lt;script src="https://yourdomain.com/chat-widget.umd.js"&gt;&lt;/script&gt;
 &lt;script&gt;
   ChatWidget.initChatWidget({
@@ -427,4 +419,8 @@ fs.writeFileSync(path.join(distDir, 'embed-example.html'), embedExampleHtml);
 console.log('✅ Generated embed files:');
 console.log('  - dist/embed.js');
 console.log('  - dist/embed-example.html');
-console.log('  - CSS file referenced:', cssFileName);
+if (cssFileName) {
+  console.log('  - CSS file referenced:', cssFileName);
+} else {
+  console.log('  - No separate CSS file needed (styled-components)');
+}

@@ -7,7 +7,7 @@
  * 
  * 1. UMD Build (Recommended for most cases):
  * <script src="https://yourdomain.com/chat-widget.umd.js"></script>
- * <link rel="stylesheet" href="https://yourdomain.com/assets/chat-DJ4jq4BM.css">
+ * <link rel="stylesheet" href="https://yourdomain.com/assets/null">
  * <script>
  *   ChatWidget.initChatWidget({
  *     publicKey: 'your-public-key',
@@ -109,13 +109,7 @@
   function loadViteWidget(container) {
     const baseUrl = getBaseUrl();
     
-    // Load CSS first
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = baseUrl + '/assets/chat-DJ4jq4BM.css';
-    document.head.appendChild(cssLink);
-
-    // Load UMD bundle
+    // Load UMD bundle (CSS is now bundled with JS)
     const widgetScript = document.createElement('script');
     widgetScript.src = baseUrl + '/chat-widget.umd.js';
     widgetScript.onload = function() {

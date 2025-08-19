@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import './css/ChatMessages.css'
 import ChatMessage from './ChatMessage'
+import { ChatMessagesContainer } from './components/styled/ChatMessages'
 
 const mainColor = 'rgba(39,175,96,1)'
 const companyLogoURL = process.env.REACT_APP_COMPANY_LOGO_URL
@@ -16,7 +16,7 @@ class MessageBox extends Component {
 
   render() {
     return (
-      <div className='chat-messages-container'>
+      <ChatMessagesContainer>
         {this.props.messages.map((message, i) => {
           const isLatestMessage = i === this.props.messages.length - 1
           return (<ChatMessage
@@ -29,7 +29,7 @@ class MessageBox extends Component {
         })}
         { /* invisible element required for automatic scrolling to bottom */ }
         <div style={ {float:'left', clear: 'both'} } ref={el => { this._messagesEnd = el }}></div>
-      </div>
+      </ChatMessagesContainer>
     )
   }
 

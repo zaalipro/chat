@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Rating as RatingContainer, RatingStar } from '../components/styled/DesignSystem';
 
 const Rating = ({ 
   defaultRating = 0, 
@@ -38,15 +39,16 @@ const Rating = ({
   }
 
   return (
-    <div className="rating">
+    <RatingContainer>
       {Array.from({ length: maxRating }, (_, index) => {
         const value = index + 1
         const isActive = value <= (hoveredRating || rating)
         
         return (
-          <span
+          <RatingStar
             key={value}
-            className={`rating-star ${isActive ? 'active' : ''}`}
+            active={isActive}
+            hover={value <= hoveredRating}
             onClick={() => handleClick(value)}
             onMouseEnter={() => handleMouseEnter(value)}
             onMouseLeave={handleMouseLeave}
@@ -56,10 +58,10 @@ const Rating = ({
             }}
           >
             {getStarIcon()}
-          </span>
+          </RatingStar>
         )
       })}
-    </div>
+    </RatingContainer>
   )
 }
 

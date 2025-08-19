@@ -1,6 +1,21 @@
 import React, { Component } from 'react'
-import './css/ChatMessage.css'
 import { timeDifferenceForDate } from './utils'
+import { 
+  MessagePadding, 
+  Flex, 
+  FlexBottom, 
+  FlexRight, 
+  MessageContainer, 
+  MessageContainerPaddingLeft, 
+  MessageContainerPaddingRight, 
+  MessageBubble, 
+  MessageAvatar,
+  Right,
+  Opacity4,
+  PaddingTop2
+} from './components/styled/ChatMessage'
+import { FadeInLeft } from './components/styled/keyframes'
+
 const imageUrl = process.env.REACT_APP_COMPANY_LOGO_URL
 
 class ChatMessage extends Component {
@@ -8,51 +23,59 @@ class ChatMessage extends Component {
   render() {
     const { message } = this.props
     return (
-      <div className='fadeInLeft'>
+      <FadeInLeft>
         {message.isAgent ? this._renderAgentMessage() : this._renderOwnMessage()}
-      </div>
+      </FadeInLeft>
     )
   }
 
   _renderOwnMessage = () => {
     const {ago, textWithLineBreaks} = this._generateChatMessageInfo()
     return (
-      <div className='message-padding'>
-        <div className='flex flex-bottom'>
-          <div className='message-container message-container-padding-right flex-right'>
-            <div
-              style={{backgroundColor: this.props.userSpeechBubbleColor}}
-              className='white padding-20 radius background-blue'>
-              <p>{textWithLineBreaks}</p>
-            </div>
-            {this.props.shouldRenderTimestamp &&
-              <p className='right opacity-4 padding-top-2'>{ago}</p>
-            }
-          </div>
-        </div>
-      </div>
+      <MessagePadding>
+        <FlexBottom>
+          <MessageContainerPaddingRight>
+            <FlexRight>
+              <MessageBubble $isAgent={false} $userSpeechBubbleColor={this.props.userSpeechBubbleColor}>
+                <p>{textWithLineBreaks}</p>
+              </MessageBubble>
+              {this.props.shouldRenderTimestamp && (
+                <Right>
+                  <Opacity4>
+                    <PaddingTop2>{ago}</PaddingTop2>
+                  </Opacity4>
+                </Right>
+              )}
+            </FlexRight>
+          </MessageContainerPaddingRight>
+        </FlexBottom>
+      </MessagePadding>
     )
   }
 
   _renderAgentMessage = () => {
     const {ago, profileImageUrl, textWithLineBreaks} = this._generateChatMessageInfo()
     return (
-      <div className='message-padding'>
-        <div className='flex flex-bottom'>
+      <MessagePadding>
+        <FlexBottom>
           <img
             src={profileImageUrl}
             alt=''
             className='avatar message-avatar'></img>
-          <div className='message-container message-container-padding-left'>
-            <div className='opaque background-gray padding-20 radius opaque'>
+          <MessageContainerPaddingLeft>
+            <MessageBubble $isAgent={true}>
               <p>{textWithLineBreaks}</p>
-            </div>
-            {this.props.shouldRenderTimestamp &&
-              <p className='right opacity-4 padding-top-2'>{ago}</p>
-            }
-          </div>
-        </div>
-      </div>
+            </MessageBubble>
+            {this.props.shouldRenderTimestamp && (
+              <Right>
+                <Opacity4>
+                  <PaddingTop2>{ago}</PaddingTop2>
+                </Opacity4>
+              </Right>
+            )}
+          </MessageContainerPaddingLeft>
+        </FlexBottom>
+      </MessagePadding>
     )
   }
 

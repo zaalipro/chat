@@ -1,9 +1,9 @@
 import React, {useState} from 'react'
 import { Mutation } from '@apollo/client/react/components'
 import store from 'store2'
-import './css/ChatInput.css'
 import { CREATE_MESSAGE } from './queries'
 import Textarea from 'react-textarea-autosize'
+import { ChatInput, ChatInputShadow, InputField, LightBackground } from './components/styled/ChatInput'
 
 const MessageForm = ({chatId}) => {
   const [inputHasFocus, setInputFocus] = useState(true)
@@ -33,25 +33,25 @@ const MessageForm = ({chatId}) => {
         }
 
         return (
-          <div className={`chat-input flex items-center radius-bottom ${inputHasFocus ? 'chat-input-shadow' : 'light-background'}`}>
-            <Textarea
-    					minRows={1}
-    					maxRows={5}
-              className={`InputField ${!inputHasFocus && 'light-background'}`}
-              placeholder='Send a message ...'
-              value={message}
-              autoFocus={true}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={onKeyDown}
-              onFocus={() => {
-                setInputFocus(true)
-              }}
-              onBlur={() => {
-                setInputFocus(false)
-              }}
-            />
-
-          </div>
+          <ChatInput>
+            <ChatInputShadow>
+              <InputField
+                $minRows={1}
+                $maxRows={5}
+                placeholder='Send a message ...'
+                value={message}
+                autoFocus={true}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={onKeyDown}
+                onFocus={() => {
+                  setInputFocus(true)
+                }}
+                onBlur={() => {
+                  setInputFocus(false)
+                }}
+              />
+            </ChatInputShadow>
+          </ChatInput>
         )
       }}
     </Mutation>

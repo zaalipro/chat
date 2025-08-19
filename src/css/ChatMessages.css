@@ -1,7 +1,0 @@
-/* MessageBox component styles */
-
-.chat-messages-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}

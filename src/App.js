@@ -1,5 +1,4 @@
 import {useState, useEffect} from 'react';
-import './css/App.css'
 import cx from 'classnames'
 import CreateChat from './CreateChat'
 import Offline from './Offline'
@@ -14,6 +13,8 @@ import { GET_CHAT, GET_WEBSITE_CONTRACTS } from './queries'
 import ToggleOpeningStateButton from './ToggleOpeningStateButton'
 import Rate from './Rate'
 import { processContractsForCurrentSession, selectContract } from './utils';
+
+import { Container, Panel } from './components/styled/App';
 
 const CONSUMER_LOGIN = gql`
   mutation consumerLogin($publicKey: UUID!) {
@@ -103,7 +104,8 @@ const App = ({ error }) => {
   const [isOpen, setOpen] = useState(true)
   const [showOffline, setOffline] = useState(false)
   const [selectedContract, setSelectedContract] = useState(null)
-  const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
+  // Replace cx utility with conditional styling
+  const panelStyles = isOpen ? 'fadeInUp' : 'hide'
 
   const processContracts = async (allContracts) => {
     const sessionContracts = await processContractsForCurrentSession(allContracts)
@@ -129,8 +131,8 @@ const App = ({ error }) => {
     return (
       <div className='App chat-widget'>
         <div>
-          <div className='container'>
-            <div className={panelStyles}>
+          <Container>
+            <Panel $isOpen={isOpen}>
               <Query query={GET_WEBSITE_CONTRACTS} variables={{ websiteId: websiteId }}>
                 {({data, error}) => {
                   if (error) {
@@ -152,13 +154,13 @@ const App = ({ error }) => {
                 }}
               </Query>
 
-            </div>
+            </Panel>
             <ToggleOpeningStateButton
               isOpen={isOpen}
               togglePanel={() => setOpen(!isOpen)}
               mainColor={'rgba(39,175,96,1)'}
             />
-          </div>
+          </Container>
         </div>
       </div>
     )
@@ -167,8 +169,8 @@ const App = ({ error }) => {
   return (
       <div className='App chat-widget'>
         <div>
-          <div className='container'>
-            <div className={panelStyles}>
+          <Container>
+            <Panel $isOpen={isOpen}>
               <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
                 {({ data}) => {
                   if (data.chat.status === "finished") {
@@ -179,13 +181,13 @@ const App = ({ error }) => {
                   )
                 }}
               </Query>
-            </div>
+            </Panel>
             <ToggleOpeningStateButton
               isOpen={isOpen}
               togglePanel={() => setOpen(!isOpen)}
               mainColor={'rgba(39,175,96,1)'}
             />
-          </div>
+          </Container>
         </div>
       </div>
   )
