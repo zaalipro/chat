@@ -1,6 +1,7 @@
 {
   "name": "chat",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "dependencies": {
     "@apollo/client": "^3.7.2",
@@ -15,15 +16,15 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.4.5",
-    "react-scripts": "5.0.1",
     "react-textarea-autosize": "^8.4.0",
     "store2": "^2.14.2"
   },
   "scripts": {
-    "start": "source .env && PORT=3006  react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite --port 3006",
+    "build": "vite build && node scripts/generate-embed-files.js",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "preview": "vite preview"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -33,5 +34,16 @@
     "not dead",
     "not ie <= 11",
     "not op_mini all"
-  ]
+  ],
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.7.0",
+    "@testing-library/react": "^16.3.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "jsdom": "^26.1.0",
+    "postcss": "^8.5.6",
+    "postcss-prefixwrap": "^1.56.2",
+    "terser": "^5.43.1",
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4"
+  }
 }

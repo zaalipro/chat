@@ -18,12 +18,14 @@ The final output must be **self-contained** — a developer unfamiliar with the 
 ### 1.1 General Guidlines
 
 - On every user prompt read master prompt file in .specs/spec.md read and follow instructions specified in this file.
-- The project requires reading .specs/spec.md before proceeding with any user prompts. This file specifies that I must analyze the codebase, research best practices, and then generate new .specs/[NN]_[feature_name]_spec.md file (where [NN] is a two-digit incremental number (e.g., 01_login_spec.md, 02_payment_spec.md).) in .specs directory, with all sections filled with content and use this file as template.
+- The project requires reading .specs/spec.md before proceeding with any user prompts. This file specifies that I must analyze the codebase, research best practices, and then generate new .specs/[NN]_[feature_name]_spec.md file (where [NN] is a two-digit incremental number (e.g., 01_login_spec.md, 02_payment_spec.md). [feature_name] should be small as possible maximum 5 words) in .specs directory, with all sections filled with content and use this file as template.
 - Before generating file you have to analize code base, do research in internet for best practices and plan best on analize and research required changes.
 - After generating .specs/[NN]_[feature_name]_spec.md (where [NN] is a two-digit incremental number (e.g., 01_login_spec.md, 02_payment_spec.md).) you have to stop writing code and wait before user reads and approves generated Markdown file
 - Never use client side filtering or sorting, use GraphQL query filteration and sorting
 - Use Context7 mcp to fetch context for graphql and react.
 - Use Sequential Thinking MCP for complex prompts
+- Keep in mind its a widjet that can be rendered in any HTML website
+- Think deeply to avoid race condition when implementing issues
 
 ---
 

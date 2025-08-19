@@ -1,6 +1,6 @@
 {
-  "short_name": "Chat Widget",
-  "name": "Chat Widget - Customer Support",
+  "short_name": "React App",
+  "name": "Create React App Sample",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,6 +10,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#27af60",
+  "theme_color": "#000000",
   "background_color": "#ffffff"
 }

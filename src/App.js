@@ -1,8 +1,9 @@
-import React, {useState} from 'react';
+import {useState, useEffect} from 'react';
 import './css/App.css'
 import cx from 'classnames'
 import CreateChat from './CreateChat'
 import Offline from './Offline'
+import ErrorState from './components/ErrorState';
 
 import store from 'store2'
 import Query from './Components/Query'
@@ -12,7 +13,11 @@ import ToggleOpeningStateButton from './ToggleOpeningStateButton'
 import Rate from './Rate'
 import { processContractsForCurrentSession, selectContract } from './utils';
 
-const App = () => {
+const App = ({ error }) => {
+  if (error) {
+    return <ErrorState message={error.message} onRetry={() => window.ChatApp.attemptLogin()} />;
+  }
+
   const activeChat = store('activeChat')
   const websiteId = store('websiteId')
   const [showCreate, setCreate] = useState(!activeChat)
@@ -20,7 +25,7 @@ const App = () => {
   const [showOffline, setOffline] = useState(false)
   const [selectedContract, setSelectedContract] = useState(null)
   const panelStyles = cx(`panel drop-shadow radius overflow-hidden ${isOpen ? 'fadeInUp' : 'hide'}`)
-  
+
   const processContracts = async (allContracts) => {
     const sessionContracts = await processContractsForCurrentSession(allContracts)
     setSelectedContract(selectContract(sessionContracts))
@@ -34,18 +39,8 @@ const App = () => {
   if (showCreate) {
     // Handle missing websiteId
     if (!websiteId) {
-      console.error('No websiteId found in local storage')
-      return (
-        <div className='App chat-widget'>
-          <div>
-            <div className='container'>
-              <div className={panelStyles}>
-                <Offline />
-              </div>
-            </div>
-          </div>
-        </div>
-      )
+      console.error("websiteId is missing");
+      return <ErrorState message="Website ID is missing. Please contact support." />;
     }
 
     return (

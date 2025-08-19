@@ -1,12 +1,35 @@
 /**
- * Chat Widget Embed Script
+ * Chat Widget Embed Script - Vite Build Version
  * 
- * This script can be embedded in any HTML page to add the chat widget.
- * Usage:
+ * This script loads the Vite-built chat widget and can be embedded in any HTML page.
+ * 
+ * Usage Options:
+ * 
+ * 1. UMD Build (Recommended for most cases):
+ * <script src="https://yourdomain.com/chat-widget.umd.js"></script>
+ * <link rel="stylesheet" href="https://yourdomain.com/assets/chat-DJ4jq4BM.css">
+ * <script>
+ *   ChatWidget.initChatWidget({
+ *     publicKey: 'your-public-key',
+ *     graphqlHttpUrl: 'https://your-api.com/graphql',
+ *     graphqlWsUrl: 'wss://your-api.com/graphql'
+ *   });
+ * </script>
+ * 
+ * 2. ES Module Build:
+ * <script type="module">
+ *   import { initChatWidget } from 'https://yourdomain.com/chat-widget.es.js';
+ *   initChatWidget({
+ *     publicKey: 'your-public-key',
+ *     graphqlHttpUrl: 'https://your-api.com/graphql',
+ *     graphqlWsUrl: 'wss://your-api.com/graphql'
+ *   });
+ * </script>
+ * 
+ * 3. Legacy Embed Script (this file):
  * <script src="https://yourdomain.com/embed.js"></script>
  * <script>
  *   ChatWidget.init({
- *     containerId: 'chat-widget-container', // optional, defaults to creating floating widget
  *     apiUrl: 'https://your-api.com/graphql',
  *     publicKey: 'your-public-key'
  *   });
@@ -50,6 +73,8 @@
     } else {
       // Create floating widget
       container.className = 'chat-widget-embed';
+      container.style.position = 'fixed';
+      container.style.zIndex = '9999';
       
       // Apply positioning
       const positions = {
@@ -68,19 +93,6 @@
     return container;
   }
 
-  // Load CSS if not already loaded
-  function loadCSS() {
-    if (document.getElementById('chat-widget-css')) {
-      return;
-    }
-
-    const link = document.createElement('link');
-    link.id = 'chat-widget-css';
-    link.rel = 'stylesheet';
-    link.href = getBaseUrl() + '/static/css/main.css'; // Adjust path as needed
-    document.head.appendChild(link);
-  }
-
   // Get base URL from script src
   function getBaseUrl() {
     const scripts = document.getElementsByTagName('script');
@@ -93,25 +105,42 @@
     return '';
   }
 
-  // Load React app bundle
-  function loadReactApp(container) {
-    // Set environment variables for the React app
-    window.REACT_APP_GRAPHQL_HTTP_URL = config.apiUrl;
-    window.REACT_APP_GRAPHQL_WS_URL = config.apiUrl.replace('http', 'ws');
-    window.REACT_APP_PUBLIC_KEY = config.publicKey;
+  // Load Vite-built widget bundle
+  function loadViteWidget(container) {
+    const baseUrl = getBaseUrl();
+    
+    // Load CSS first
+    const cssLink = document.createElement('link');
+    cssLink.rel = 'stylesheet';
+    cssLink.href = baseUrl + '/assets/chat-DJ4jq4BM.css';
+    document.head.appendChild(cssLink);
 
-    // Load React bundle (adjust paths as needed)
-    const reactScript = document.createElement('script');
-    reactScript.src = getBaseUrl() + '/static/js/main.js'; // Path to built React bundle
-    reactScript.onload = function() {
-      // React app should automatically render into the container
-      console.log('ChatWidget: Loaded successfully');
+    // Load UMD bundle
+    const widgetScript = document.createElement('script');
+    widgetScript.src = baseUrl + '/chat-widget.umd.js';
+    widgetScript.onload = function() {
+      // Initialize the widget using the UMD global
+      if (window.ChatWidget && window.ChatWidget.initChatWidget) {
+        window.ChatWidget.initChatWidget({
+          containerId: container.id,
+          publicKey: config.publicKey,
+          graphqlHttpUrl: config.apiUrl,
+          graphqlWsUrl: config.apiUrl.replace('http', 'ws'),
+          defaultContractId: config.defaultContractId,
+          companyLogoUrl: config.companyLogoUrl,
+          apiUrl: config.apiUrl,
+          ipifyUrl: config.ipifyUrl
+        });
+        console.log('ChatWidget: Loaded successfully');
+      } else {
+        console.error('ChatWidget: UMD global not found');
+      }
     };
-    reactScript.onerror = function() {
-      console.error('ChatWidget: Failed to load React bundle');
+    widgetScript.onerror = function() {
+      console.error('ChatWidget: Failed to load Vite widget bundle');
     };
     
-    document.head.appendChild(reactScript);
+    document.head.appendChild(widgetScript);
   }
 
   // Widget API
@@ -134,17 +163,14 @@
         return;
       }
 
-      // Load CSS
-      loadCSS();
-
       // Create container
       const container = createWidgetContainer();
       if (!container) {
         return;
       }
 
-      // Load React app
-      loadReactApp(container);
+      // Load Vite widget
+      loadViteWidget(container);
     },
 
     show: function() {
