@@ -2,7 +2,7 @@ import { Component} from 'react'
 import cx from 'classnames'
 import { Button } from './components/styled/App'
 
-class ToggleOpeningStateButton extends Component {
+class ToggleButton extends Component {
 
   render() {
 
@@ -24,4 +24,4 @@ class ToggleOpeningStateButton extends Component {
 
 }
 
-export default ToggleOpeningStateButton
+export default ToggleButton

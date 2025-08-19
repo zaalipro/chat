@@ -320,6 +320,7 @@ const CreateChat = ({ setCreate }) => {
                               <FullWidth>
                                 <ConversationButtonWrapper className="pointer-events-none">
                                   <Button
+                                    style={{backgroundColor: "rgb(39, 175, 96)", marginLeft: "55px", color: "white"}}
                                     $primary
                                     $large
                                     className="pointer-events-initial"

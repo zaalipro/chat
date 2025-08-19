@@ -9,7 +9,7 @@ import store from 'store2'
 import Query from './Components/Query'
 import ChatContainer from './ChatContainer'
 import { GET_CHAT, GET_WEBSITE_CONTRACTS } from './queries'
-import ToggleOpeningStateButton from './ToggleOpeningStateButton'
+import ToggleButton from './ToggleButton'
 import Rate from './Rate'
 import { processContractsForCurrentSession, selectContract } from './utils';
 
@@ -154,7 +154,7 @@ const App = ({ error }) => {
               </Query>
 
             </Panel>
-            <ToggleOpeningStateButton
+            <ToggleButton
               isOpen={isOpen}
               togglePanel={() => setOpen(!isOpen)}
               mainColor={'rgba(39,175,96,1)'}
@@ -181,7 +181,7 @@ const App = ({ error }) => {
                 }}
               </Query>
             </Panel>
-            <ToggleOpeningStateButton
+            <ToggleButton
               isOpen={isOpen}
               togglePanel={() => setOpen(!isOpen)}
               mainColor={'rgba(39,175,96,1)'}
