@@ -1,5 +1,4 @@
 import {useState, useEffect} from 'react';
-import cx from 'classnames'
 import CreateChat from './CreateChat'
 import Offline from './Offline'
 import ErrorState from './components/ErrorState';

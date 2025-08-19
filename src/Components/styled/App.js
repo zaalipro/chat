@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components';
-import { fadeInUp, rotate } from './keyframes';
+import { fadeInUp } from './keyframes';
 
 // Utility classes from App.css
 export const Flex = styled.div`
@@ -287,9 +287,16 @@ export const Button = styled.div`
   float: right;
   width: 60px;
   height: 60px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: white;
   background-color: #00BCD4;
+  cursor: pointer;
+  
+  .material-icons {
+    font-size: 24px;
+  }
 `;
 
 export const MobileButtonClose = styled.div`

@@ -1,4 +1,3 @@
-import React from 'react'
 import store from 'store2'
 import styled from 'styled-components'
 import { theme } from './Components/styled/design-system/theme'
