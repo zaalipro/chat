@@ -1,20 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat Widget Embed Example</title>
 </head>
+
 <body>
   <div class="container">
-    blah
+    <h1>Website Content</h1>
+    <p>This is your website content. The chat widget will appear in the bottom-right corner with consistent dimensions.
+    </p>
+    <p>Try interacting with the widget - it should maintain the same size regardless of its state (closed, open,
+      different screens).</p>
   </div>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 
   <!-- Load the chat widget script -->
   <script src="./dist/chat-widget.umd.js"></script>
   <script>
     // Wait for DOM to be ready and script to load
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       // Check if ChatWidget is available
       if (typeof ChatWidget !== 'undefined' && ChatWidget.initChatWidget) {
         ChatWidget.initChatWidget({
@@ -28,4 +52,5 @@
     });
   </script>
 </body>
+
 </html>

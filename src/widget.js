@@ -101,8 +101,45 @@ export function initChatWidget(config = {}) {
   if (!container) {
     container = document.createElement('div');
     container.id = containerId;
+    
+    // Add consistent styling to the widget container
+    container.style.cssText = `
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 400px;
+      height: 700px;
+      z-index: 9999;
+      pointer-events: none;
+    `;
+    
+    // Add responsive styles for mobile
+    const mediaQuery = window.matchMedia('(max-width: 450px)');
+    const handleMobileView = (e) => {
+      if (e.matches) {
+        container.style.width = '100%';
+        container.style.height = '100%';
+      } else {
+        container.style.width = '400px';
+        container.style.height = '700px';
+      }
+    };
+    
+    mediaQuery.addListener(handleMobileView);
+    handleMobileView(mediaQuery);
+    
     document.body.appendChild(container);
   }
+  
+  // Ensure pointer events work for interactive elements
+  container.style.pointerEvents = 'none';
+  const style = document.createElement('style');
+  style.textContent = `
+    #${containerId} * {
+      pointer-events: auto;
+    }
+  `;
+  document.head.appendChild(style);
 
   const root = ReactDOM.createRoot(container);
 

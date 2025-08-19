@@ -293,10 +293,6 @@ export const Button = styled.div`
   color: white;
   background-color: #00BCD4;
   cursor: pointer;
-  
-  .material-icons {
-    font-size: 24px;
-  }
 `;
 
 export const MobileButtonClose = styled.div`
