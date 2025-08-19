@@ -9,7 +9,6 @@ import { createClient } from 'graphql-ws';
 import App from './App';
 import store from 'store2'
 import { jwtDecode } from 'jwt-decode'
-import ErrorState from './components/ErrorState';
 import ThemeProvider from './components/styled/design-system/ThemeProvider';
 import GlobalStyles from './components/styled/design-system/GlobalStyles';
 

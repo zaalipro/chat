@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import ChatMessage from './ChatMessage'
 import { ChatMessagesContainer } from './components/styled/ChatMessages'
 

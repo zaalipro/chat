@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSubscription, useMutation } from '@apollo/client';
 import { CHAT_STATUS_SUBSCRIPTION, UPDATE_CHAT_MISSED } from './queries';
 import { createChatTimeouts, clearChatTimeouts, clearChatTimeout } from './utils';

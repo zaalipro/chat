@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   Segment, 
   LoaderContainer, 
@@ -13,7 +12,7 @@ import {
   TextCenter,
   Button
 } from './components/styled/DesignSystem';
-import { Dimmer, DimmerLoaderContainer } from './components/styled/DesignSystem';
+import { DimmerLoaderContainer } from './components/styled/DesignSystem';
 
 const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
   return (

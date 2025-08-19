@@ -1,12 +1,8 @@
-import React from 'react'
 import { 
   Header, 
   HeaderPadding, 
-  HeaderShadow, 
   ConversationHeader, 
-  GutterLeft, 
   TextOpaque,
-  FadeInLeft,
   OverflowYScroll,
   OverflowXHidden
 } from './components/styled/App';

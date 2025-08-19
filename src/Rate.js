@@ -1,26 +1,16 @@
-import React from 'react';
 import { Mutation } from '@apollo/client/react/components'
 import { RATE_AGENT } from './queries'
 import Rating from './Components/Rating'
 import { 
   Header, 
   HeaderPadding, 
-  HeaderShadow, 
   ConversationHeader, 
-  GutterLeft, 
   TextOpaque,
-  FadeInLeft,
   OverflowYScroll,
   OverflowXHidden,
-  Flex,
   FlexHCenter,
   FullWidth,
-  ConversationButtonWrapper,
-  PointerEventsNone,
-  BackgroundDarkGray,
-  DropShadowHover,
-  Pointer,
-  ConversationButton
+  ConversationButtonWrapper
 } from './components/styled/App';
 import { Segment, Button, Mb3 } from './components/styled/DesignSystem';
 

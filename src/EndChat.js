@@ -1,4 +1,3 @@
-import React from 'react'
 import { useMutation } from '@apollo/client'
 import { END_CHAT, GET_CHAT } from './queries'
 import store from 'store2'

@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import MessageBox from './MessageBox'
 import MessageForm from './MessageForm'
 import { Dropzone, MessageBody, ChatContainer } from './components/styled/Chat'

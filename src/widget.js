@@ -1,6 +1,5 @@
 import React from 'react';
 import ReactDOM from "react-dom/client";
-import * as serviceWorker from './serviceWorker';
 import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split, gql } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions';

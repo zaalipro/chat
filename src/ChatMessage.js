@@ -1,15 +1,12 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import { timeDifferenceForDate } from './utils'
 import { 
   MessagePadding, 
-  Flex, 
   FlexBottom, 
   FlexRight, 
-  MessageContainer, 
   MessageContainerPaddingLeft, 
   MessageContainerPaddingRight, 
   MessageBubble, 
-  MessageAvatar,
   Right,
   Opacity4,
   PaddingTop2

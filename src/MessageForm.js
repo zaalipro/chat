@@ -1,9 +1,8 @@
-import React, {useState} from 'react'
+import {useState} from 'react'
 import { Mutation } from '@apollo/client/react/components'
 import store from 'store2'
 import { CREATE_MESSAGE } from './queries'
-import Textarea from 'react-textarea-autosize'
-import { ChatInput, ChatInputShadow, InputField, LightBackground } from './components/styled/ChatInput'
+import { ChatInput, ChatInputShadow, InputField } from './components/styled/ChatInput'
 
 const MessageForm = ({chatId}) => {
   const [inputHasFocus, setInputFocus] = useState(true)
