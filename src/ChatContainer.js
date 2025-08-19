@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Query from './Components/Query'
-import { useMutation, useSubscription } from '@apollo/client'
+import { useMutation, useSubscription, useQuery } from '@apollo/client'
 import { GET_MESSAGES, MESSAGE_SUBSCRIPTION, END_CHAT, GET_CHAT, CHAT_STATUS_SUBSCRIPTION } from './queries'
 import store from 'store2'
 import Chat from './Chat'
@@ -15,6 +15,11 @@ const ChatContainer = () => {
     refetchQueries: [
       { query: GET_CHAT, variables: { chatId: chat.id } },
     ]
+  })
+
+  // Get chat details including company name
+  const { data: chatData } = useQuery(GET_CHAT, {
+    variables: { chatId: chat.id }
   })
 
   // Subscribe to chat status changes
@@ -32,12 +37,22 @@ const ChatContainer = () => {
     return <EndedChat />
   }
 
+  // Extract company name and status from chat data
+  const companyName = chatData?.chat?.companyName || "Company Name"
+  const status = chatData?.chat?.status 
+    ? chatData.chat.status.charAt(0).toUpperCase() + chatData.chat.status.slice(1)
+    : "Started"
+
   return (
     <Query query={GET_MESSAGES} variables={{ chatId: chat.id }}>
       {({ subscribeToMore, ...rest }) => {
         return (
           <span>
-            <ChatHeader endChat={endChat} />
+            <ChatHeader 
+              endChat={endChat} 
+              companyName={companyName}
+              status={status}
+            />
             <Chat
               {...rest}
               chatId={chat.id}
