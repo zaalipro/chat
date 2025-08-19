@@ -1,52 +1,62 @@
 import { 
-  Segment, 
-  LoaderContainer, 
   Loader, 
-  LoaderText, 
-  TextSecondary, 
-  TextMuted, 
-  Mb4, 
-  TextCenter,
-  Button
+  Button,
+  TextCenter
 } from './components/styled/DesignSystem';
-import { DimmerLoaderContainer } from './components/styled/DesignSystem';
 
 const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
   return (
-    <Segment $padded $active>
-      <DimmerLoaderContainer>
-        <LoaderContainer>
-          <Loader $large />
-          <LoaderText>Waiting for agent response</LoaderText>
-        </LoaderContainer>
-      </DimmerLoaderContainer>
+    <div style={{ 
+      padding: '40px 20px', 
+      textAlign: 'center',
+      background: 'white',
+      minHeight: '300px',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center'
+    }}>
+      <Loader style={{ marginBottom: '24px' }} />
       
-      <TextCenter>
-        <div className="p-5" style={{ minHeight: '200px' }}>
-          <Mb4>
-            <TextSecondary className="mb-2" style={{ fontSize: '16px' }}>
-              {pendingChatsCount > 1 
-                ? `Connecting to ${pendingChatsCount} available agents...`
-                : 'Connecting to available agent...'
-              }
-            </TextSecondary>
-            <TextMuted style={{ fontSize: '14px' }}>
-              You'll be connected to the first agent who responds
-            </TextMuted>
-          </Mb4>
-          
-          {onCancel && (
-            <Button 
-              $basic
-              className="mt-4"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          )}
-        </div>
-      </TextCenter>
-    </Segment>
+      <h3 style={{ 
+        margin: '0 0 8px 0', 
+        fontSize: '18px', 
+        fontWeight: '500',
+        color: '#333'
+      }}>
+        Waiting for agent response
+      </h3>
+      
+      <p style={{ 
+        margin: '0 0 24px 0', 
+        fontSize: '14px', 
+        color: '#666',
+        lineHeight: '1.4'
+      }}>
+        {pendingChatsCount > 1 
+          ? `Connecting to ${pendingChatsCount} available agents...`
+          : 'Connecting to available agent...'
+        }
+        <br />
+        You'll be connected to the first agent who responds
+      </p>
+      
+      {onCancel && (
+        <Button 
+          onClick={onCancel}
+          style={{
+            marginTop: '16px',
+            padding: '8px 24px',
+            fontSize: '14px',
+            backgroundColor: '#e91e63',
+            color: 'white',
+            border: 'none'
+          }}
+        >
+          Cancel
+        </Button>
+      )}
+    </div>
   );
 };
 

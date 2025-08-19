@@ -24125,7 +24125,7 @@ const Button$1 = dt.button`
     justify-content: center;
   }
 `;
-const LoaderContainer = dt.div`
+dt.div`
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -24150,7 +24150,7 @@ const Loader = dt.div`
     border-width: 4px;
   `}
 `;
-const LoaderText = dt.div`
+dt.div`
   font-size: ${(props) => props.theme.fontSize.lg};
   font-weight: 500;
   color: ${(props) => props.theme.colors.textSecondary};
@@ -24173,7 +24173,7 @@ dt.div`
     }
   `}
 `;
-const DimmerLoaderContainer = dt.div`
+dt.div`
   position: absolute;
   top: 50%;
   left: 50%;
@@ -24261,7 +24261,7 @@ dt.div`
 const FullWidth$1 = dt.div`
   width: 100%;
 `;
-const TextCenter = dt.div`
+dt.div`
   text-align: center;
 `;
 dt.div`
@@ -24273,10 +24273,10 @@ dt.div`
 dt.div`
   color: ${(props) => props.theme.colors.textPrimary};
 `;
-const TextSecondary = dt.div`
+dt.div`
   color: ${(props) => props.theme.colors.textSecondary};
 `;
-const TextMuted = dt.div`
+dt.div`
   color: ${(props) => props.theme.colors.textMuted};
 `;
 dt.div`
@@ -24297,7 +24297,7 @@ dt.div`
 dt.div`
   margin-bottom: ${(props) => props.theme.spacing.md};
 `;
-const Mb4 = dt.div`
+dt.div`
   margin-bottom: ${(props) => props.theme.spacing.lg};
 `;
 dt.div`
@@ -24427,26 +24427,48 @@ const TextAreaField = ({ form, name, label, placeholder = "" }) => /* @__PURE__ 
   ] })
 ] });
 const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(Segment, { $padded: true, $active: true, children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(DimmerLoaderContainer, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LoaderContainer, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Loader, { $large: true }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderText, { children: "Waiting for agent response" })
-    ] }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(TextCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-5", style: { minHeight: "200px" }, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs(Mb4, { children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TextSecondary, { className: "mb-2", style: { fontSize: "16px" }, children: pendingChatsCount > 1 ? `Connecting to ${pendingChatsCount} available agents...` : "Connecting to available agent..." }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(TextMuted, { style: { fontSize: "14px" }, children: "You'll be connected to the first agent who responds" })
-      ] }),
-      onCancel && /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Button$1,
-        {
-          $basic: true,
-          className: "mt-4",
-          onClick: onCancel,
-          children: "Cancel"
-        }
-      )
-    ] }) })
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
+    padding: "40px 20px",
+    textAlign: "center",
+    background: "white",
+    minHeight: "300px",
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "center"
+  }, children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Loader, { style: { marginBottom: "24px" } }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { style: {
+      margin: "0 0 8px 0",
+      fontSize: "18px",
+      fontWeight: "500",
+      color: "#333"
+    }, children: "Waiting for agent response" }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: {
+      margin: "0 0 24px 0",
+      fontSize: "14px",
+      color: "#666",
+      lineHeight: "1.4"
+    }, children: [
+      pendingChatsCount > 1 ? `Connecting to ${pendingChatsCount} available agents...` : "Connecting to available agent...",
+      /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+      "You'll be connected to the first agent who responds"
+    ] }),
+    onCancel && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      Button$1,
+      {
+        onClick: onCancel,
+        style: {
+          marginTop: "16px",
+          padding: "8px 24px",
+          fontSize: "14px",
+          backgroundColor: "#e91e63",
+          color: "white",
+          border: "none"
+        },
+        children: "Cancel"
+      }
+    )
   ] });
 };
 const CREATE_CHAT = gql`
@@ -28016,7 +28038,7 @@ const Container = dt.div`
   right: 0;
   width: 400px;
   height: 700px;
-  padding: 20px;
+  padding: 20px 0 20px 20px;
   box-sizing: border-box;
   
   & div {

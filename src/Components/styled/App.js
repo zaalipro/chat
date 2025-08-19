@@ -120,7 +120,7 @@ export const Container = styled.div`
   right: 0;
   width: 400px;
   height: 700px;
-  padding: 20px;
+  padding: 20px 0 20px 20px;
   box-sizing: border-box;
   
   & div {
