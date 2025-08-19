@@ -29198,76 +29198,9 @@ const ChatContainer = () => {
     ] });
   } });
 };
-var classnames = { exports: {} };
-/*!
-	Copyright (c) 2018 Jed Watson.
-	Licensed under the MIT License (MIT), see
-	http://jedwatson.github.io/classnames
-*/
-var hasRequiredClassnames;
-function requireClassnames() {
-  if (hasRequiredClassnames) return classnames.exports;
-  hasRequiredClassnames = 1;
-  (function(module2) {
-    (function() {
-      var hasOwn2 = {}.hasOwnProperty;
-      function classNames() {
-        var classes = "";
-        for (var i = 0; i < arguments.length; i++) {
-          var arg = arguments[i];
-          if (arg) {
-            classes = appendClass(classes, parseValue(arg));
-          }
-        }
-        return classes;
-      }
-      function parseValue(arg) {
-        if (typeof arg === "string" || typeof arg === "number") {
-          return arg;
-        }
-        if (typeof arg !== "object") {
-          return "";
-        }
-        if (Array.isArray(arg)) {
-          return classNames.apply(null, arg);
-        }
-        if (arg.toString !== Object.prototype.toString && !arg.toString.toString().includes("[native code]")) {
-          return arg.toString();
-        }
-        var classes = "";
-        for (var key in arg) {
-          if (hasOwn2.call(arg, key) && arg[key]) {
-            classes = appendClass(classes, key);
-          }
-        }
-        return classes;
-      }
-      function appendClass(value, newClass) {
-        if (!newClass) {
-          return value;
-        }
-        if (value) {
-          return value + " " + newClass;
-        }
-        return value + newClass;
-      }
-      if (module2.exports) {
-        classNames.default = classNames;
-        module2.exports = classNames;
-      } else {
-        window.classNames = classNames;
-      }
-    })();
-  })(classnames);
-  return classnames.exports;
-}
-var classnamesExports = requireClassnames();
-const cx = /* @__PURE__ */ getDefaultExportFromCjs(classnamesExports);
 class ToggleButton extends reactExports.Component {
   render() {
-    const buttonStyles = cx("drop-shadow-hover pointer flex-center flex", {
-      "drop-shadow-hover-active": this.props.isOpen
-    });
+    const buttonStyles = `drop-shadow-hover pointer flex-center flex${this.props.isOpen ? " drop-shadow-hover-active" : ""}`;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Button,
       {
@@ -29440,7 +29373,7 @@ const App = ({ error }) => {
   if (error) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: error.message, onRetry: retryLogin });
   }
-  const [isOpen, setOpen] = reactExports.useState(true);
+  const [isOpen, setOpen] = reactExports.useState(false);
   const [showOffline, setOffline] = reactExports.useState(false);
   const [selectedContract, setSelectedContract] = reactExports.useState(null);
   const processContracts = (allContracts) => __async(null, null, function* () {

@@ -100,7 +100,7 @@ const App = ({ error }) => {
     return <ErrorState message={error.message} onRetry={retryLogin} />;
   }
 
-  const [isOpen, setOpen] = useState(true)
+  const [isOpen, setOpen] = useState(false)
   const [showOffline, setOffline] = useState(false)
   const [selectedContract, setSelectedContract] = useState(null)
   // Replace cx utility with conditional styling
