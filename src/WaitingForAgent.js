@@ -20,7 +20,7 @@ const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
     <Segment $padded $active>
       <DimmerLoaderContainer>
         <LoaderContainer>
-          <Loader large />
+          <Loader $large />
           <LoaderText>Waiting for agent response</LoaderText>
         </LoaderContainer>
       </DimmerLoaderContainer>

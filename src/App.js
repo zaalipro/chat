@@ -42,7 +42,7 @@ const App = ({ error }) => {
     setLoggingIn(true);
     setLoginError(null);
     // Retrieve the public key from window object or Vite environment variables.
-    const publicKey = window.REACT_APP_PUBLIC_KEY || import.meta.env.VITE_PUBLIC_KEY;
+    const publicKey = import.meta.env.VITE_PUBLIC_KEY;
     // If no public key is found, record an error and stop the process.
     if (!publicKey) {
       const err = new Error("Public key not found for login.");

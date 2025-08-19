@@ -16,7 +16,7 @@ import {
 } from './components/styled/ChatMessage'
 import { FadeInLeft } from './components/styled/keyframes'
 
-const imageUrl = process.env.REACT_APP_COMPANY_LOGO_URL
+const imageUrl = import.meta.env.VITE_COMPANY_LOGO_URL
 
 class ChatMessage extends Component {
 

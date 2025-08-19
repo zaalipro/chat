@@ -91,7 +91,7 @@ export const isWorkingHours = (session, currentTime) => {
 }
 
 export const getCurrentTime = () => {
-  return axios.get(process.env.REACT_APP_API_URL + '/api/time', {
+  return axios.get(import.meta.env.VITE_API_URL + '/api/time', {
     headers: { "Content-Type": "application/json" }
   })
 }
@@ -298,7 +298,7 @@ export const clearChatTimeout = (timeouts, chatId) => {
  */
 export const detectIPAddress = async (timeout = 3000) => {
   try {
-    const response = await axios.get(process.env.REACT_APP_IPIFY_URL, {
+    const response = await axios.get(import.meta.env.VITE_IPIFY_URL, {
       timeout: timeout,
       headers: {
         'Content-Type': 'application/json'

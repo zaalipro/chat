@@ -2,7 +2,7 @@ import React from 'react'
 import store from 'store2'
 
 const  mainColor = 'rgba(39,175,96,1)'
-const companyLogoURL = process.env.REACT_APP_COMPANY_LOGO_URL
+const companyLogoURL = import.meta.env.VITE_COMPANY_LOGO_URL
 
 const ChatHeader = ({endChat = () => Promise.resolve()}) => (
   <div

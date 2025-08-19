@@ -211,7 +211,7 @@
   `}
   margin-bottom: ${e=>e.theme.spacing.lg};
   
-  ${e=>e.large&&"\n    width: 60px;\n    height: 60px;\n    border-width: 4px;\n  "}
+  ${e=>e.$large&&"\n    width: 60px;\n    height: 60px;\n    border-width: 4px;\n  "}
 `,Dh=mh.div`
   font-size: ${e=>e.theme.fontSize.lg};
   font-weight: 500;
@@ -360,7 +360,7 @@
     max-height: 100vh;
     border-radius: 0;
   }
-`;const Wh=({form:e,name:t,label:n,placeholder:r=""})=>N.jsxs(_h,{children:[N.jsx(Oh,{htmlFor:t,children:n}),N.jsx(Th,{id:t,$error:e.errors[t],type:"text",name:t,placeholder:r,onChange:e.handleChange,onBlur:e.handleBlur,value:e.values[t]}),e.touched[t]&&e.errors[t]&&N.jsxs(Nh,{children:[N.jsxs(Ih,{children:[n," is not valid"]}),N.jsx("div",{children:e.errors[t]})]})]}),Hh=({form:e,name:t,label:n,placeholder:r=""})=>N.jsxs(_h,{children:[N.jsx(Oh,{htmlFor:t,children:n}),N.jsx(Ch,{id:t,$error:e.errors[t],name:t,placeholder:r,onChange:e.handleChange,onBlur:e.handleBlur,value:e.values[t],rows:4}),e.touched[t]&&e.errors[t]&&N.jsxs(Nh,{children:[N.jsxs(Ih,{children:[n," is not valid"]}),N.jsx("div",{children:e.errors[t]})]})]}),Kh=({pendingChatsCount:e=0,onCancel:t})=>N.jsxs(kh,{$padded:!0,$active:!0,children:[N.jsx(Ph,{children:N.jsxs(jh,{children:[N.jsx(Ah,{large:!0}),N.jsx(Dh,{children:"Waiting for agent response"})]})}),N.jsx(Uh,{children:N.jsxs("div",{className:"p-5",style:{minHeight:"200px"},children:[N.jsxs(Bh,{children:[N.jsx(qh,{className:"mb-2",style:{fontSize:"16px"},children:e>1?`Connecting to ${e} available agents...`:"Connecting to available agent..."}),N.jsx(Vh,{style:{fontSize:"14px"},children:"You'll be connected to the first agent who responds"})]}),t&&N.jsx(Rh,{$basic:!0,className:"mt-4",onClick:t,children:"Cancel"})]})})]}),Gh=as`
+`;const Wh=({form:e,name:t,label:n,placeholder:r=""})=>N.jsxs(_h,{children:[N.jsx(Oh,{htmlFor:t,children:n}),N.jsx(Th,{id:t,$error:e.errors[t],type:"text",name:t,placeholder:r,onChange:e.handleChange,onBlur:e.handleBlur,value:e.values[t]}),e.touched[t]&&e.errors[t]&&N.jsxs(Nh,{children:[N.jsxs(Ih,{children:[n," is not valid"]}),N.jsx("div",{children:e.errors[t]})]})]}),Hh=({form:e,name:t,label:n,placeholder:r=""})=>N.jsxs(_h,{children:[N.jsx(Oh,{htmlFor:t,children:n}),N.jsx(Ch,{id:t,$error:e.errors[t],name:t,placeholder:r,onChange:e.handleChange,onBlur:e.handleBlur,value:e.values[t],rows:4}),e.touched[t]&&e.errors[t]&&N.jsxs(Nh,{children:[N.jsxs(Ih,{children:[n," is not valid"]}),N.jsx("div",{children:e.errors[t]})]})]}),Kh=({pendingChatsCount:e=0,onCancel:t})=>N.jsxs(kh,{$padded:!0,$active:!0,children:[N.jsx(Ph,{children:N.jsxs(jh,{children:[N.jsx(Ah,{$large:!0}),N.jsx(Dh,{children:"Waiting for agent response"})]})}),N.jsx(Uh,{children:N.jsxs("div",{className:"p-5",style:{minHeight:"200px"},children:[N.jsxs(Bh,{children:[N.jsx(qh,{className:"mb-2",style:{fontSize:"16px"},children:e>1?`Connecting to ${e} available agents...`:"Connecting to available agent..."}),N.jsx(Vh,{style:{fontSize:"14px"},children:"You'll be connected to the first agent who responds"})]}),t&&N.jsx(Rh,{$basic:!0,className:"mt-4",onClick:t,children:"Cancel"})]})})]}),Gh=as`
 mutation createChat(
   $customerName: String!
   $headline: String!

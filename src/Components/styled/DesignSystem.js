@@ -231,7 +231,7 @@ export const Loader = styled.div`
   `}
   margin-bottom: ${props => props.theme.spacing.lg};
   
-  ${props => props.large && `
+  ${props => props.$large && `
     width: 60px;
     height: 60px;
     border-width: 4px;

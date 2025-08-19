@@ -24216,7 +24216,7 @@ const Loader = dt.div`
   `}
   margin-bottom: ${(props) => props.theme.spacing.lg};
   
-  ${(props) => props.large && `
+  ${(props) => props.$large && `
     width: 60px;
     height: 60px;
     border-width: 4px;
@@ -24501,7 +24501,7 @@ const TextAreaField = ({ form, name, label, placeholder = "" }) => /* @__PURE__ 
 const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(Segment, { $padded: true, $active: true, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(DimmerLoaderContainer, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(LoaderContainer, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Loader, { large: true }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Loader, { $large: true }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(LoaderText, { children: "Waiting for agent response" })
     ] }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(TextCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-5", style: { minHeight: "200px" }, children: [
