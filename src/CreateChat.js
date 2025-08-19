@@ -242,103 +242,101 @@ const CreateChat = ({ setCreate }) => {
         </HeaderPadding>
       </Header>
       <div className="body">
-        <OverflowYScroll>
-          <OverflowXHidden>
-            {/* Show waiting state */}
-            {(state === CHAT_STATES.CREATING || state === CHAT_STATES.WAITING) && (
-              <>
-                <WaitingForAgent
-                  pendingChatsCount={pending.length}
-                  onCancel={() => {
-                    setState(CHAT_STATES.FORM);
-                    setPending([]);
-                    reset();
-                    clearError();
-                  }}
+        <OverflowXHidden>
+          {/* Show waiting state */}
+          {(state === CHAT_STATES.CREATING || state === CHAT_STATES.WAITING) && (
+            <>
+              <WaitingForAgent
+                pendingChatsCount={pending.length}
+                onCancel={() => {
+                  setState(CHAT_STATES.FORM);
+                  setPending([]);
+                  reset();
+                  clearError();
+                }}
+              />
+
+              {/* Monitor chat statuses */}
+              {state === CHAT_STATES.WAITING && pending.length > 0 && (
+                <ChatStatusMonitor
+                  pendingChats={pending}
+                  onChatStarted={onChatStarted}
+                  onChatMissed={onChatMissed}
+                  onError={onMonitorError}
                 />
+              )}
+            </>
+          )}
 
-                {/* Monitor chat statuses */}
-                {state === CHAT_STATES.WAITING && pending.length > 0 && (
-                  <ChatStatusMonitor
-                    pendingChats={pending}
-                    onChatStarted={onChatStarted}
-                    onChatMissed={onChatMissed}
-                    onError={onMonitorError}
-                  />
-                )}
-              </>
-            )}
+          {/* Show form */}
+          {state === CHAT_STATES.FORM && (
+            <Segment $padded $basic style={{ margin: 0, padding: '16px 0 16px 16px', marginRight: '14px' }}>
+              <Row>
+                <Formik
+                  initialValues={{
+                    customerName: "",
+                    headline: ""
+                  }}
+                  validate={validate}
+                  onSubmit={handleSubmit}
+                >
+                  {form => {
+                    return (
+                      <form
+                        onSubmit={form.handleSubmit}
+                      >
+                        <TextField
+                          form={form}
+                          name="customerName"
+                          label="Customer name"
+                          placeholder="John"
+                        />
+                        <TextAreaField
+                          form={form}
+                          name="headline"
+                          label="Head line"
+                        />
 
-            {/* Show form */}
-            {state === CHAT_STATES.FORM && (
-              <Segment $padded $basic style={{ margin: 0 }}>
-                <Row>
-                  <Formik
-                    initialValues={{
-                      customerName: "",
-                      headline: ""
-                    }}
-                    validate={validate}
-                    onSubmit={handleSubmit}
-                  >
-                    {form => {
-                      return (
-                        <form
-                          onSubmit={form.handleSubmit}
-                        >
-                          <TextField
-                            form={form}
-                            name="customerName"
-                            label="Customer name"
-                            placeholder="John"
-                          />
-                          <TextAreaField
-                            form={form}
-                            name="headline"
-                            label="Head line"
-                          />
+                        {error && (
+                          <Message error>
+                            <MessageHeader>Error</MessageHeader>
+                            <div>{error}</div>
+                            <Button
+                              $small
+                              onClick={handleRetry}
+                              style={{ backgroundColor: 'var(--danger-color)', color: 'white' }}
+                            >
+                              Retry
+                            </Button>
+                          </Message>
+                        )}
 
-                          {error && (
-                            <Message error>
-                              <MessageHeader>Error</MessageHeader>
-                              <div>{error}</div>
-                              <Button
-                                $small
-                                onClick={handleRetry}
-                                style={{ backgroundColor: 'var(--danger-color)', color: 'white' }}
-                              >
-                                Retry
-                              </Button>
-                            </Message>
-                          )}
-
-                          <Mt5>
-                            <FlexHCenter>
-                              <FullWidth>
-                                <ConversationButtonWrapper className="pointer-events-none">
-                                  <Button
-                                    style={{ backgroundColor: "rgb(39, 175, 96)", marginLeft: "55px", color: "white" }}
-                                    $primary
-                                    $large
-                                    className="pointer-events-initial"
-                                    onClick={() => form.submitForm()}
-                                    disabled={form.isSubmitting}
-                                  >
-                                    {form.isSubmitting ? 'Starting...' : 'Start Conversation'}
-                                  </Button>
-                                </ConversationButtonWrapper>
-                              </FullWidth>
-                            </FlexHCenter>
-                          </Mt5>
-                        </form>
-                      );
-                    }}
-                  </Formik>
-                </Row>
-              </Segment>
-            )}
-          </OverflowXHidden>
-        </OverflowYScroll>
+                        <Mt5>
+                          <FlexHCenter>
+                            <FullWidth>
+                              <ConversationButtonWrapper className="pointer-events-none">
+                                <Button
+                                  style={{ backgroundColor: "rgb(39, 175, 96)", marginLeft: "75px", color: "white" }}
+                                  $primary
+                                  $large
+                                  className="pointer-events-initial"
+                                  onClick={() => form.submitForm()}
+                                  disabled={form.isSubmitting}
+                                >
+                                  {form.isSubmitting ? 'Starting...' : 'Start Conversation'}
+                                </Button>
+                              </ConversationButtonWrapper>
+                            </FullWidth>
+                          </FlexHCenter>
+                        </Mt5>
+                      </form>
+                    );
+                  }}
+                </Formik>
+              </Row>
+            </Segment>
+          )}
+        </OverflowXHidden>
       </div>
     </span>
   );

@@ -16,8 +16,6 @@ export const Container = styled.div`
 
 export const Segment = styled.div`
   background: ${props => props.theme.colors.white};
-  border: 1px solid ${props => props.theme.colors.gray200};
-  border-radius: ${props => props.theme.radius.md};
   padding: ${props => props.theme.spacing.lg};
   margin-bottom: ${props => props.theme.spacing.md};
   box-shadow: ${props => props.theme.shadows.sm};

@@ -14,10 +14,8 @@ class Chat extends Component {
     return (
       <Dropzone>
         <MessageBody>
-          <ChatContainer>
-            <MessageBox messages={data.messages}/>
-            <MessageForm chatId={chatId} />
-          </ChatContainer>
+          <MessageBox messages={data.messages}/>
+          <MessageForm chatId={chatId} />
         </MessageBody>
       </Dropzone>
     );

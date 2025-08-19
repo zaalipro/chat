@@ -23942,8 +23942,6 @@ dt.div`
 `;
 const Segment = dt.div`
   background: ${(props) => props.theme.colors.white};
-  border: 1px solid ${(props) => props.theme.colors.gray200};
-  border-radius: ${(props) => props.theme.radius.md};
   padding: ${(props) => props.theme.spacing.lg};
   margin-bottom: ${(props) => props.theme.spacing.md};
   box-shadow: ${(props) => props.theme.shadows.sm};
@@ -28359,7 +28357,7 @@ const CreateChat = ({ setCreate }) => {
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "fadeInLeft", children: "Start conversation" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(TextOpaque, { className: "fadeInLeft", children: "TeamViewer" })
     ] }) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "body", children: /* @__PURE__ */ jsxRuntimeExports.jsx(OverflowYScroll, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(OverflowXHidden, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "body", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(OverflowXHidden, { children: [
       (state === CHAT_STATES.CREATING || state === CHAT_STATES.WAITING) && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           WaitingForAgent,
@@ -28383,7 +28381,7 @@ const CreateChat = ({ setCreate }) => {
           }
         )
       ] }),
-      state === CHAT_STATES.FORM && /* @__PURE__ */ jsxRuntimeExports.jsx(Segment, { $padded: true, $basic: true, style: { margin: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Row, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      state === CHAT_STATES.FORM && /* @__PURE__ */ jsxRuntimeExports.jsx(Segment, { $padded: true, $basic: true, style: { margin: 0, padding: "16px 0 16px 16px", marginRight: "14px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Row, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Formik,
         {
           initialValues: {
@@ -28431,7 +28429,7 @@ const CreateChat = ({ setCreate }) => {
                   /* @__PURE__ */ jsxRuntimeExports.jsx(Mt5, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FlexHCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FullWidth$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConversationButtonWrapper, { className: "pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                     Button$1,
                     {
-                      style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "55px", color: "white" },
+                      style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "75px", color: "white" },
                       $primary: true,
                       $large: true,
                       className: "pointer-events-initial",
@@ -28446,7 +28444,7 @@ const CreateChat = ({ setCreate }) => {
           }
         }
       ) }) })
-    ] }) }) })
+    ] }) })
   ] });
 };
 const validate = (values) => {
@@ -28894,7 +28892,7 @@ const MessageForm = ({ chatId }) => {
     ) }) });
   } });
 };
-const ChatContainer$1 = dt.div`
+dt.div`
   overflow-y: scroll;
   overflow-x: hidden;
 `;
@@ -28910,10 +28908,10 @@ class Chat extends reactExports.Component {
   }
   render() {
     const { data, chatId } = this.props;
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(Dropzone, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageBody, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ChatContainer$1, { children: [
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(Dropzone, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(MessageBody, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(MessageBox, { messages: data.messages }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(MessageForm, { chatId })
-    ] }) }) });
+    ] }) });
   }
 }
 const theme = {
@@ -29314,7 +29312,7 @@ const Rate = ({ chat, setCreate }) => {
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "fadeInLeft", children: "Agent feedback" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(TextOpaque, { className: "fadeInLeft", children: "Agent Name" })
     ] }) }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "body", children: /* @__PURE__ */ jsxRuntimeExports.jsx(OverflowYScroll, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(OverflowXHidden, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "body", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(OverflowXHidden, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(Mutation, { mutation: RATE_AGENT, children: (createRate) => /* @__PURE__ */ jsxRuntimeExports.jsxs(Segment, { children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "mb-3", children: "Chat finished, Please rate the agent:" }),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -29335,13 +29333,14 @@ const Rate = ({ chat, setCreate }) => {
       /* @__PURE__ */ jsxRuntimeExports.jsx(FlexHCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FullWidth, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConversationButtonWrapper, { className: "pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Button$1,
         {
+          style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "95px", color: "white" },
           primary: true,
           className: "pointer-events-initial",
           onClick: () => setCreate(true),
           children: "New Conversation"
         }
       ) }) }) })
-    ] }) }) })
+    ] }) })
   ] });
 };
 const CONSUMER_LOGIN = gql`

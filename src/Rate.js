@@ -26,7 +26,6 @@ const Rate = ({chat, setCreate}) => {
         </HeaderPadding>
       </Header>
       <div className='body'>
-        <OverflowYScroll>
           <OverflowXHidden>
             <Mutation mutation={RATE_AGENT}>
             {(createRate) => (
@@ -50,6 +49,7 @@ const Rate = ({chat, setCreate}) => {
               <FullWidth>
                 <ConversationButtonWrapper className='pointer-events-none'>
                   <Button
+                    style={{ backgroundColor: "rgb(39, 175, 96)", marginLeft: "95px", color: "white" }}
                     primary
                     className='pointer-events-initial'
                     onClick={() => setCreate(true)}
@@ -60,7 +60,6 @@ const Rate = ({chat, setCreate}) => {
               </FullWidth>
             </FlexHCenter>
           </OverflowXHidden>
-        </OverflowYScroll>
       </div>
     </span>
   )
