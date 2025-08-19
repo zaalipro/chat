@@ -7139,13 +7139,6 @@ function requireClient() {
 }
 var clientExports = requireClient();
 const ReactDOM = /* @__PURE__ */ getDefaultExportFromCjs(clientExports);
-Boolean(
-  window.location.hostname === "localhost" || // [::1] is the IPv6 localhost address.
-  window.location.hostname === "[::1]" || // 127.0.0.1/8 is considered localhost for IPv4.
-  window.location.hostname.match(
-    /^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/
-  )
-);
 var extendStatics = function(d, b2) {
   extendStatics = Object.setPrototypeOf || { __proto__: [] } instanceof Array && function(d2, b3) {
     d2.__proto__ = b3;
@@ -20615,71 +20608,6 @@ function isFatalInternalCloseCode(code) {
 function isWebSocket(val) {
   return typeof val === "function" && "constructor" in val && "CLOSED" in val && "CLOSING" in val && "CONNECTING" in val && "OPEN" in val;
 }
-var classnames = { exports: {} };
-/*!
-	Copyright (c) 2018 Jed Watson.
-	Licensed under the MIT License (MIT), see
-	http://jedwatson.github.io/classnames
-*/
-var hasRequiredClassnames;
-function requireClassnames() {
-  if (hasRequiredClassnames) return classnames.exports;
-  hasRequiredClassnames = 1;
-  (function(module2) {
-    (function() {
-      var hasOwn2 = {}.hasOwnProperty;
-      function classNames() {
-        var classes = "";
-        for (var i = 0; i < arguments.length; i++) {
-          var arg = arguments[i];
-          if (arg) {
-            classes = appendClass(classes, parseValue(arg));
-          }
-        }
-        return classes;
-      }
-      function parseValue(arg) {
-        if (typeof arg === "string" || typeof arg === "number") {
-          return arg;
-        }
-        if (typeof arg !== "object") {
-          return "";
-        }
-        if (Array.isArray(arg)) {
-          return classNames.apply(null, arg);
-        }
-        if (arg.toString !== Object.prototype.toString && !arg.toString.toString().includes("[native code]")) {
-          return arg.toString();
-        }
-        var classes = "";
-        for (var key in arg) {
-          if (hasOwn2.call(arg, key) && arg[key]) {
-            classes = appendClass(classes, key);
-          }
-        }
-        return classes;
-      }
-      function appendClass(value, newClass) {
-        if (!newClass) {
-          return value;
-        }
-        if (value) {
-          return value + " " + newClass;
-        }
-        return value + newClass;
-      }
-      if (module2.exports) {
-        classNames.default = classNames;
-        module2.exports = classNames;
-      } else {
-        window.classNames = classNames;
-      }
-    })();
-  })(classnames);
-  return classnames.exports;
-}
-var classnamesExports = requireClassnames();
-const cx = /* @__PURE__ */ getDefaultExportFromCjs(classnamesExports);
 var isMergeableObject = function isMergeableObject2(value) {
   return isNonNullObject(value) && !isSpecial(value);
 };
@@ -27140,7 +27068,7 @@ function timeDifferenceForDate(date) {
   return timeDifference(now, updated);
 }
 const getCurrentTime = () => {
-  return axios.get("undefined/api/time", {
+  return axios.get("http://localhost:5001/api/time", {
     headers: { "Content-Type": "application/json" }
   });
 };
@@ -27237,7 +27165,7 @@ const clearChatTimeout = (timeouts, chatId) => {
 };
 const detectIPAddress = (timeout = 3e3) => __async(null, null, function* () {
   try {
-    const response = yield axios.get(void 0, {
+    const response = yield axios.get("https://api.ipify.org?format=json", {
       timeout,
       headers: {
         "Content-Type": "application/json"
@@ -28236,9 +28164,16 @@ const Button = dt.div`
   float: right;
   width: 60px;
   height: 60px;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: white;
   background-color: #00BCD4;
+  cursor: pointer;
+  
+  .material-icons {
+    font-size: 24px;
+  }
 `;
 dt.div`
   position: absolute;
@@ -28478,6 +28413,7 @@ const CreateChat = ({ setCreate }) => {
                   /* @__PURE__ */ jsxRuntimeExports.jsx(Mt5, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FlexHCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FullWidth$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConversationButtonWrapper, { className: "pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                     Button$1,
                     {
+                      style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "55px", color: "white" },
                       $primary: true,
                       $large: true,
                       className: "pointer-events-initial",
@@ -28780,7 +28716,7 @@ const MessageBubble = dt.div`
     min-height: 40px;
   }
 `;
-const imageUrl = void 0;
+const imageUrl = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
 class ChatMessage extends reactExports.Component {
   constructor() {
     super(...arguments);
@@ -28827,8 +28763,8 @@ const ChatMessagesContainer = dt.div`
   flex-direction: column;
   justify-content: center;
 `;
-const mainColor$1 = "rgba(39,175,96,1)";
-const companyLogoURL$1 = void 0;
+const mainColor = "rgba(39,175,96,1)";
+const companyLogoURL = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
 class MessageBox extends reactExports.Component {
   constructor() {
     super(...arguments);
@@ -28853,8 +28789,8 @@ class MessageBox extends reactExports.Component {
           {
             message,
             shouldRenderTimestamp: isLatestMessage,
-            profileImageURL: companyLogoURL$1,
-            userSpeechBubbleColor: mainColor$1
+            profileImageURL: companyLogoURL,
+            userSpeechBubbleColor: mainColor
           },
           i
         );
@@ -28962,33 +28898,227 @@ class Chat extends reactExports.Component {
     ] }) }) });
   }
 }
-const mainColor = "rgba(39,175,96,1)";
-const companyLogoURL = void 0;
-const ChatHeader = ({ endChat = () => Promise.resolve() }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-  "div",
-  {
-    style: { backgroundColor: mainColor },
-    className: "header flex header-padding-chat items-center header-shadow",
-    children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "radius fadeInLeft flex flex-center back-button pointer", children: /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: "material-icons", children: "keyboard_arrow_left" }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "padding-10 flex", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "img",
-          {
-            src: companyLogoURL,
-            alt: "",
-            className: "avatar fadeInLeft"
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fadeInLeft gutter-left conversation-title", children: [
-          "Company Name",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "fadeInLeft text-opaque", children: "Started" })
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "radius fadeInLeft flex flex-center back-button pointer", onClick: () => endChat().then((resp) => store.remove("activeChat")), children: /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: "material-icons", children: "clear" }) })
-    ]
+const theme = {
+  // Colors
+  colors: {
+    primary: "rgba(39, 175, 96, 1)",
+    primaryDark: "rgba(30, 140, 77, 1)",
+    primaryLight: "rgba(39, 175, 96, 0.1)",
+    secondary: "#6c757d",
+    success: "#28a745",
+    danger: "#dc3545",
+    warning: "#ffc107",
+    info: "#17a2b8",
+    // Neutral Colors
+    white: "#ffffff",
+    lightGray: "#f8f9fa",
+    gray100: "#f1f3f4",
+    gray200: "#e9ecef",
+    gray300: "#dee2e6",
+    gray400: "#ced4da",
+    gray500: "#adb5bd",
+    gray600: "#6c757d",
+    gray700: "#495057",
+    gray800: "#343a40",
+    gray900: "#212529",
+    black: "#000000",
+    // Text Colors
+    textPrimary: "#212529",
+    textSecondary: "#6c757d",
+    textMuted: "#999999",
+    textLight: "#ffffff",
+    textOpaque: "rgba(255, 255, 255, 0.8)",
+    // Background colors
+    backgroundDarkGray: "#8196b2"
+  },
+  // Spacing
+  spacing: {
+    xs: "0.25rem",
+    sm: "0.5rem",
+    md: "1rem",
+    lg: "1.5rem",
+    xl: "2rem",
+    xxl: "3rem"
+  },
+  // Border Radius
+  radius: {
+    sm: "0.25rem",
+    md: "0.5rem",
+    lg: "0.75rem",
+    xl: "1rem",
+    circle: "50%"
+  },
+  // Shadows
+  shadows: {
+    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    header: "0px -3px 42px 6px rgba(0,0,0,0.17)",
+    hover: "0px 6px 30px -4px rgba(0,0,0,0.0)",
+    hoverActive: "0px 6px 30px -4px rgba(0,0,0,0.45)",
+    input: "0px -3px 48px -1px rgba(0,0,0,0.10)"
+  },
+  // Typography
+  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+  fontSize: {
+    xs: "0.75rem",
+    sm: "0.875rem",
+    base: "1rem",
+    lg: "1.125rem",
+    xl: "1.25rem",
+    xxl: "1.5rem",
+    xxxl: "1.875rem"
+  },
+  // Line Heights
+  lineHeight: {
+    tight: 1.25,
+    normal: 1.5,
+    relaxed: 1.625
+  },
+  // Transitions
+  transitions: {
+    fast: "150ms ease",
+    normal: "300ms ease",
+    slow: "500ms ease"
+  },
+  // Z-index
+  zIndex: {
+    dropdown: 1e3,
+    modal: 1050,
+    tooltip: 1070
+  },
+  // Widget dimensions
+  widget: {
+    width: "400px",
+    height: "700px",
+    mobileWidth: "100%",
+    mobileHeight: "100%"
+  },
+  // Message bubble
+  message: {
+    maxWidth: "280px",
+    maxWidthMobile: "240px",
+    minHeight: "44px",
+    minHeightMobile: "40px",
+    padding: "20px 24px",
+    paddingMobile: "16px 20px"
+  },
+  // Avatar
+  avatar: {
+    size: "40px"
   }
-);
+};
+const HeaderContainer = dt.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: ${theme.spacing.md};
+  background-color: ${theme.colors.primary};
+  box-shadow: ${theme.shadows.header};
+  min-height: 60px;
+  transition: box-shadow ${theme.transitions.normal};
+
+  &:hover {
+    box-shadow: ${theme.shadows.hoverActive};
+  }
+`;
+const HeaderButton = dt.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.radius.circle};
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  cursor: pointer;
+  transition: all ${theme.transitions.fast};
+  color: ${theme.colors.white};
+
+  &:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .material-icons {
+    font-size: 24px;
+  }
+`;
+const CompanyInfo = dt.div`
+  display: flex;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+  padding: 0 ${theme.spacing.md};
+`;
+const CompanyLogo = dt.img`
+  width: 40px;
+  height: 40px;
+  border-radius: ${theme.radius.md};
+  object-fit: contain;
+  background-color: ${theme.colors.white};
+  padding: 4px;
+`;
+const CompanyDetails = dt.div`
+  display: flex;
+  flex-direction: column;
+  margin-left: ${theme.spacing.md};
+  color: ${theme.colors.white};
+  text-align: left;
+  overflow: hidden;
+`;
+const CompanyName = dt.h3`
+  margin: 0;
+  font-size: ${theme.fontSize.lg};
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+`;
+const StatusText = dt.p`
+  margin: 0;
+  font-size: ${theme.fontSize.sm};
+  opacity: 0.8;
+  font-weight: 400;
+`;
+const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started" }) => {
+  const companyLogoURL2 = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
+  const handleEndChat = () => __async(null, null, function* () {
+    try {
+      yield endChat();
+      store.remove("activeChat");
+    } catch (error) {
+      console.error("Error ending chat:", error);
+    }
+  });
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(HeaderContainer, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderButton, { "aria-label": "Back", children: /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: "material-icons", children: "keyboard_arrow_left" }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(CompanyInfo, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        CompanyLogo,
+        {
+          src: companyLogoURL2,
+          alt: `${companyName} logo`,
+          onError: (e) => {
+            e.target.style.display = "none";
+            e.target.nextSibling.style.marginLeft = "0";
+          }
+        }
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(CompanyDetails, { children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(CompanyName, { title: companyName, children: companyName }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(StatusText, { children: status })
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderButton, { "aria-label": "End chat", onClick: handleEndChat, children: /* @__PURE__ */ jsxRuntimeExports.jsx("i", { className: "material-icons", children: "clear" }) })
+  ] });
+};
 const EndedChat = () => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { padding: "20px", textAlign: "center" }, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { children: "Chat Ended" }),
@@ -29014,6 +29144,7 @@ const EndedChat = () => {
   ] });
 };
 const ChatContainer = () => {
+  var _a2, _b;
   const chat = store("activeChat");
   const [chatEnded, setChatEnded] = reactExports.useState(false);
   const [endChat] = useMutation(END_CHAT, {
@@ -29022,22 +29153,34 @@ const ChatContainer = () => {
       { query: GET_CHAT, variables: { chatId: chat.id } }
     ]
   });
+  const { data: chatData } = useQuery(GET_CHAT, {
+    variables: { chatId: chat.id }
+  });
   const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
     variables: { chatId: chat.id }
   });
   reactExports.useEffect(() => {
-    var _a2;
-    if (((_a2 = chatStatusData == null ? void 0 : chatStatusData.chat) == null ? void 0 : _a2.status) === "ended") {
+    var _a3;
+    if (((_a3 = chatStatusData == null ? void 0 : chatStatusData.chat) == null ? void 0 : _a3.status) === "ended") {
       setChatEnded(true);
     }
   }, [chatStatusData]);
   if (chatEnded) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(EndedChat, {});
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(Query, { query: GET_MESSAGES, variables: { chatId: chat.id }, children: (_a2) => {
-    var _b = _a2, { subscribeToMore } = _b, rest = __objRest(_b, ["subscribeToMore"]);
+  const companyName = ((_a2 = chatData == null ? void 0 : chatData.chat) == null ? void 0 : _a2.companyName) || "Company Name";
+  const status = ((_b = chatData == null ? void 0 : chatData.chat) == null ? void 0 : _b.status) ? chatData.chat.status.charAt(0).toUpperCase() + chatData.chat.status.slice(1) : "Started";
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(Query, { query: GET_MESSAGES, variables: { chatId: chat.id }, children: (_c) => {
+    var _d = _c, { subscribeToMore } = _d, rest = __objRest(_d, ["subscribeToMore"]);
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(ChatHeader, { endChat }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ChatHeader,
+        {
+          endChat,
+          companyName,
+          status
+        }
+      ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         Chat,
         __spreadProps(__spreadValues({}, rest), {
@@ -29054,7 +29197,72 @@ const ChatContainer = () => {
     ] });
   } });
 };
-class ToggleOpeningStateButton extends reactExports.Component {
+var classnames = { exports: {} };
+/*!
+	Copyright (c) 2018 Jed Watson.
+	Licensed under the MIT License (MIT), see
+	http://jedwatson.github.io/classnames
+*/
+var hasRequiredClassnames;
+function requireClassnames() {
+  if (hasRequiredClassnames) return classnames.exports;
+  hasRequiredClassnames = 1;
+  (function(module2) {
+    (function() {
+      var hasOwn2 = {}.hasOwnProperty;
+      function classNames() {
+        var classes = "";
+        for (var i = 0; i < arguments.length; i++) {
+          var arg = arguments[i];
+          if (arg) {
+            classes = appendClass(classes, parseValue(arg));
+          }
+        }
+        return classes;
+      }
+      function parseValue(arg) {
+        if (typeof arg === "string" || typeof arg === "number") {
+          return arg;
+        }
+        if (typeof arg !== "object") {
+          return "";
+        }
+        if (Array.isArray(arg)) {
+          return classNames.apply(null, arg);
+        }
+        if (arg.toString !== Object.prototype.toString && !arg.toString.toString().includes("[native code]")) {
+          return arg.toString();
+        }
+        var classes = "";
+        for (var key in arg) {
+          if (hasOwn2.call(arg, key) && arg[key]) {
+            classes = appendClass(classes, key);
+          }
+        }
+        return classes;
+      }
+      function appendClass(value, newClass) {
+        if (!newClass) {
+          return value;
+        }
+        if (value) {
+          return value + " " + newClass;
+        }
+        return value + newClass;
+      }
+      if (module2.exports) {
+        classNames.default = classNames;
+        module2.exports = classNames;
+      } else {
+        window.classNames = classNames;
+      }
+    })();
+  })(classnames);
+  return classnames.exports;
+}
+var classnamesExports = requireClassnames();
+const cx = /* @__PURE__ */ getDefaultExportFromCjs(classnamesExports);
+class ToggleButton extends reactExports.Component {
   render() {
     const buttonStyles = cx("drop-shadow-hover pointer flex-center flex", {
       "drop-shadow-hover-active": this.props.isOpen
@@ -29178,7 +29386,7 @@ const App = ({ error }) => {
     var _a2, _b;
     setLoggingIn(true);
     setLoginError(null);
-    const publicKey = window.REACT_APP_PUBLIC_KEY || "4754248e-63af-43bf-b023-15777d6d1dea";
+    const publicKey = "4754248e-63af-43bf-b023-15777d6d1dea";
     try {
       const response = yield client2.mutate({
         mutation: CONSUMER_LOGIN,
@@ -29247,7 +29455,7 @@ const App = ({ error }) => {
         return /* @__PURE__ */ jsxRuntimeExports.jsx(CreateChat, { show: showCreate, setCreate });
       } }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
-        ToggleOpeningStateButton,
+        ToggleButton,
         {
           isOpen,
           togglePanel: () => setOpen(!isOpen),
@@ -29264,7 +29472,7 @@ const App = ({ error }) => {
       return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatContainer, { chat: data.chat });
     } }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
-      ToggleOpeningStateButton,
+      ToggleButton,
       {
         isOpen,
         togglePanel: () => setOpen(!isOpen),
@@ -29272,117 +29480,6 @@ const App = ({ error }) => {
       }
     )
   ] }) }) });
-};
-const theme = {
-  // Colors
-  colors: {
-    primary: "rgba(39, 175, 96, 1)",
-    primaryDark: "rgba(30, 140, 77, 1)",
-    primaryLight: "rgba(39, 175, 96, 0.1)",
-    secondary: "#6c757d",
-    success: "#28a745",
-    danger: "#dc3545",
-    warning: "#ffc107",
-    info: "#17a2b8",
-    // Neutral Colors
-    white: "#ffffff",
-    lightGray: "#f8f9fa",
-    gray100: "#f1f3f4",
-    gray200: "#e9ecef",
-    gray300: "#dee2e6",
-    gray400: "#ced4da",
-    gray500: "#adb5bd",
-    gray600: "#6c757d",
-    gray700: "#495057",
-    gray800: "#343a40",
-    gray900: "#212529",
-    black: "#000000",
-    // Text Colors
-    textPrimary: "#212529",
-    textSecondary: "#6c757d",
-    textMuted: "#999999",
-    textLight: "#ffffff",
-    textOpaque: "rgba(255, 255, 255, 0.8)",
-    // Background colors
-    backgroundDarkGray: "#8196b2"
-  },
-  // Spacing
-  spacing: {
-    xs: "0.25rem",
-    sm: "0.5rem",
-    md: "1rem",
-    lg: "1.5rem",
-    xl: "2rem",
-    xxl: "3rem"
-  },
-  // Border Radius
-  radius: {
-    sm: "0.25rem",
-    md: "0.5rem",
-    lg: "0.75rem",
-    xl: "1rem",
-    circle: "50%"
-  },
-  // Shadows
-  shadows: {
-    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-    header: "0px -3px 42px 6px rgba(0,0,0,0.17)",
-    hover: "0px 6px 30px -4px rgba(0,0,0,0.0)",
-    hoverActive: "0px 6px 30px -4px rgba(0,0,0,0.45)",
-    input: "0px -3px 48px -1px rgba(0,0,0,0.10)"
-  },
-  // Typography
-  fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-  fontSize: {
-    xs: "0.75rem",
-    sm: "0.875rem",
-    base: "1rem",
-    lg: "1.125rem",
-    xl: "1.25rem",
-    xxl: "1.5rem",
-    xxxl: "1.875rem"
-  },
-  // Line Heights
-  lineHeight: {
-    tight: 1.25,
-    normal: 1.5,
-    relaxed: 1.625
-  },
-  // Transitions
-  transitions: {
-    fast: "150ms ease",
-    normal: "300ms ease",
-    slow: "500ms ease"
-  },
-  // Z-index
-  zIndex: {
-    dropdown: 1e3,
-    modal: 1050,
-    tooltip: 1070
-  },
-  // Widget dimensions
-  widget: {
-    width: "400px",
-    height: "700px",
-    mobileWidth: "100%",
-    mobileHeight: "100%"
-  },
-  // Message bubble
-  message: {
-    maxWidth: "280px",
-    maxWidthMobile: "240px",
-    minHeight: "44px",
-    minHeightMobile: "40px",
-    padding: "20px 24px",
-    paddingMobile: "16px 20px"
-  },
-  // Avatar
-  avatar: {
-    size: "40px"
-  }
 };
 const ThemeProvider = ({ children }) => /* @__PURE__ */ jsxRuntimeExports.jsx(ot, { theme, children });
 const GlobalStyles = ft`
