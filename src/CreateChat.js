@@ -16,14 +16,11 @@ import { useError } from "./hooks/useError";
 import { CHAT_STATES, TIMEOUTS } from "./config/ChatConfig";
 
 // Styled Components
-import { 
-  Header, 
-  HeaderPadding, 
-  HeaderShadow, 
-  ConversationHeader, 
-  GutterLeft, 
+import {
+  Header,
+  HeaderPadding,
+  ConversationHeader,
   TextOpaque,
-  FadeInLeft,
   OverflowYScroll,
   OverflowXHidden,
   Row,
@@ -54,11 +51,11 @@ const CreateChat = ({ setCreate }) => {
 
   // Check for offline state
   useEffect(() => {
-    const shouldShow = contracts.length === 0 && 
-                     !loading && 
-                     !contractError && 
-                     !processing && 
-                     loadComplete;
+    const shouldShow = contracts.length === 0 &&
+      !loading &&
+      !contractError &&
+      !processing &&
+      loadComplete;
 
     console.log('shouldShowOffline:', shouldShow);
 
@@ -125,7 +122,7 @@ const CreateChat = ({ setCreate }) => {
     } catch (err) {
       console.error('Chat started error:', err);
       handleError(err);
-      
+
       // Still proceed with chat
       store("activeChat", chat);
       setPending([]);
@@ -136,7 +133,7 @@ const CreateChat = ({ setCreate }) => {
 
   const onChatMissed = (chatId, contractId) => {
     handleMissed(chatId, contractId);
-    
+
     // Update pending chats
     setPending(prev =>
       prev.map(chat =>
@@ -147,7 +144,7 @@ const CreateChat = ({ setCreate }) => {
 
   const onMonitorError = (err, chatId) => {
     monitorError(err, chatId);
-    
+
     // Handle specific errors
     if (err.networkError) {
       setTimeout(() => {
@@ -155,7 +152,7 @@ const CreateChat = ({ setCreate }) => {
           handleError(err, 'CONNECTION_ERROR');
         }
       }, TIMEOUTS.CONNECTION_RETRY);
-    } else if (err.graphQLErrors?.some(e => 
+    } else if (err.graphQLErrors?.some(e =>
       e.message.includes('auth') || e.message.includes('unauthorized')
     )) {
       handleError(err, 'AUTH_ERROR');
@@ -236,7 +233,7 @@ const CreateChat = ({ setCreate }) => {
 
   return (
     <span>
-      <Header style={{ backgroundColor: "rgba(39,175,96,1)" }} className="header-shadow">
+      <Header style={{ backgroundColor: "rgba(39,175,96,1)" }}>
         <HeaderPadding>
           <ConversationHeader className="gutter-left">
             <h3 className="fadeInLeft">Start conversation</h3>
@@ -274,7 +271,7 @@ const CreateChat = ({ setCreate }) => {
 
             {/* Show form */}
             {state === CHAT_STATES.FORM && (
-              <Segment $padded>
+              <Segment $padded $basic style={{ margin: 0 }}>
                 <Row>
                   <Formik
                     initialValues={{
@@ -320,7 +317,7 @@ const CreateChat = ({ setCreate }) => {
                               <FullWidth>
                                 <ConversationButtonWrapper className="pointer-events-none">
                                   <Button
-                                    style={{backgroundColor: "rgb(39, 175, 96)", marginLeft: "55px", color: "white"}}
+                                    style={{ backgroundColor: "rgb(39, 175, 96)", marginLeft: "55px", color: "white" }}
                                     $primary
                                     $large
                                     className="pointer-events-initial"

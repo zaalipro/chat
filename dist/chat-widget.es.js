@@ -28333,7 +28333,7 @@ const CreateChat = ({ setCreate }) => {
     }
   }, [contracts]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { style: { backgroundColor: "rgba(39,175,96,1)" }, className: "header-shadow", children: /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderPadding, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ConversationHeader, { className: "gutter-left", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { style: { backgroundColor: "rgba(39,175,96,1)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderPadding, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ConversationHeader, { className: "gutter-left", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "fadeInLeft", children: "Start conversation" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(TextOpaque, { className: "fadeInLeft", children: "TeamViewer" })
     ] }) }) }),
@@ -28361,7 +28361,7 @@ const CreateChat = ({ setCreate }) => {
           }
         )
       ] }),
-      state === CHAT_STATES.FORM && /* @__PURE__ */ jsxRuntimeExports.jsx(Segment, { $padded: true, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Row, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+      state === CHAT_STATES.FORM && /* @__PURE__ */ jsxRuntimeExports.jsx(Segment, { $padded: true, $basic: true, style: { margin: 0 }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Row, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Formik,
         {
           initialValues: {

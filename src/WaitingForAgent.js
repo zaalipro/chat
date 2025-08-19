@@ -6,9 +6,6 @@ import {
   TextSecondary, 
   TextMuted, 
   Mb4, 
-  Mb2, 
-  Mt4, 
-  P5, 
   TextCenter,
   Button
 } from './components/styled/DesignSystem';
