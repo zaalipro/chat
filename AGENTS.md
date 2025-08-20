@@ -1,4 +1,4 @@
-# Agent Guidelines for Kodala App
+# Agent Guidelines for Chat Widget App
 
 ## Development Workflow
 ```bash
@@ -15,9 +15,9 @@ npm run build      # Test production build before deployment
 
 ### Testing
 - **Run all tests**: `npm test`
-- **Run single test file**: `npm test -- --testPathPattern=ChartHelpers.test.js`
+- **Run single test file**: `npm test -- --testPathPattern=ChatHelpers.test.js`
 - **Run tests in watch mode**: `npm test -- --watch`
-- **Run specific test**: `npm test -- --testNamePattern="converts minutes to hours correctly"`
+- **Run specific test**: `npm test -- --testNamePattern="handles message submission correctly"`
 - **Run tests with coverage**: `npm test -- --coverage`
 
 ### Linting
@@ -44,10 +44,10 @@ npm run build      # Test production build before deployment
 - **GraphQL Files**: `queries.js`, `mutations.js`, `subscriptions.js` (separate subscriptions)
 
 ### Feature Organization
-- **Agent features**: `src/Agent/[FeatureName]/`
-- **Company features**: `src/Company/[FeatureName]/`
+- **Chat features**: `src/` (main directory for chat components)
 - **Shared components**: `src/Components/`
-- **Authentication**: `src/Auth/`
+- **Styled components**: `src/Components/styled/`
+- **Authentication**: Handled in `src/widget.js` and `src/App.js`
 
 ## Code Style Guidelines
 
@@ -59,10 +59,10 @@ npm run build      # Test production build before deployment
 - Use descriptive variable names with auxiliary verbs (e.g., `isLoaded`, `hasError`)
 
 ### Naming Conventions (Strict)
-- **Components**: PascalCase (e.g., `ToastProvider`, `ChatList`)
-- **Variables/Functions**: camelCase (e.g., `addToast`, `formatDate`)
+- **Components**: PascalCase (e.g., `ChatContainer`, `MessageForm`)
+- **Variables/Functions**: camelCase (e.g., `sendMessage`, `formatDate`)
 - **Event handlers**: Prefix with `handle` (e.g., `handleClick`, `handleSubmit`)
-- **GraphQL queries**: Prefix with `use` (e.g., `useSiteMetadata`)
+- **GraphQL queries**: Prefix with `use` (e.g., `useGetChat`)
 - **Constants**: SCREAMING_SNAKE_CASE for true constants
 - **Files**: PascalCase for components, camelCase for utilities
 - **Containers**: Always `Container.js`
@@ -75,10 +75,10 @@ npm run build      # Test production build before deployment
 - Use absolute imports when possible
 
 ### Styling
-- **Primary**: Tailwind CSS utility classes
-- **Component library**: DaisyUI for consistent UI components
+- **Primary**: Styled Components with design system
+- **Component library**: Custom design system in `src/Components/styled/design-system/`
 - **Approach**: Mobile-first responsive design
-- **Avoid**: Custom CSS files or inline styles
+- **Scoping**: All CSS is automatically scoped with `.chat-widget` prefix
 
 ### Apollo Client & GraphQL
 - Use Apollo hooks: `useQuery`, `useMutation`, `useSubscription`
@@ -89,8 +89,7 @@ npm run build      # Test production build before deployment
 
 ### Authentication & Security
 - **JWT Tokens**: Store using `store2` library, decode with `jwt-decode`
-- **Role-Based Access**: Check user roles before rendering role-specific content
-- **Route Protection**: Use `AgentRoute` and `CompanyRoute` wrappers
+- **Widget Initialization**: Use `initChatWidget` function with config object
 - Never commit secrets or API keys
 - Validate and sanitize user inputs
 
@@ -109,7 +108,7 @@ npm run build      # Test production build before deployment
 
 ### Testing
 - Write tests for utility functions and complex logic
-- Use Jest with React Testing Library
+- Use Vitest with React Testing Library
 - Test file patterns: `__tests__/*.test.js` or `*.spec.js`
 - Focus on behavior testing over implementation details
 - Mock external dependencies (API calls, etc.)
@@ -117,9 +116,10 @@ npm run build      # Test production build before deployment
 ## Technology Stack
 - **React 18** with functional components and hooks
 - **Apollo Client** for GraphQL operations
-- **Tailwind CSS + DaisyUI** for styling
+- **Styled Components** for styling with design system
+- **Vite** for build tool and development server
 - **Formik** for forms with validation schemas
-- **React Router v5** with role-based protection
+- **React Router v6** for routing
 - **GraphQL subscriptions** with `graphql-ws` transport
 - **JWT authentication** with `store2` and `jwt-decode`
 
@@ -135,3 +135,32 @@ npm run build      # Test production build before deployment
 - **Kiro Steering**: Follow `.kiro/steering/` documents for tech and structure
 - **Date Handling**: Always use `moment` library
 - **HTTP Requests**: Use `axios` only for non-GraphQL API calls
+
+## Widget-Specific Guidelines
+
+### Widget Initialization
+- Use `ChatWidget.initChatWidget(config)` to initialize the widget
+- Config object should include:
+  - `publicKey`: Your public API key
+  - `graphqlHttpUrl`: GraphQL HTTP endpoint
+  - `graphqlWsUrl`: GraphQL WebSocket endpoint
+  - Optional: `containerId`, `companyLogoUrl`, `apiUrl`, `ipifyUrl`
+
+### Embedding Options
+- **UMD Build**: For simple browser globals embedding
+- **ES Module Build**: For modern applications using ES modules
+- **Legacy Embed Script**: For backward compatibility
+
+### CSS Scoping
+- All widget CSS is automatically scoped with `.chat-widget` prefix
+- This prevents conflicts with host website styles
+- Do not remove or modify the scoping mechanism
+
+### Responsive Design
+- Widget is responsive by default
+- Mobile view automatically adjusts to full screen on small devices
+- Desktop view uses fixed 400px width and 700px height
+
+### Environment Variables
+- Supports both Vite (`VITE_`) and Create React App (`REACT_APP_`) prefixes
+- Environment variables are mapped in `vite.config.js` for backward compatibility
