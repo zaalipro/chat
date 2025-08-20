@@ -28429,7 +28429,7 @@ const CreateChat = ({ setCreate }) => {
                   /* @__PURE__ */ jsxRuntimeExports.jsx(Mt5, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FlexHCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FullWidth$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConversationButtonWrapper, { className: "pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                     Button$1,
                     {
-                      style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "75px", color: "white" },
+                      style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "85px", color: "white" },
                       $primary: true,
                       $large: true,
                       className: "pointer-events-initial",
