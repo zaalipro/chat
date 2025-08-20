@@ -132,7 +132,6 @@ npm run build      # Test production build before deployment
 
 ## Integration Rules
 - **Cursor Rules**: Follow `.cursor/rules/reactrules.mdc`
-- **Gemini Guidelines**: Follow `GEMINI.md` for spec-driven development
 - **Kiro Steering**: Follow `.kiro/steering/` documents for tech and structure
 - **Date Handling**: Always use `moment` library
 - **HTTP Requests**: Use `axios` only for non-GraphQL API calls
