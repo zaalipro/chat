@@ -24595,7 +24595,7 @@ const END_CHAT = gql`
       input: {
         id: $chatId
         patch: {
-      		status: "finished"
+      		status: FINISHED
         }
       }
 
@@ -24635,6 +24635,21 @@ const UPDATE_CHAT_MISSED = gql`
     }
   }
 `;
+const CHAT_STATUS = {
+  STARTED: "STARTED",
+  FINISHED: "FINISHED"
+};
+const CONTRACT_STATUS = {
+  ACTIVE: "active"
+};
+const getDisplayStatus = (enumStatus) => {
+  const statusMap = {
+    "STARTED": "Started",
+    "FINISHED": "Finished",
+    "ACTIVE": "Active"
+  };
+  return statusMap[enumStatus] || "Started";
+};
 function bind(fn, thisArg) {
   return function wrap2() {
     return fn.apply(thisArg, arguments);
@@ -27121,7 +27136,7 @@ const filterActiveContracts = (contracts) => {
     return [];
   }
   return contracts.filter((contract) => {
-    return contract && contract.status === "active" && contract.id && typeof contract.session === "number";
+    return contract && contract.status === CONTRACT_STATUS.ACTIVE && contract.id && typeof contract.session === "number";
   });
 };
 const getContractsForSession = (contracts, session) => {
@@ -27274,7 +27289,7 @@ const ChatStatusMonitor = ({
 const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
   const [hasNotifiedStarted, setHasNotifiedStarted] = reactExports.useState(false);
   const handleChatStarted = reactExports.useCallback((chatData) => {
-    if (!hasNotifiedStarted && chatData && chatData.status === "started") {
+    if (!hasNotifiedStarted && chatData && chatData.status === CHAT_STATUS.STARTED) {
       console.log(`Chat ${chatId} status changed to started - notifying parent`);
       setHasNotifiedStarted(true);
       onChatStarted(chatData);
@@ -29182,7 +29197,7 @@ const ChatContainer = () => {
   });
   reactExports.useEffect(() => {
     var _a3;
-    if (((_a3 = chatStatusData == null ? void 0 : chatStatusData.chat) == null ? void 0 : _a3.status) === "ended") {
+    if (((_a3 = chatStatusData == null ? void 0 : chatStatusData.chat) == null ? void 0 : _a3.status) === CHAT_STATUS.FINISHED) {
       setChatEnded(true);
     }
   }, [chatStatusData]);
@@ -29190,7 +29205,7 @@ const ChatContainer = () => {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(EndedChat, {});
   }
   const companyName = ((_a2 = chatData == null ? void 0 : chatData.chat) == null ? void 0 : _a2.companyName) || "Company Name";
-  const status = ((_b = chatData == null ? void 0 : chatData.chat) == null ? void 0 : _b.status) ? chatData.chat.status.charAt(0).toUpperCase() + chatData.chat.status.slice(1) : "Started";
+  const status = ((_b = chatData == null ? void 0 : chatData.chat) == null ? void 0 : _b.status) ? getDisplayStatus(chatData.chat.status) : "Started";
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Query, { query: GET_MESSAGES, variables: { chatId: chat.id }, children: (_c) => {
     var _d = _c, { subscribeToMore } = _d, rest = __objRest(_d, ["subscribeToMore"]);
     return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
@@ -29441,7 +29456,7 @@ const App = ({ error }) => {
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "App chat-widget", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Container, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { $isOpen: isOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Query, { query: GET_CHAT, variables: { chatId: activeChat.id }, children: ({ data }) => {
-      if (data.chat.status === "finished") {
+      if (data.chat.status === CHAT_STATUS.FINISHED) {
         return /* @__PURE__ */ jsxRuntimeExports.jsx(Rate, { chat: data.chat, setCreate });
       }
       return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatContainer, { chat: data.chat });

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { CONTRACT_STATUS } from './constants/chatStatus'
 
 // shamelessly copied from:
 // http://stackoverflow.com/questions/6108819/javascript-timestamp-to-relative-time-eg-2-seconds-ago-one-week-ago-etc-best
@@ -145,7 +146,7 @@ export const filterActiveContracts = (contracts) => {
 
   return contracts.filter(contract => {
     return contract &&
-      contract.status === 'active' &&
+      contract.status === CONTRACT_STATUS.ACTIVE &&
       contract.id &&
       typeof contract.session === 'number'
   })

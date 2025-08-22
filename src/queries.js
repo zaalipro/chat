@@ -135,7 +135,7 @@ export const END_CHAT = gql`
       input: {
         id: $chatId
         patch: {
-      		status: "finished"
+      		status: FINISHED
         }
       }
 

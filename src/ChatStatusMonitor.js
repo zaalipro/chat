@@ -1,6 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useSubscription, useMutation } from '@apollo/client';
 import { CHAT_STATUS_SUBSCRIPTION, UPDATE_CHAT_MISSED } from './queries';
+import { CHAT_STATUS } from './constants/chatStatus';
 import { createChatTimeouts, clearChatTimeouts, clearChatTimeout } from './utils';
 
 const ChatStatusMonitor = ({ 
@@ -94,7 +95,7 @@ const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
   const [hasNotifiedStarted, setHasNotifiedStarted] = useState(false);
   
   const handleChatStarted = useCallback((chatData) => {
-    if (!hasNotifiedStarted && chatData && chatData.status === 'started') {
+    if (!hasNotifiedStarted && chatData && chatData.status === CHAT_STATUS.STARTED) {
       console.log(`Chat ${chatId} status changed to started - notifying parent`);
       setHasNotifiedStarted(true);
       onChatStarted(chatData);

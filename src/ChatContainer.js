@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Query from './Components/Query'
 import { useMutation, useSubscription, useQuery } from '@apollo/client'
 import { GET_MESSAGES, MESSAGE_SUBSCRIPTION, END_CHAT, GET_CHAT, CHAT_STATUS_SUBSCRIPTION } from './queries'
+import { CHAT_STATUS, getDisplayStatus } from './constants/chatStatus'
 import store from 'store2'
 import Chat from './Chat'
 import ChatHeader from './ChatHeader'
@@ -28,7 +29,7 @@ const ChatContainer = () => {
   })
 
   useEffect(() => {
-    if (chatStatusData?.chat?.status === 'ended') {
+    if (chatStatusData?.chat?.status === CHAT_STATUS.FINISHED) {
       setChatEnded(true)
     }
   }, [chatStatusData])
@@ -40,7 +41,7 @@ const ChatContainer = () => {
   // Extract company name and status from chat data
   const companyName = chatData?.chat?.companyName || "Company Name"
   const status = chatData?.chat?.status 
-    ? chatData.chat.status.charAt(0).toUpperCase() + chatData.chat.status.slice(1)
+    ? getDisplayStatus(chatData.chat.status)
     : "Started"
 
   return (

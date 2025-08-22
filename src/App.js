@@ -4,6 +4,7 @@ import Offline from './Offline'
 import ErrorState from './components/ErrorState';
 import { gql, useApolloClient } from '@apollo/client';
 import { jwtDecode } from 'jwt-decode';
+import { CHAT_STATUS } from './constants/chatStatus';
 
 import store from 'store2'
 import Query from './Components/Query'
@@ -172,7 +173,7 @@ const App = ({ error }) => {
             <Panel $isOpen={isOpen}>
               <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
                 {({ data}) => {
-                  if (data.chat.status === "finished") {
+                  if (data.chat.status === CHAT_STATUS.FINISHED) {
                     return(<Rate chat={data.chat} setCreate={setCreate} />)
                   }
                   return (

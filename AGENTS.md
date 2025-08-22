@@ -49,6 +49,11 @@ npm run build      # Test production build before deployment
 - **Styled components**: `src/Components/styled/`
 - **Authentication**: Handled in `src/widget.js` and `src/App.js`
 
+### Git Integration
+- **CRITICAL**: Never execute `git commit`, `git push` or any related commit commands. The developer will handle all commits.
+- **Reason**: All changes must be manually reviewed and signed off by the developer.
+- **Rule**: If a task requires changes, prepare the files, but DO NOT run any Git commit commands.
+
 ## Code Style Guidelines
 
 ### React & JavaScript
