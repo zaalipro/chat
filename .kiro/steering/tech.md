@@ -8,7 +8,6 @@ inclusion: always
 - **React 18.2.0** with functional components and hooks only
 - **Apollo Client 3.7.2** for GraphQL operations and caching
 - **Create React App** build system (port 3006)
-- **Semantic UI React** for UI components
 
 ## GraphQL Patterns
 - All queries/mutations/subscriptions in `src/queries.js`

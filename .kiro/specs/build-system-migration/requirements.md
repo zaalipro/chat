@@ -25,7 +25,7 @@ This feature involves migrating the chat widget application from Create React Ap
 
 1. WHEN the migration is complete THEN all React components SHALL function identically to the current implementation
 2. WHEN the application runs THEN all GraphQL queries, mutations, and subscriptions SHALL work without modification
-3. WHEN the application loads THEN all CSS styling and Semantic UI components SHALL render correctly
+3. WHEN the application loads THEN all CSS styling SHALL render correctly
 4. WHEN the chat widget is embedded THEN it SHALL maintain the same embedding capabilities as before
 
 ### Requirement 3
