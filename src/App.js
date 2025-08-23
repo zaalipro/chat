@@ -56,6 +56,50 @@ const CreateChatFlow = ({ show, setCreate }) => {
   return <CreateChat show={show} setCreate={setCreate} />;
 };
 
+const AppContent = () => {
+  const activeChat = store('activeChat');
+  const [showCreate, setCreate] = useState(!activeChat);
+  const [isOpen, setOpen] = useState(false);
+
+  if (showCreate) {
+    return (
+      <div>
+        <Container>
+          <Panel $isOpen={isOpen}>
+            <CreateChatFlow show={showCreate} setCreate={setCreate} />
+          </Panel>
+          <ToggleButton
+            isOpen={isOpen}
+            togglePanel={() => setOpen(!isOpen)}
+          />
+        </Container>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Container>
+        <Panel $isOpen={isOpen}>
+          <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
+            {({ data }) => {
+              if (!data || !data.chat) return null;
+              if (data.chat.status === CHAT_STATUS.FINISHED) {
+                return <Rate chat={data.chat} setCreate={setCreate} />;
+              }
+              return <ChatContainer chat={data.chat} />;
+            }}
+          </Query>
+        </Panel>
+        <ToggleButton
+          isOpen={isOpen}
+          togglePanel={() => setOpen(!isOpen)}
+        />
+      </Container>
+    </div>
+  );
+};
+
 
 const App = ({ error }) => {
   // websiteId from local storage, managed by React state for re-rendering.
@@ -114,81 +158,38 @@ const App = ({ error }) => {
     }
   };
 
-  const activeChat = store('activeChat')
-  const [showCreate, setCreate] = useState(!activeChat)
-
   // This effect hook triggers the login process under specific conditions.
   useEffect(() => {
+    const showCreate = !store('activeChat');
     // It runs if showing the create chat screen, no websiteId exists,
     // a login is not already in progress, and there has been no previous login error.
     // This prevents infinite loops on login failure.
     if (showCreate && !websiteId && !isLoggingIn && !loginError) {
       retryLogin();
     }
-  }, [showCreate, websiteId, isLoggingIn, loginError]); // Dependencies for the effect.
+  }, [websiteId, isLoggingIn, loginError]); // Dependencies for the effect.
 
   // If there's a generic error passed as a prop, display it.
   if (error) {
     return <ErrorState message={error.message} onRetry={retryLogin} />;
   }
 
-  const [isOpen, setOpen] = useState(false)
-  // Replace cx utility with conditional styling
-  const panelStyles = isOpen ? 'fadeInUp' : 'hide'
-
-  if (showCreate) {
-    // If websiteId is missing, display the current login status.
-    if (!websiteId) {
-      // Show an initializing message while logging in.
-      if (isLoggingIn) return <ErrorState message="Initializing..." />;
-      // Show an error message if login failed, with a retry button.
-      if (loginError) return <ErrorState message={`Failed to initialize: ${loginError.message}`} onRetry={retryLogin} />;
-      // Default message while waiting for the login process to start.
-      return <ErrorState message="Initializing session..." />;
-    }
-
-    return (
-      <div className='App chat-widget'>
-        <div>
-          <Container>
-            <Panel $isOpen={isOpen}>
-              <WebsiteProvider websiteId={websiteId}>
-                <CreateChatFlow show={showCreate} setCreate={setCreate} />
-              </WebsiteProvider>
-            </Panel>
-            <ToggleButton
-              isOpen={isOpen}
-              togglePanel={() => setOpen(!isOpen)}
-            />
-          </Container>
-        </div>
-      </div>
-    )
+  // If websiteId is missing, display the current login status.
+  if (!websiteId) {
+    // Show an initializing message while logging in.
+    if (isLoggingIn) return <ErrorState message="Initializing..." />;
+    // Show an error message if login failed, with a retry button.
+    if (loginError) return <ErrorState message={`Failed to initialize: ${loginError.message}`} onRetry={retryLogin} />;
+    // Default message while waiting for the login process to start.
+    return <ErrorState message="Initializing session..." />;
   }
 
   return (
-      <div className='App chat-widget'>
-        <div>
-          <Container>
-            <Panel $isOpen={isOpen}>
-              <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
-                {({ data}) => {
-                  if (data.chat.status === CHAT_STATUS.FINISHED) {
-                    return(<Rate chat={data.chat} setCreate={setCreate} />)
-                  }
-                  return (
-                    <ChatContainer chat={data.chat} />
-                  )
-                }}
-              </Query>
-            </Panel>
-            <ToggleButton
-              isOpen={isOpen}
-              togglePanel={() => setOpen(!isOpen)}
-            />
-          </Container>
-        </div>
-      </div>
+    <div className='App chat-widget'>
+      <WebsiteProvider websiteId={websiteId}>
+        <AppContent />
+      </WebsiteProvider>
+    </div>
   )
 }
 

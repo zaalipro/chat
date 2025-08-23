@@ -28777,7 +28777,7 @@ const MessageBubble = dt.div`
     min-height: 40px;
   }
 `;
-const imageUrl = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
+const imageUrl = void 0;
 class ChatMessage extends reactExports.Component {
   constructor() {
     super(...arguments);
@@ -28824,8 +28824,8 @@ const ChatMessagesContainer = dt.div`
   flex-direction: column;
   justify-content: center;
 `;
-const mainColor$1 = "rgba(39,175,96,1)";
-const companyLogoURL = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
+const mainColor = "rgba(39,175,96,1)";
+const companyLogoURL = void 0;
 class MessageBox extends reactExports.Component {
   constructor() {
     super(...arguments);
@@ -28851,7 +28851,7 @@ class MessageBox extends reactExports.Component {
             message,
             shouldRenderTimestamp: isLatestMessage,
             profileImageURL: companyLogoURL,
-            userSpeechBubbleColor: mainColor$1
+            userSpeechBubbleColor: mainColor
           },
           i
         );
@@ -29268,7 +29268,6 @@ const ToggleButton = (props) => {
 };
 class ToggleButtonClass extends reactExports.Component {
   render() {
-    console.log(mainColor);
     const buttonStyles = `drop-shadow-hover pointer flex-center flex${this.props.isOpen ? " drop-shadow-hover-active" : ""}`;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Button,
@@ -29424,6 +29423,39 @@ const CreateChatFlow = ({ show, setCreate }) => {
   }
   return /* @__PURE__ */ jsxRuntimeExports.jsx(CreateChat, { show, setCreate });
 };
+const AppContent = () => {
+  const activeChat = store("activeChat");
+  const [showCreate, setCreate] = reactExports.useState(!activeChat);
+  const [isOpen, setOpen] = reactExports.useState(false);
+  if (showCreate) {
+    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Container, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { $isOpen: isOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(CreateChatFlow, { show: showCreate, setCreate }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        ToggleButton,
+        {
+          isOpen,
+          togglePanel: () => setOpen(!isOpen)
+        }
+      )
+    ] }) });
+  }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Container, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { $isOpen: isOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Query, { query: GET_CHAT, variables: { chatId: activeChat.id }, children: ({ data }) => {
+      if (!data || !data.chat) return null;
+      if (data.chat.status === CHAT_STATUS.FINISHED) {
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(Rate, { chat: data.chat, setCreate });
+      }
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatContainer, { chat: data.chat });
+    } }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ToggleButton,
+      {
+        isOpen,
+        togglePanel: () => setOpen(!isOpen)
+      }
+    )
+  ] }) });
+};
 const App = ({ error }) => {
   const [websiteId, setWebsiteId] = reactExports.useState(store("websiteId"));
   const [isLoggingIn, setLoggingIn] = reactExports.useState(false);
@@ -29456,49 +29488,21 @@ const App = ({ error }) => {
       setLoggingIn(false);
     }
   });
-  const activeChat = store("activeChat");
-  const [showCreate, setCreate] = reactExports.useState(!activeChat);
   reactExports.useEffect(() => {
+    const showCreate = !store("activeChat");
     if (showCreate && !websiteId && !isLoggingIn && !loginError) {
       retryLogin();
     }
-  }, [showCreate, websiteId, isLoggingIn, loginError]);
+  }, [websiteId, isLoggingIn, loginError]);
   if (error) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: error.message, onRetry: retryLogin });
   }
-  const [isOpen, setOpen] = reactExports.useState(false);
-  if (showCreate) {
-    if (!websiteId) {
-      if (isLoggingIn) return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: "Initializing..." });
-      if (loginError) return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: `Failed to initialize: ${loginError.message}`, onRetry: retryLogin });
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: "Initializing session..." });
-    }
-    return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "App chat-widget", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Container, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { $isOpen: isOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(WebsiteProvider, { websiteId, children: /* @__PURE__ */ jsxRuntimeExports.jsx(CreateChatFlow, { show: showCreate, setCreate }) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx(
-        ToggleButton,
-        {
-          isOpen,
-          togglePanel: () => setOpen(!isOpen)
-        }
-      )
-    ] }) }) });
+  if (!websiteId) {
+    if (isLoggingIn) return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: "Initializing..." });
+    if (loginError) return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: `Failed to initialize: ${loginError.message}`, onRetry: retryLogin });
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: "Initializing session..." });
   }
-  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "App chat-widget", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(Container, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Panel, { $isOpen: isOpen, children: /* @__PURE__ */ jsxRuntimeExports.jsx(Query, { query: GET_CHAT, variables: { chatId: activeChat.id }, children: ({ data }) => {
-      if (data.chat.status === CHAT_STATUS.FINISHED) {
-        return /* @__PURE__ */ jsxRuntimeExports.jsx(Rate, { chat: data.chat, setCreate });
-      }
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatContainer, { chat: data.chat });
-    } }) }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx(
-      ToggleButton,
-      {
-        isOpen,
-        togglePanel: () => setOpen(!isOpen)
-      }
-    )
-  ] }) }) });
+  return /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "App chat-widget", children: /* @__PURE__ */ jsxRuntimeExports.jsx(WebsiteProvider, { websiteId, children: /* @__PURE__ */ jsxRuntimeExports.jsx(AppContent, {}) }) });
 };
 const ThemeProvider = ({ children }) => /* @__PURE__ */ jsxRuntimeExports.jsx(ot, { theme, children });
 const GlobalStyles = ft`
