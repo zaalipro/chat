@@ -54,7 +54,6 @@ const ChatContainer = ({ chat }) => {
               endChat={endChat} 
               companyName={companyName}
               status={status}
-              color={website?.color}
             />
             <Chat
               {...rest}

@@ -43,7 +43,6 @@ const HeaderButton = styled.button`
 const CompanyInfo = styled.div`
   display: flex;
   align-items: center;
-  flex: 1;
   justify-content: center;
   padding: 0 ${theme.spacing.md};
 `
@@ -69,7 +68,7 @@ const CompanyDetails = styled.div`
 const CompanyName = styled.h3`
   margin: 0;
   font-size: ${theme.fontSize.lg};
-  font-weight: 600;
+  font-weight: .600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

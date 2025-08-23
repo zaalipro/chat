@@ -18,7 +18,6 @@ export function initChatWidget(config = {}) {
     publicKey,
     graphqlHttpUrl,
     graphqlWsUrl,
-    companyLogoUrl,
     apiUrl,
     ipifyUrl
   } = config;
@@ -27,7 +26,6 @@ export function initChatWidget(config = {}) {
   if (publicKey) window.REACT_APP_PUBLIC_KEY = publicKey;
   if (graphqlHttpUrl) window.REACT_APP_GRAPHQL_HTTP_URL = graphqlHttpUrl;
   if (graphqlWsUrl) window.REACT_APP_GRAPHQL_WS_URL = graphqlWsUrl;
-  if (companyLogoUrl) window.REACT_APP_COMPANY_LOGO_URL = companyLogoUrl;
   if (apiUrl) window.REACT_APP_API_URL = apiUrl;
   if (ipifyUrl) window.REACT_APP_IPIFY_URL = ipifyUrl;
 

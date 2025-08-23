@@ -28824,7 +28824,7 @@ const ChatMessagesContainer = dt.div`
   flex-direction: column;
   justify-content: center;
 `;
-const mainColor = "rgba(39,175,96,1)";
+const mainColor$1 = "rgba(39,175,96,1)";
 const companyLogoURL = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
 class MessageBox extends reactExports.Component {
   constructor() {
@@ -28851,7 +28851,7 @@ class MessageBox extends reactExports.Component {
             message,
             shouldRenderTimestamp: isLatestMessage,
             profileImageURL: companyLogoURL,
-            userSpeechBubbleColor: mainColor
+            userSpeechBubbleColor: mainColor$1
           },
           i
         );
@@ -29109,7 +29109,6 @@ const HeaderButton = dt.button`
 const CompanyInfo = dt.div`
   display: flex;
   align-items: center;
-  flex: 1;
   justify-content: center;
   padding: 0 ${theme.spacing.md};
 `;
@@ -29132,7 +29131,7 @@ const CompanyDetails = dt.div`
 const CompanyName = dt.h3`
   margin: 0;
   font-size: ${theme.fontSize.lg};
-  font-weight: 600;
+  font-weight: .600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -29244,8 +29243,7 @@ const ChatContainer = ({ chat }) => {
         {
           endChat,
           companyName,
-          status,
-          color: website == null ? void 0 : website.color
+          status
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -29270,6 +29268,7 @@ const ToggleButton = (props) => {
 };
 class ToggleButtonClass extends reactExports.Component {
   render() {
+    console.log(mainColor);
     const buttonStyles = `drop-shadow-hover pointer flex-center flex${this.props.isOpen ? " drop-shadow-hover-active" : ""}`;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(
       Button,
@@ -29590,14 +29589,12 @@ function initChatWidget(config = {}) {
     publicKey,
     graphqlHttpUrl,
     graphqlWsUrl,
-    companyLogoUrl,
     apiUrl,
     ipifyUrl
   } = config;
   if (publicKey) window.REACT_APP_PUBLIC_KEY = publicKey;
   if (graphqlHttpUrl) window.REACT_APP_GRAPHQL_HTTP_URL = graphqlHttpUrl;
   if (graphqlWsUrl) window.REACT_APP_GRAPHQL_WS_URL = graphqlWsUrl;
-  if (companyLogoUrl) window.REACT_APP_COMPANY_LOGO_URL = companyLogoUrl;
   if (apiUrl) window.REACT_APP_API_URL = apiUrl;
   if (ipifyUrl) window.REACT_APP_IPIFY_URL = ipifyUrl;
   const httpLink = createHttpLink({

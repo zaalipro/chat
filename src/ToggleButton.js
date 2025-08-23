@@ -11,7 +11,6 @@ const ToggleButton = (props) => {
 class ToggleButtonClass extends Component {
 
   render() {
-
     const buttonStyles = `drop-shadow-hover pointer flex-center flex${this.props.isOpen ? ' drop-shadow-hover-active' : ''}`
 
     return (
