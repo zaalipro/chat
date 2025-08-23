@@ -24610,6 +24610,7 @@ const END_CHAT = gql`
 const GET_WEBSITE_CONTRACTS = gql`
   query GetWebsiteContracts($websiteId: UUID!) {
     website(id: $websiteId) {
+      color
       contracts(condition: {status: "active"}) {
         id
         session
@@ -28227,7 +28228,7 @@ dt.div`
     animation: rotate 0.4s ease 0s 1 normal;
   `}
 `;
-const CreateChat = ({ setCreate }) => {
+const CreateChat = ({ setCreate, color }) => {
   const websiteId = store("websiteId");
   const [state, setState] = reactExports.useState(CHAT_STATES.FORM);
   const [pending, setPending] = reactExports.useState([]);
@@ -28368,7 +28369,7 @@ const CreateChat = ({ setCreate }) => {
     }
   }, [contracts]);
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { style: { backgroundColor: "rgba(39,175,96,1)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderPadding, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ConversationHeader, { className: "gutter-left", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { style: { backgroundColor: color || "rgba(39,175,96,1)" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderPadding, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ConversationHeader, { className: "gutter-left", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "fadeInLeft", children: "Start conversation" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(TextOpaque, { className: "fadeInLeft", children: "TeamViewer" })
     ] }) }) }),
@@ -28444,7 +28445,7 @@ const CreateChat = ({ setCreate }) => {
                   /* @__PURE__ */ jsxRuntimeExports.jsx(Mt5, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FlexHCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FullWidth$1, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConversationButtonWrapper, { className: "pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                     Button$1,
                     {
-                      style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "85px", color: "white" },
+                      style: { backgroundColor: color || "rgb(39, 175, 96)", marginLeft: "85px", color: "white" },
                       $primary: true,
                       $large: true,
                       className: "pointer-events-initial",
@@ -29045,7 +29046,7 @@ const HeaderContainer = dt.div`
   align-items: center;
   justify-content: space-between;
   padding: ${theme.spacing.md};
-  background-color: ${theme.colors.primary};
+  background-color: ${({ color }) => color || theme.colors.primary};
   box-shadow: ${theme.shadows.header};
   min-height: 60px;
   transition: box-shadow ${theme.transitions.normal};
@@ -29114,7 +29115,7 @@ const StatusText = dt.p`
   opacity: 0.8;
   font-weight: 400;
 `;
-const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started" }) => {
+const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started", color }) => {
   const companyLogoURL2 = "https://media.flaticon.com/dist/min/img/logos/flaticon-color-negative.svg";
   const handleEndChat = () => __async(null, null, function* () {
     try {
@@ -29124,7 +29125,7 @@ const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company 
       console.error("Error ending chat:", error);
     }
   });
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(HeaderContainer, { children: [
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(HeaderContainer, { color, children: [
     /* @__PURE__ */ jsxRuntimeExports.jsxs(CompanyInfo, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         CompanyLogo,
@@ -29179,9 +29180,8 @@ const EndedChat = () => {
     )
   ] });
 };
-const ChatContainer = () => {
+const ChatContainer = ({ chat, website }) => {
   var _a2, _b;
-  const chat = store("activeChat");
   const [chatEnded, setChatEnded] = reactExports.useState(false);
   const [endChat] = useMutation(END_CHAT, {
     variables: { chatId: chat.id },
@@ -29214,7 +29214,8 @@ const ChatContainer = () => {
         {
           endChat,
           companyName,
-          status
+          status,
+          color: website == null ? void 0 : website.color
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -29369,6 +29370,7 @@ const CONSUMER_LOGIN = gql`
 `;
 const App = ({ error }) => {
   const [websiteId, setWebsiteId] = reactExports.useState(store("websiteId"));
+  const [website, setWebsite] = reactExports.useState(store("website"));
   const [isLoggingIn, setLoggingIn] = reactExports.useState(false);
   const [loginError, setLoginError] = reactExports.useState(null);
   const client2 = useApolloClient();
@@ -29434,6 +29436,10 @@ const App = ({ error }) => {
           console.error("Error fetching website contracts:", error2);
           return /* @__PURE__ */ jsxRuntimeExports.jsx(Offline, {});
         }
+        if (data == null ? void 0 : data.website) {
+          store.set("website", data.website);
+          setWebsite(data.website);
+        }
         if (!((_a2 = data == null ? void 0 : data.website) == null ? void 0 : _a2.contracts) || data.website.contracts.length === 0) {
           console.warn("No active contracts found for website");
           return /* @__PURE__ */ jsxRuntimeExports.jsx(Offline, {});
@@ -29442,14 +29448,14 @@ const App = ({ error }) => {
         if (!selectedContract || showOffline) {
           return /* @__PURE__ */ jsxRuntimeExports.jsx(Offline, {});
         }
-        return /* @__PURE__ */ jsxRuntimeExports.jsx(CreateChat, { show: showCreate, setCreate });
+        return /* @__PURE__ */ jsxRuntimeExports.jsx(CreateChat, { show: showCreate, setCreate, color: website == null ? void 0 : website.color });
       } }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         ToggleButton,
         {
           isOpen,
           togglePanel: () => setOpen(!isOpen),
-          mainColor: "rgba(39,175,96,1)"
+          mainColor: (website == null ? void 0 : website.color) || "rgba(39,175,96,1)"
         }
       )
     ] }) }) });
@@ -29459,14 +29465,14 @@ const App = ({ error }) => {
       if (data.chat.status === CHAT_STATUS.FINISHED) {
         return /* @__PURE__ */ jsxRuntimeExports.jsx(Rate, { chat: data.chat, setCreate });
       }
-      return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatContainer, { chat: data.chat });
+      return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatContainer, { chat: data.chat, website });
     } }) }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       ToggleButton,
       {
         isOpen,
         togglePanel: () => setOpen(!isOpen),
-        mainColor: "rgba(39,175,96,1)"
+        mainColor: (website == null ? void 0 : website.color) || "rgba(39,175,96,1)"
       }
     )
   ] }) }) });

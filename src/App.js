@@ -29,6 +29,7 @@ const CONSUMER_LOGIN = gql`
 const App = ({ error }) => {
   // websiteId from local storage, managed by React state for re-rendering.
   const [websiteId, setWebsiteId] = useState(store('websiteId'));
+  const [website, setWebsite] = useState(store('website'))
   // Flag to indicate when a login attempt is in progress.
   const [isLoggingIn, setLoggingIn] = useState(false);
   // Holds any error that occurs during login.
@@ -140,6 +141,11 @@ const App = ({ error }) => {
                     return(<Offline />)
                   }
 
+                  if (data?.website) {
+                    store.set('website', data.website)
+                    setWebsite(data.website)
+                  }
+
                   if (!data?.website?.contracts || data.website.contracts.length === 0) {
                     console.warn('No active contracts found for website')
                     return(<Offline />)
@@ -150,7 +156,7 @@ const App = ({ error }) => {
                     return(<Offline />)
                   }
 
-                  return(<CreateChat show={showCreate} setCreate={setCreate}/>)
+                  return(<CreateChat show={showCreate} setCreate={setCreate} color={website?.color} />)
                 }}
               </Query>
 
@@ -158,7 +164,7 @@ const App = ({ error }) => {
             <ToggleButton
               isOpen={isOpen}
               togglePanel={() => setOpen(!isOpen)}
-              mainColor={'rgba(39,175,96,1)'}
+              mainColor={website?.color || 'rgba(39,175,96,1)'}
             />
           </Container>
         </div>
@@ -177,7 +183,7 @@ const App = ({ error }) => {
                     return(<Rate chat={data.chat} setCreate={setCreate} />)
                   }
                   return (
-                    <ChatContainer chat={data.chat} />
+                    <ChatContainer chat={data.chat} website={website} />
                   )
                 }}
               </Query>
@@ -185,7 +191,7 @@ const App = ({ error }) => {
             <ToggleButton
               isOpen={isOpen}
               togglePanel={() => setOpen(!isOpen)}
-              mainColor={'rgba(39,175,96,1)'}
+              mainColor={website?.color || 'rgba(39,175,96,1)'}
             />
           </Container>
         </div>

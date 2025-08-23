@@ -7,7 +7,7 @@ const HeaderContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: ${theme.spacing.md};
-  background-color: ${theme.colors.primary};
+  background-color: ${({ color }) => color || theme.colors.primary};
   box-shadow: ${theme.shadows.header};
   min-height: 60px;
   transition: box-shadow ${theme.transitions.normal};
@@ -83,7 +83,7 @@ const StatusText = styled.p`
   font-weight: 400;
 `
 
-const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started" }) => {
+const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started", color }) => {
   const companyLogoURL = import.meta.env.VITE_COMPANY_LOGO_URL
 
   const handleEndChat = async () => {
@@ -96,7 +96,7 @@ const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company 
   }
 
   return (
-    <HeaderContainer>
+    <HeaderContainer color={color}>
       <CompanyInfo>
         <CompanyLogo 
           src={companyLogoURL} 

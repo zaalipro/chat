@@ -3,13 +3,11 @@ import Query from './Components/Query'
 import { useMutation, useSubscription, useQuery } from '@apollo/client'
 import { GET_MESSAGES, MESSAGE_SUBSCRIPTION, END_CHAT, GET_CHAT, CHAT_STATUS_SUBSCRIPTION } from './queries'
 import { CHAT_STATUS, getDisplayStatus } from './constants/chatStatus'
-import store from 'store2'
 import Chat from './Chat'
 import ChatHeader from './ChatHeader'
 import EndedChat from './EndedChat'
 
-const ChatContainer = () => {
-  const chat = store('activeChat')
+const ChatContainer = ({ chat, website }) => {
   const [chatEnded, setChatEnded] = useState(false)
   const [endChat] = useMutation(END_CHAT, {
     variables: { chatId: chat.id },
@@ -53,6 +51,7 @@ const ChatContainer = () => {
               endChat={endChat} 
               companyName={companyName}
               status={status}
+              color={website?.color}
             />
             <Chat
               {...rest}
