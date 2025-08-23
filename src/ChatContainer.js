@@ -7,7 +7,10 @@ import Chat from './Chat'
 import ChatHeader from './ChatHeader'
 import EndedChat from './EndedChat'
 
-const ChatContainer = ({ chat, website }) => {
+import { useWebsite } from './context/WebsiteContext';
+
+const ChatContainer = ({ chat }) => {
+  const { website } = useWebsite();
   const [chatEnded, setChatEnded] = useState(false)
   const [endChat] = useMutation(END_CHAT, {
     variables: { chatId: chat.id },

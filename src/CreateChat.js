@@ -29,8 +29,11 @@ import {
 } from './components/styled/App';
 import { Segment, Message, MessageHeader, Button, Mt5, FullWidth } from './components/styled/DesignSystem';
 
-const CreateChat = ({ setCreate, color }) => {
+import { useWebsite } from "./context/WebsiteContext";
+
+const CreateChat = ({ setCreate }) => {
   const websiteId = store("websiteId");
+  const { website } = useWebsite();
 
   // State
   const [state, setState] = useState(CHAT_STATES.FORM);
@@ -233,7 +236,7 @@ const CreateChat = ({ setCreate, color }) => {
 
   return (
     <span>
-      <Header style={{ backgroundColor: color || "rgba(39,175,96,1)" }}>
+      <Header style={{ backgroundColor: website?.color || "rgba(39,175,96,1)" }}>
         <HeaderPadding>
           <ConversationHeader className="gutter-left">
             <h3 className="fadeInLeft">Start conversation</h3>
@@ -316,7 +319,7 @@ const CreateChat = ({ setCreate, color }) => {
                             <FullWidth>
                               <ConversationButtonWrapper className="pointer-events-none">
                                 <Button
-                                  style={{ backgroundColor: color || "rgb(39, 175, 96)", marginLeft: "85px", color: "white" }}
+                                  style={{ backgroundColor: website?.color || "rgb(39, 175, 96)", marginLeft: "85px", color: "white" }}
                                   $primary
                                   $large
                                   className="pointer-events-initial"

@@ -83,8 +83,10 @@ const StatusText = styled.p`
   font-weight: 400;
 `
 
-const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started", color }) => {
-  const companyLogoURL = import.meta.env.VITE_COMPANY_LOGO_URL
+import { useWebsite } from './context/WebsiteContext';
+
+const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company Name", status = "Started" }) => {
+  const { website } = useWebsite();
 
   const handleEndChat = async () => {
     try {
@@ -96,10 +98,10 @@ const ChatHeader = ({ endChat = () => Promise.resolve(), companyName = "Company 
   }
 
   return (
-    <HeaderContainer color={color}>
+    <HeaderContainer color={website?.color}>
       <CompanyInfo>
         <CompanyLogo 
-          src={companyLogoURL} 
+          src={website?.logoUrl} 
           alt={`${companyName} logo`}
           onError={(e) => {
             e.target.style.display = 'none'

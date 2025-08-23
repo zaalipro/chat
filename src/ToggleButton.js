@@ -1,7 +1,14 @@
-import { Component } from 'react'
-import { Button } from './components/styled/App'
+import { Component } from 'react';
+import { Button } from './components/styled/App';
+import { useWebsite } from './context/WebsiteContext';
 
-class ToggleButton extends Component {
+const ToggleButton = (props) => {
+  const { website } = useWebsite();
+
+  return <ToggleButtonClass {...props} mainColor={website?.color} />;
+};
+
+class ToggleButtonClass extends Component {
 
   render() {
 
@@ -9,7 +16,7 @@ class ToggleButton extends Component {
 
     return (
       <Button
-        style={{ backgroundColor: this.props.mainColor }}
+        style={{ backgroundColor: this.props.mainColor || 'rgba(39,175,96,1)' }}
         className={buttonStyles}
         onClick={() => this.props.togglePanel()}
       >

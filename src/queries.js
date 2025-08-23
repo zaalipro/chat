@@ -151,6 +151,7 @@ export const END_CHAT = gql`
 export const GET_WEBSITE_CONTRACTS = gql`
   query GetWebsiteContracts($websiteId: UUID!) {
     website(id: $websiteId) {
+      logoUrl
       color
       contracts(condition: {status: "active"}) {
         id

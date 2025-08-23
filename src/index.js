@@ -11,6 +11,7 @@ import store from 'store2'
 import { jwtDecode } from 'jwt-decode'
 import ThemeProvider from './components/styled/design-system/ThemeProvider';
 import GlobalStyles from './components/styled/design-system/GlobalStyles';
+import { WebsiteProvider } from './context/WebsiteContext';
 
 const httpLink = createHttpLink({ uri: import.meta.env.VITE_GRAPHQL_HTTP_URL })
 const authLink = setContext((_, { headers }) => {
@@ -61,7 +62,9 @@ const ClientApp = ({ error }) => (
           </div>
         </div>
       }>
-        <App error={error} />
+        <WebsiteProvider>
+          <App error={error} />
+        </WebsiteProvider>
       </Suspense>
     </ThemeProvider>
   </ApolloProvider>
