@@ -29355,8 +29355,9 @@ const Rating = ({
   }) });
 };
 const Rate = ({ chat, setCreate }) => {
+  const { website } = useWebsite();
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { style: { backgroundColor: "rgba(39,175,96,1)" }, className: "header-shadow", children: /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderPadding, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ConversationHeader, { className: "gutter-left", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(Header, { style: { backgroundColor: (website == null ? void 0 : website.color) || "rgba(39,175,96,1)" }, className: "header-shadow", children: /* @__PURE__ */ jsxRuntimeExports.jsx(HeaderPadding, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ConversationHeader, { className: "gutter-left", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "fadeInLeft", children: "Agent feedback" }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(TextOpaque, { className: "fadeInLeft", children: "Agent Name" })
     ] }) }) }),
@@ -29381,7 +29382,7 @@ const Rate = ({ chat, setCreate }) => {
       /* @__PURE__ */ jsxRuntimeExports.jsx(FlexHCenter, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(FullWidth, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ConversationButtonWrapper, { className: "pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
         Button$1,
         {
-          style: { backgroundColor: "rgb(39, 175, 96)", marginLeft: "95px", color: "white" },
+          style: { backgroundColor: (website == null ? void 0 : website.color) || "rgb(39, 175, 96)", marginLeft: "95px", color: "white" },
           primary: true,
           className: "pointer-events-initial",
           onClick: () => setCreate(true),

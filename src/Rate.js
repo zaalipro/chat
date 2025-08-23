@@ -1,6 +1,7 @@
 import { Mutation } from '@apollo/client/react/components'
 import { RATE_AGENT } from './queries'
 import Rating from './Components/Rating'
+import { useWebsite } from './context/WebsiteContext';
 import { 
   Header, 
   HeaderPadding, 
@@ -15,9 +16,11 @@ import {
 import { Segment, Button, Mb3 } from './components/styled/DesignSystem';
 
 const Rate = ({chat, setCreate}) => {
+  const { website } = useWebsite();
+
   return(
     <span>
-      <Header style={{backgroundColor: 'rgba(39,175,96,1)'}} className='header-shadow'>
+      <Header style={{backgroundColor: website?.color || 'rgba(39,175,96,1)'}} className='header-shadow'>
         <HeaderPadding>
           <ConversationHeader className='gutter-left'>
             <h3 className='fadeInLeft'>Agent feedback</h3>
@@ -49,7 +52,7 @@ const Rate = ({chat, setCreate}) => {
               <FullWidth>
                 <ConversationButtonWrapper className='pointer-events-none'>
                   <Button
-                    style={{ backgroundColor: "rgb(39, 175, 96)", marginLeft: "95px", color: "white" }}
+                    style={{ backgroundColor: website?.color || "rgb(39, 175, 96)", marginLeft: "95px", color: "white" }}
                     primary
                     className='pointer-events-initial'
                     onClick={() => setCreate(true)}
