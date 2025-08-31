@@ -74,9 +74,7 @@ export const HeaderShadow = styled.div`
   box-shadow: 0px -3px 42px 6px rgba(0,0,0,0.17);
 `;
 
-export const Radius = styled.div`
-  border-radius: 9px;
-`;
+
 
 export const Hide = styled.div`
   visibility: hidden;
@@ -122,6 +120,7 @@ export const Container = styled.div`
   height: 700px;
   padding: 20px 0 20px 20px;
   box-sizing: border-box;
+  padding-bottom: 20px;
   
   & div {
     box-sizing: border-box;
@@ -165,8 +164,9 @@ export const Container = styled.div`
 export const Panel = styled.div`
   position: relative;
   height: calc(100% - 80px);
-  margin-bottom: 20px;
   background-color: white;
+  border-radius: 9px;
+  overflow: hidden;
   
   .message-body {
     height: calc(100% - 53px);
@@ -188,6 +188,7 @@ export const Header = styled.div`
   color: white;
   height: 80px;
   background-color: #00BCD4;
+  border-radius: 9px 9px 0 0;
 `;
 
 export const HeaderPadding = styled.div`
@@ -283,7 +284,7 @@ export const BackButton = styled.div`
 `;
 
 export const Button = styled.div`
-  border-radius: 50%;
+  border-radius: 9px;
   float: right;
   width: 60px;
   height: 60px;

@@ -28016,9 +28016,6 @@ dt.div`
   box-shadow: 0px -3px 42px 6px rgba(0,0,0,0.17);
 `;
 dt.div`
-  border-radius: 9px;
-`;
-dt.div`
   visibility: hidden;
 `;
 dt.div`
@@ -28055,6 +28052,7 @@ const Container = dt.div`
   height: 700px;
   padding: 20px 0 20px 20px;
   box-sizing: border-box;
+  padding-bottom: 20px;
   
   & div {
     box-sizing: border-box;
@@ -28097,8 +28095,9 @@ const Container = dt.div`
 const Panel = dt.div`
   position: relative;
   height: calc(100% - 80px);
-  margin-bottom: 20px;
   background-color: white;
+  border-radius: 9px;
+  overflow: hidden;
   
   .message-body {
     height: calc(100% - 53px);
@@ -28119,6 +28118,7 @@ const Header = dt.div`
   color: white;
   height: 80px;
   background-color: #00BCD4;
+  border-radius: 9px 9px 0 0;
 `;
 const HeaderPadding = dt.div`
   padding-top: 16px;
@@ -28197,7 +28197,7 @@ dt.div`
   }
 `;
 const Button = dt.div`
-  border-radius: 50%;
+  border-radius: 9px;
   float: right;
   width: 60px;
   height: 60px;
