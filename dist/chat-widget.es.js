@@ -28871,9 +28871,11 @@ const ChatInput = dt.div`
 const ChatInputShadow = dt.div`
   box-shadow: 0px -3px 48px -1px rgba(0,0,0,0.10);
   background: #fff;
+  display: flex;
+  align-items: center;
 `;
 const InputField = dt.textarea`
-  width: calc(100% - 52px);
+  width: 100%;
   height: auto;
   border: 0px;
   padding: 20px 0px 20px 30px;
@@ -28883,6 +28885,7 @@ const InputField = dt.textarea`
   font-weight: 400;
   line-height: 1.33;
   color: #565867;
+  flex-grow: 1;
   
   ${(props) => props.$minRows && `
     min-height: ${props.$minRows * 20}px;
@@ -28892,6 +28895,16 @@ const InputField = dt.textarea`
     max-height: ${props.$maxRows * 20}px;
   `}
 `;
+const SubmitButton = dt.button`
+  background-color: #00BCD4;
+  color: white;
+  border: none;
+  border-radius: 9px;
+  padding: 10px 15px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 15px;
+`;
 dt.div`
   background-color: rgba(240,243,245,1);
 `;
@@ -28899,42 +28912,48 @@ const MessageForm = ({ chatId }) => {
   const [inputHasFocus, setInputFocus] = reactExports.useState(true);
   const [message, setMessage] = reactExports.useState("");
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Mutation, { mutation: CREATE_MESSAGE, children: (createMessage, { data }) => {
+    const handleSubmit = () => {
+      if (message.length < 1) {
+        return;
+      }
+      createMessage({ variables: {
+        text: message,
+        author: store("customerName"),
+        chatId
+      } }).then((resp) => {
+        setMessage("");
+      });
+    };
     const onKeyDown = (e) => {
       if (e.keyCode === 13) {
         if (e.shiftKey) {
           return;
         }
-        if (message.length < 1) {
-          return;
-        }
-        createMessage({ variables: {
-          text: message,
-          author: store("customerName"),
-          chatId
-        } }).then((resp) => {
-          setMessage("");
-        });
+        handleSubmit();
         e.preventDefault();
       }
     };
-    return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatInput, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ChatInputShadow, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-      InputField,
-      {
-        $minRows: 1,
-        $maxRows: 5,
-        placeholder: "Send a message ...",
-        value: message,
-        autoFocus: true,
-        onChange: (e) => setMessage(e.target.value),
-        onKeyDown,
-        onFocus: () => {
-          setInputFocus(true);
-        },
-        onBlur: () => {
-          setInputFocus(false);
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatInput, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ChatInputShadow, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        InputField,
+        {
+          $minRows: 1,
+          $maxRows: 5,
+          placeholder: "Send a message ...",
+          value: message,
+          autoFocus: true,
+          onChange: (e) => setMessage(e.target.value),
+          onKeyDown,
+          onFocus: () => {
+            setInputFocus(true);
+          },
+          onBlur: () => {
+            setInputFocus(false);
+          }
         }
-      }
-    ) }) });
+      ),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(SubmitButton, { onClick: handleSubmit, children: "Send" })
+    ] }) });
   } });
 };
 dt.div`

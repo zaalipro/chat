@@ -2,7 +2,7 @@ import {useState} from 'react'
 import { Mutation } from '@apollo/client/react/components'
 import store from 'store2'
 import { CREATE_MESSAGE } from './queries'
-import { ChatInput, ChatInputShadow, InputField } from './components/styled/ChatInput'
+import { ChatInput, ChatInputShadow, InputField, SubmitButton } from './components/styled/ChatInput'
 
 const MessageForm = ({chatId}) => {
   const [inputHasFocus, setInputFocus] = useState(true)
@@ -11,22 +11,26 @@ const MessageForm = ({chatId}) => {
   return (
     <Mutation mutation={CREATE_MESSAGE}>
       {(createMessage, { data }) => {
+        const handleSubmit = () => {
+          if (message.length < 1) {
+            return
+          }
+
+          createMessage({ variables: {
+            text: message,
+            author: store('customerName'),
+            chatId
+          }}).then( resp => {
+            setMessage('')
+          });
+        }
+
         const onKeyDown = (e) => {
           if (e.keyCode === 13) { // ENTER
             if (e.shiftKey) { // allow new lines with ENTER + SHIFT
               return
             }
-            if (message.length < 1) {
-              return
-            }
-
-            createMessage({ variables: {
-              text: message,
-              author: store('customerName'),
-              chatId
-            }}).then( resp => {
-              setMessage('')
-            });
+            handleSubmit();
             e.preventDefault()
           }
         }
@@ -49,6 +53,7 @@ const MessageForm = ({chatId}) => {
                   setInputFocus(false)
                 }}
               />
+              <SubmitButton onClick={handleSubmit}>Send</SubmitButton>
             </ChatInputShadow>
           </ChatInput>
         )
