@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import MessageBox from './MessageBox'
 import MessageForm from './MessageForm'
-import { Dropzone, MessageBody, ChatContainer } from './components/styled/Chat'
+import { Dropzone, MessageBody, MessagesArea, ChatContainer } from './components/styled/Chat'
 
 class Chat extends Component {
   componentDidMount() {
@@ -14,7 +14,9 @@ class Chat extends Component {
     return (
       <Dropzone>
         <MessageBody>
-          <MessageBox messages={data.messages}/>
+          <MessagesArea>
+            <MessageBox messages={data.messages}/>
+          </MessagesArea>
           <MessageForm chatId={chatId} />
         </MessageBody>
       </Dropzone>

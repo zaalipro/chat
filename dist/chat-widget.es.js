@@ -28822,7 +28822,9 @@ class ChatMessage extends reactExports.Component {
 const ChatMessagesContainer = dt.div`
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  padding-bottom: 10px;
+  min-height: 100%;
 `;
 const mainColor = "rgba(39,175,96,1)";
 const companyLogoURL = void 0;
@@ -28863,10 +28865,8 @@ class MessageBox extends reactExports.Component {
   }
 }
 const ChatInput = dt.div`
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  position: relative;
+  width: 100%;
 `;
 const ChatInputShadow = dt.div`
   box-shadow: 0px -3px 48px -1px rgba(0,0,0,0.10);
@@ -28964,7 +28964,15 @@ const Dropzone = dt.div`
   height: calc(100% - 80px);
 `;
 const MessageBody = dt.div`
-  height: calc(100% - 53px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+`;
+const MessagesArea = dt.div`
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
 `;
 class Chat extends reactExports.Component {
   componentDidMount() {
@@ -28973,7 +28981,7 @@ class Chat extends reactExports.Component {
   render() {
     const { data, chatId } = this.props;
     return /* @__PURE__ */ jsxRuntimeExports.jsx(Dropzone, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(MessageBody, { children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx(MessageBox, { messages: data.messages }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(MessagesArea, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(MessageBox, { messages: data.messages }) }),
       /* @__PURE__ */ jsxRuntimeExports.jsx(MessageForm, { chatId })
     ] }) });
   }
