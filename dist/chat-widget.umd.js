@@ -819,7 +819,7 @@ mutation createChat(
   color: white;
   border: none;
   border-radius: 9px;
-  padding: 10px 15px;
+  padding: 25px 20px;
   margin-right: 10px;
   cursor: pointer;
   font-size: 15px;
