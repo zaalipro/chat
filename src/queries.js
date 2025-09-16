@@ -1,82 +1,96 @@
 import { gql } from '@apollo/client'
 
+// Fragments
+export const chatFragment = gql`
+  fragment chatFragment on Chat {
+    id
+    key
+    status
+    missed
+    headline
+    ipAddress
+    customerName
+  }
+`
+
+export const messageFragment = gql`
+  fragment messageFragment on Message {
+    id
+    text
+    author
+    isAgent
+    insertedAt
+    updatedAt
+  }
+`
+
+export const contractFragment = gql`
+  fragment contractFragment on Contract {
+    id
+    status
+    session
+    color
+    chatMissTime
+  }
+`
+
 export const CREATE_CHAT = gql`
-mutation createChat(
-  $customerName: String!
-  $headline: String!
-  $contractId: UUID!
-  $ipAddress: InternetAddress,
-  $key: UUID!
-) {
-  createChat(
-    input: {
-      chat: {
-        customerName: $customerName
-        headline: $headline
-        contractId: $contractId
-        ipAddress: $ipAddress
-        key: $key
+  mutation createChat(
+    $customerName: String!
+    $headline: String!
+    $contractId: UUID!
+    $ipAddress: InternetAddress,
+    $key: UUID!
+  ) {
+    createChat(
+      input: {
+        chat: {
+          customerName: $customerName
+          headline: $headline
+          contractId: $contractId
+          ipAddress: $ipAddress
+          key: $key
+        }
+      }
+    ) {
+      chat {
+        ...chatFragment
       }
     }
-  ) {
-    chat {
-      id
-      key
-      customerName
-      headline
-      ipAddress
-      status
-    }
   }
-}
-
 `
 
 export const MESSAGE_SUBSCRIPTION = gql`
   subscription ($chatId: UUID!) {
-    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC ) {
-      id
-      text
-      author
-      isAgent
-      insertedAt
-      updatedAt
+    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
+      ...messageFragment
     }
   }
+  ${messageFragment}
 `
 
 export const GET_CONTRACT = gql`
   query ($id: UUID!) {
     contract(id: $id) {
-      id
-      status
-      session
+      ...contractFragment
     }
   }
-`;
+  ${contractFragment}
+`
 
 export const GET_MESSAGES = gql`
   query ($chatId: UUID!) {
     messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
-      id
-      author
-      isAgent
-      text
-      insertedAt
-      updatedAt
+      ...messageFragment
     }
   }
-`;
-
+  ${messageFragment}
+`
 
 export const GET_CHAT = gql`
   query ($chatId: UUID!) {
     chat(id: $chatId) {
-      id
-      status
-      customerName
-      headline
-      ipAddress
+      ...chatFragment
       contract {
         agent {
           id
@@ -84,7 +98,8 @@ export const GET_CHAT = gql`
       }
     }
   }
-`;
+  ${chatFragment}
+`
 
 export const RATE_AGENT = gql`
   mutation createRate($chatId: UUID!, $rating: Int!) {
@@ -96,7 +111,7 @@ export const RATE_AGENT = gql`
       }
     }
   }
-`;
+`
 
 export const CREATE_MESSAGE = gql`
   mutation createMessage($text: String!, $author: String!, $chatId: UUID!) {
@@ -106,28 +121,21 @@ export const CREATE_MESSAGE = gql`
       }
     }) {
       message {
-        id
-        text
-        author
-        isAgent
-        insertedAt
-        updatedAt
+        ...messageFragment
       }
     }
   }
-`;
+  ${messageFragment}
+`
 
 export const CHAT_STATUS_SUBSCRIPTION = gql`
   subscription ($chatId: UUID!) {
     chat(id: $chatId) {
-      id
-      status
-      customerName
-      headline
-      ipAddress
+      ...chatFragment
     }
   }
-`;
+  ${chatFragment}
+`
 
 export const END_CHAT = gql`
   mutation endChat($chatId: UUID!) {
@@ -135,18 +143,17 @@ export const END_CHAT = gql`
       input: {
         id: $chatId
         patch: {
-      		status: FINISHED
+          status: FINISHED
         }
       }
-
     ) {
       chat {
-        id
-        status
+        ...chatFragment
       }
     }
   }
-`;
+  ${chatFragment}
+`
 
 export const GET_WEBSITE_CONTRACTS = gql`
   query GetWebsiteContracts($websiteId: UUID!) {
@@ -154,15 +161,12 @@ export const GET_WEBSITE_CONTRACTS = gql`
       logoUrl
       color
       contracts(condition: {status: "active"}) {
-        id
-        session
-        status
-        color
-        chatMissTime
+        ...contractFragment
       }
     }
   }
-`;
+  ${contractFragment}
+`
 
 export const UPDATE_CHAT_MISSED = gql`
   mutation UpdateChatMissed($chatId: UUID!) {
@@ -173,9 +177,9 @@ export const UPDATE_CHAT_MISSED = gql`
       }
     }) {
       chat {
-        id
-        missed
+        ...chatFragment
       }
     }
   }
-`;
+  ${chatFragment}
+`

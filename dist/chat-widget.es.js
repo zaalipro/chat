@@ -24469,78 +24469,89 @@ const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
     )
   ] });
 };
+const chatFragment = gql`
+  fragment chatFragment on Chat {
+    id
+    key
+    status
+    missed
+    headline
+    ipAddress
+    customerName
+  }
+`;
+const messageFragment = gql`
+  fragment messageFragment on Message {
+    id
+    text
+    author
+    isAgent
+    insertedAt
+    updatedAt
+  }
+`;
+const contractFragment = gql`
+  fragment contractFragment on Contract {
+    id
+    status
+    session
+    color
+    chatMissTime
+  }
+`;
 const CREATE_CHAT = gql`
-mutation createChat(
-  $customerName: String!
-  $headline: String!
-  $contractId: UUID!
-  $ipAddress: InternetAddress,
-  $key: UUID!
-) {
-  createChat(
-    input: {
-      chat: {
-        customerName: $customerName
-        headline: $headline
-        contractId: $contractId
-        ipAddress: $ipAddress
-        key: $key
+  mutation createChat(
+    $customerName: String!
+    $headline: String!
+    $contractId: UUID!
+    $ipAddress: InternetAddress,
+    $key: UUID!
+  ) {
+    createChat(
+      input: {
+        chat: {
+          customerName: $customerName
+          headline: $headline
+          contractId: $contractId
+          ipAddress: $ipAddress
+          key: $key
+        }
+      }
+    ) {
+      chat {
+        ...chatFragment
       }
     }
-  ) {
-    chat {
-      id
-      key
-      customerName
-      headline
-      ipAddress
-      status
-    }
   }
-}
-
 `;
 const MESSAGE_SUBSCRIPTION = gql`
   subscription ($chatId: UUID!) {
-    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC ) {
-      id
-      text
-      author
-      isAgent
-      insertedAt
-      updatedAt
+    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
+      ...messageFragment
     }
   }
+  ${messageFragment}
 `;
 gql`
   query ($id: UUID!) {
     contract(id: $id) {
-      id
-      status
-      session
+      ...contractFragment
     }
   }
+  ${contractFragment}
 `;
 const GET_MESSAGES = gql`
   query ($chatId: UUID!) {
     messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
-      id
-      author
-      isAgent
-      text
-      insertedAt
-      updatedAt
+      ...messageFragment
     }
   }
+  ${messageFragment}
 `;
 const GET_CHAT = gql`
   query ($chatId: UUID!) {
     chat(id: $chatId) {
-      id
-      status
-      customerName
-      headline
-      ipAddress
+      ...chatFragment
       contract {
         agent {
           id
@@ -24548,6 +24559,7 @@ const GET_CHAT = gql`
       }
     }
   }
+  ${chatFragment}
 `;
 const RATE_AGENT = gql`
   mutation createRate($chatId: UUID!, $rating: Int!) {
@@ -24568,26 +24580,19 @@ const CREATE_MESSAGE = gql`
       }
     }) {
       message {
-        id
-        text
-        author
-        isAgent
-        insertedAt
-        updatedAt
+        ...messageFragment
       }
     }
   }
+  ${messageFragment}
 `;
 const CHAT_STATUS_SUBSCRIPTION = gql`
   subscription ($chatId: UUID!) {
     chat(id: $chatId) {
-      id
-      status
-      customerName
-      headline
-      ipAddress
+      ...chatFragment
     }
   }
+  ${chatFragment}
 `;
 const END_CHAT = gql`
   mutation endChat($chatId: UUID!) {
@@ -24595,17 +24600,16 @@ const END_CHAT = gql`
       input: {
         id: $chatId
         patch: {
-      		status: FINISHED
+          status: FINISHED
         }
       }
-
     ) {
       chat {
-        id
-        status
+        ...chatFragment
       }
     }
   }
+  ${chatFragment}
 `;
 const GET_WEBSITE_CONTRACTS = gql`
   query GetWebsiteContracts($websiteId: UUID!) {
@@ -24613,14 +24617,11 @@ const GET_WEBSITE_CONTRACTS = gql`
       logoUrl
       color
       contracts(condition: {status: "active"}) {
-        id
-        session
-        status
-        color
-        chatMissTime
+        ...contractFragment
       }
     }
   }
+  ${contractFragment}
 `;
 const UPDATE_CHAT_MISSED = gql`
   mutation UpdateChatMissed($chatId: UUID!) {
@@ -24631,11 +24632,11 @@ const UPDATE_CHAT_MISSED = gql`
       }
     }) {
       chat {
-        id
-        missed
+        ...chatFragment
       }
     }
   }
+  ${chatFragment}
 `;
 const CHAT_STATUS = {
   STARTED: "STARTED",
