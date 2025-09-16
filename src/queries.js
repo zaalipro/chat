@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client'
 
 // Fragments
-export const chatFragment = gql`
+const chatFragment = gql`
   fragment chatFragment on Chat {
     id
     key
@@ -13,7 +13,7 @@ export const chatFragment = gql`
   }
 `
 
-export const messageFragment = gql`
+const messageFragment = gql`
   fragment messageFragment on Message {
     id
     text
@@ -24,7 +24,7 @@ export const messageFragment = gql`
   }
 `
 
-export const contractFragment = gql`
+const contractFragment = gql`
   fragment contractFragment on Contract {
     id
     status
