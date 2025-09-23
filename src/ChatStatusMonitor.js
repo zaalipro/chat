@@ -107,11 +107,11 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
 
   const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
     variables: { contractId: contractId },
-    onSubscriptionData: ({ subscriptionData }) => {
-      const chatData = subscriptionData?.data?.chatChanged?.record;
+    onData: ({ data: subscriptionData }) => {
+      const chatData = subscriptionData?.chatChanged?.record;
       handleChatStarted(chatData);
     },
-    onSubscriptionComplete: () => {
+    onComplete: () => {
       console.log(`Subscription completed for chat ${chatId}`);
     },
     shouldResubscribe: true // Automatically resubscribe on connection loss

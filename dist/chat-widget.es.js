@@ -27335,12 +27335,12 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
   }, [chatId, onChatStarted, hasNotifiedStarted]);
   const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
     variables: { contractId },
-    onSubscriptionData: ({ subscriptionData }) => {
-      var _a2, _b;
-      const chatData = (_b = (_a2 = subscriptionData == null ? void 0 : subscriptionData.data) == null ? void 0 : _a2.chatChanged) == null ? void 0 : _b.record;
+    onData: ({ data: subscriptionData }) => {
+      var _a2;
+      const chatData = (_a2 = subscriptionData == null ? void 0 : subscriptionData.chatChanged) == null ? void 0 : _a2.record;
       handleChatStarted(chatData);
     },
-    onSubscriptionComplete: () => {
+    onComplete: () => {
       console.log(`Subscription completed for chat ${chatId}`);
     },
     shouldResubscribe: true
