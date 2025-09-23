@@ -26,11 +26,11 @@ const ChatContainer = ({ chat }) => {
 
   // Subscribe to chat status changes
   const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { chatId: chat.id }
+    variables: { contractId: chat.contractId }
   })
 
   useEffect(() => {
-    if (chatStatusData?.chat?.status === CHAT_STATUS.FINISHED) {
+    if (chatStatusData?.chatChanged?.record?.status === CHAT_STATUS.FINISHED) {
       setChatEnded(true)
     }
   }, [chatStatusData])
@@ -63,7 +63,12 @@ const ChatContainer = ({ chat }) => {
                   document: MESSAGE_SUBSCRIPTION,
                   variables: { chatId: chat.id },
                   updateQuery: (prev, { subscriptionData }) => {
-                    return subscriptionData.data
+                    if (!subscriptionData.data) return prev;
+                    
+                    const newMessage = subscriptionData.data.onMessageAdded.record;
+                    return {
+                      messages: [...prev.messages, newMessage]
+                    };
                   }
                 })
               }

@@ -24470,7 +24470,7 @@ const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
   ] });
 };
 const chatFragment = gql`
-  fragment chatFragment on Chat {
+  fragment ChatFragment on Chat {
     id
     key
     status
@@ -24481,7 +24481,7 @@ const chatFragment = gql`
   }
 `;
 const messageFragment = gql`
-  fragment messageFragment on Message {
+  fragment MessageFragment on Message {
     id
     text
     author
@@ -24491,12 +24491,24 @@ const messageFragment = gql`
   }
 `;
 const contractFragment = gql`
-  fragment contractFragment on Contract {
+  fragment ContractFragment on Contract {
     id
+    name
+    color
+    rate
     status
     session
-    color
     chatMissTime
+    chatMissFee
+    websiteId
+    agentId
+    jobId
+    companyId
+    proposalId
+    insertedAt
+    updatedAt
+    agentDeleted
+    __typename
   }
 `;
 const CREATE_CHAT = gql`
@@ -24519,15 +24531,18 @@ const CREATE_CHAT = gql`
       }
     ) {
       chat {
-        ...chatFragment
+        ...ChatFragment
       }
     }
   }
+  ${chatFragment}
 `;
 const MESSAGE_SUBSCRIPTION = gql`
-  subscription ($chatId: UUID!) {
-    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
-      ...messageFragment
+  subscription OnMessageAdded($chatId: UUID!) {
+    onMessageAdded(chatId: $chatId) {
+      record {
+        ...MessageFragment
+      }
     }
   }
   ${messageFragment}
@@ -24535,7 +24550,7 @@ const MESSAGE_SUBSCRIPTION = gql`
 gql`
   query ($id: UUID!) {
     contract(id: $id) {
-      ...contractFragment
+      ...ContractFragment
     }
   }
   ${contractFragment}
@@ -24543,7 +24558,7 @@ gql`
 const GET_MESSAGES = gql`
   query ($chatId: UUID!) {
     messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
-      ...messageFragment
+      ...MessageFragment
     }
   }
   ${messageFragment}
@@ -24551,7 +24566,7 @@ const GET_MESSAGES = gql`
 const GET_CHAT = gql`
   query ($chatId: UUID!) {
     chat(id: $chatId) {
-      ...chatFragment
+      ...ChatFragment
       contract {
         agent {
           id
@@ -24580,16 +24595,19 @@ const CREATE_MESSAGE = gql`
       }
     }) {
       message {
-        ...messageFragment
+        ...MessageFragment
       }
     }
   }
   ${messageFragment}
 `;
 const CHAT_STATUS_SUBSCRIPTION = gql`
-  subscription ($chatId: UUID!) {
-    chat(id: $chatId) {
-      ...chatFragment
+  subscription onChatChanged($contractId: UUID, $status: String) {
+    chatChanged(contractId: $contractId, status: $status) {
+      operation
+      record {
+        ...ChatFragment
+      }
     }
   }
   ${chatFragment}
@@ -24605,7 +24623,7 @@ const END_CHAT = gql`
       }
     ) {
       chat {
-        ...chatFragment
+        ...ChatFragment
       }
     }
   }
@@ -24617,7 +24635,7 @@ const GET_WEBSITE_CONTRACTS = gql`
       logoUrl
       color
       contracts(condition: {status: "active"}) {
-        ...contractFragment
+        ...ContractFragment
       }
     }
   }
@@ -24632,11 +24650,22 @@ const UPDATE_CHAT_MISSED = gql`
       }
     }) {
       chat {
-        ...chatFragment
+        ...ChatFragment
       }
     }
   }
   ${chatFragment}
+`;
+gql`
+  subscription onContractChanged($companyId: UUID) {
+    contractChanged(companyId: $companyId) {
+      operation
+      record {
+        ...ContractFragment
+      }
+    }
+  }
+  ${contractFragment}
 `;
 const CHAT_STATUS = {
   STARTED: "STARTED",
@@ -27273,23 +27302,27 @@ const ChatStatusMonitor = ({
       clearChatTimeouts(timeoutsRef.current);
     };
   }, []);
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: pendingChats.map((chat) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-    ChatSubscription,
-    {
-      chatId: chat.id,
-      onChatStarted: (chatData) => {
-        clearChatTimeout(timeoutsRef.current, chat.id);
-        clearChatTimeouts(timeoutsRef.current);
-        if (onChatStarted) {
-          onChatStarted(chatData);
-        }
+  return /* @__PURE__ */ jsxRuntimeExports.jsx(jsxRuntimeExports.Fragment, { children: pendingChats.map((chat) => {
+    var _a2;
+    return /* @__PURE__ */ jsxRuntimeExports.jsx(
+      ChatSubscription,
+      {
+        chatId: chat.id,
+        contractId: (_a2 = chat.contract) == null ? void 0 : _a2.id,
+        onChatStarted: (chatData) => {
+          clearChatTimeout(timeoutsRef.current, chat.id);
+          clearChatTimeouts(timeoutsRef.current);
+          if (onChatStarted) {
+            onChatStarted(chatData);
+          }
+        },
+        onError
       },
-      onError
-    },
-    chat.id
-  )) });
+      chat.id
+    );
+  }) });
 };
-const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
+const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
   const [hasNotifiedStarted, setHasNotifiedStarted] = reactExports.useState(false);
   const handleChatStarted = reactExports.useCallback((chatData) => {
     if (!hasNotifiedStarted && chatData && chatData.status === CHAT_STATUS.STARTED) {
@@ -27301,10 +27334,10 @@ const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
     }
   }, [chatId, onChatStarted, hasNotifiedStarted]);
   const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { chatId },
+    variables: { contractId },
     onSubscriptionData: ({ subscriptionData }) => {
-      var _a2;
-      const chatData = (_a2 = subscriptionData == null ? void 0 : subscriptionData.data) == null ? void 0 : _a2.chat;
+      var _a2, _b;
+      const chatData = (_b = (_a2 = subscriptionData == null ? void 0 : subscriptionData.data) == null ? void 0 : _a2.chatChanged) == null ? void 0 : _b.record;
       handleChatStarted(chatData);
     },
     onSubscriptionComplete: () => {
@@ -27322,8 +27355,9 @@ const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
     }
   }, [error, chatId, onError]);
   reactExports.useEffect(() => {
-    if (data == null ? void 0 : data.chat) {
-      handleChatStarted(data.chat);
+    var _a2;
+    if ((_a2 = data == null ? void 0 : data.chatChanged) == null ? void 0 : _a2.record) {
+      handleChatStarted(data.chatChanged.record);
     }
   }, [data, handleChatStarted]);
   return null;
@@ -29250,11 +29284,11 @@ const ChatContainer = ({ chat }) => {
     variables: { chatId: chat.id }
   });
   const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { chatId: chat.id }
+    variables: { contractId: chat.contractId }
   });
   reactExports.useEffect(() => {
-    var _a3;
-    if (((_a3 = chatStatusData == null ? void 0 : chatStatusData.chat) == null ? void 0 : _a3.status) === CHAT_STATUS.FINISHED) {
+    var _a3, _b2;
+    if (((_b2 = (_a3 = chatStatusData == null ? void 0 : chatStatusData.chatChanged) == null ? void 0 : _a3.record) == null ? void 0 : _b2.status) === CHAT_STATUS.FINISHED) {
       setChatEnded(true);
     }
   }, [chatStatusData]);
@@ -29282,7 +29316,11 @@ const ChatContainer = ({ chat }) => {
             document: MESSAGE_SUBSCRIPTION,
             variables: { chatId: chat.id },
             updateQuery: (prev2, { subscriptionData }) => {
-              return subscriptionData.data;
+              if (!subscriptionData.data) return prev2;
+              const newMessage = subscriptionData.data.onMessageAdded.record;
+              return {
+                messages: [...prev2.messages, newMessage]
+              };
             }
           })
         })

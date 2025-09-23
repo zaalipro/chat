@@ -71,6 +71,7 @@ const ChatStatusMonitor = ({
         <ChatSubscription
           key={chat.id}
           chatId={chat.id}
+          contractId={chat.contract?.id}
           onChatStarted={(chatData) => {
             // Clear timeout for this chat since it's now started
             clearChatTimeout(timeoutsRef.current, chat.id);
@@ -91,7 +92,7 @@ const ChatStatusMonitor = ({
 };
 
 // Individual chat subscription component
-const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
+const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
   const [hasNotifiedStarted, setHasNotifiedStarted] = useState(false);
   
   const handleChatStarted = useCallback((chatData) => {
@@ -105,9 +106,9 @@ const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
   }, [chatId, onChatStarted, hasNotifiedStarted]);
 
   const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { chatId },
+    variables: { contractId: contractId },
     onSubscriptionData: ({ subscriptionData }) => {
-      const chatData = subscriptionData?.data?.chat;
+      const chatData = subscriptionData?.data?.chatChanged?.record;
       handleChatStarted(chatData);
     },
     onSubscriptionComplete: () => {
@@ -127,8 +128,8 @@ const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
 
   // Check initial data in case chat is already started
   useEffect(() => {
-    if (data?.chat) {
-      handleChatStarted(data.chat);
+    if (data?.chatChanged?.record) {
+      handleChatStarted(data.chatChanged.record);
     }
   }, [data, handleChatStarted]);
 

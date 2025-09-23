@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client'
 
 // Fragments
-const chatFragment = gql`
-  fragment chatFragment on Chat {
+ const chatFragment = gql`
+  fragment ChatFragment on Chat {
     id
     key
     status
@@ -13,8 +13,8 @@ const chatFragment = gql`
   }
 `
 
-const messageFragment = gql`
-  fragment messageFragment on Message {
+export const messageFragment = gql`
+  fragment MessageFragment on Message {
     id
     text
     author
@@ -24,13 +24,25 @@ const messageFragment = gql`
   }
 `
 
-const contractFragment = gql`
-  fragment contractFragment on Contract {
+export const contractFragment = gql`
+  fragment ContractFragment on Contract {
     id
+    name
+    color
+    rate
     status
     session
-    color
     chatMissTime
+    chatMissFee
+    websiteId
+    agentId
+    jobId
+    companyId
+    proposalId
+    insertedAt
+    updatedAt
+    agentDeleted
+    __typename
   }
 `
 
@@ -54,16 +66,19 @@ export const CREATE_CHAT = gql`
       }
     ) {
       chat {
-        ...chatFragment
+        ...ChatFragment
       }
     }
   }
+  ${chatFragment}
 `
 
 export const MESSAGE_SUBSCRIPTION = gql`
-  subscription ($chatId: UUID!) {
-    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
-      ...messageFragment
+  subscription OnMessageAdded($chatId: UUID!) {
+    onMessageAdded(chatId: $chatId) {
+      record {
+        ...MessageFragment
+      }
     }
   }
   ${messageFragment}
@@ -72,7 +87,7 @@ export const MESSAGE_SUBSCRIPTION = gql`
 export const GET_CONTRACT = gql`
   query ($id: UUID!) {
     contract(id: $id) {
-      ...contractFragment
+      ...ContractFragment
     }
   }
   ${contractFragment}
@@ -81,7 +96,7 @@ export const GET_CONTRACT = gql`
 export const GET_MESSAGES = gql`
   query ($chatId: UUID!) {
     messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
-      ...messageFragment
+      ...MessageFragment
     }
   }
   ${messageFragment}
@@ -90,7 +105,7 @@ export const GET_MESSAGES = gql`
 export const GET_CHAT = gql`
   query ($chatId: UUID!) {
     chat(id: $chatId) {
-      ...chatFragment
+      ...ChatFragment
       contract {
         agent {
           id
@@ -121,7 +136,7 @@ export const CREATE_MESSAGE = gql`
       }
     }) {
       message {
-        ...messageFragment
+        ...MessageFragment
       }
     }
   }
@@ -129,9 +144,12 @@ export const CREATE_MESSAGE = gql`
 `
 
 export const CHAT_STATUS_SUBSCRIPTION = gql`
-  subscription ($chatId: UUID!) {
-    chat(id: $chatId) {
-      ...chatFragment
+  subscription onChatChanged($contractId: UUID, $status: String) {
+    chatChanged(contractId: $contractId, status: $status) {
+      operation
+      record {
+        ...ChatFragment
+      }
     }
   }
   ${chatFragment}
@@ -148,7 +166,7 @@ export const END_CHAT = gql`
       }
     ) {
       chat {
-        ...chatFragment
+        ...ChatFragment
       }
     }
   }
@@ -161,7 +179,7 @@ export const GET_WEBSITE_CONTRACTS = gql`
       logoUrl
       color
       contracts(condition: {status: "active"}) {
-        ...contractFragment
+        ...ContractFragment
       }
     }
   }
@@ -177,9 +195,21 @@ export const UPDATE_CHAT_MISSED = gql`
       }
     }) {
       chat {
-        ...chatFragment
+        ...ChatFragment
       }
     }
   }
   ${chatFragment}
+`
+
+export const CONTRACT_CHANGED_SUBSCRIPTION = gql`
+  subscription onContractChanged($companyId: UUID) {
+    contractChanged(companyId: $companyId) {
+      operation
+      record {
+        ...ContractFragment
+      }
+    }
+  }
+  ${contractFragment}
 `
