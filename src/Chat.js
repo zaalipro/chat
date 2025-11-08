@@ -5,7 +5,15 @@ import { Dropzone, MessageBody, MessagesArea, ChatContainer } from './components
 
 class Chat extends Component {
   componentDidMount() {
-    this.props.subscribeToNewMessages()
+    // Store the unsubscribe function returned by subscribeToNewMessages
+    this.unsubscribe = this.props.subscribeToNewMessages()
+  }
+
+  componentWillUnmount() {
+    // Clean up subscriptions when component unmounts
+    if (this.unsubscribe) {
+      this.unsubscribe()
+    }
   }
 
   render() {
