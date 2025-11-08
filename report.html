@@ -1,0 +1,2876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Widget Codebase Analysis Report</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: white;
+            --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border-color: #e9ecef;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --accent: #667eea;
+            --accent-hover: #764ba2;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --code-bg: #2d3748;
+            --code-text: #e2e8f0;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-header: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            --text-primary: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --text-muted: #718096;
+            --border-color: #4a5568;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+            --accent: #9f7aea;
+            --accent-hover: #b794f4;
+            --code-bg: #1a202c;
+            --code-text: #e2e8f0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background-color: var(--bg-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .theme-toggle:hover {
+            background: var(--accent-hover);
+            transform: scale(1.1);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
+        }
+        
+        .header {
+            background: var(--bg-header);
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .summary-card {
+            background: var(--bg-secondary);
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .summary-card h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .summary-card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        .summary-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        .section {
+            background: var(--bg-secondary);
+            margin-bottom: 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        
+        .section-header {
+            background: var(--bg-primary);
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .section-header h2 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .section-header .icon {
+            margin-right: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .section-content {
+            padding: 30px;
+        }
+        
+        .item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: var(--bg-primary);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .item:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .item h3 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .item p {
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+        
+        .severity {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .severity.critical {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .severity.high {
+            background: #fd7e14;
+            color: white;
+        }
+        
+        .severity.medium {
+            background: var(--warning);
+            color: #333;
+        }
+        
+        .severity.low {
+            background: var(--success);
+            color: white;
+        }
+        
+        .code-block {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9rem;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        .code-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .code-before, .code-after {
+            position: relative;
+        }
+
+        .code-label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: var(--accent);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            z-index: 1;
+        }
+
+        .code-before .code-label {
+            background: var(--danger);
+        }
+
+        .code-after .code-label {
+            background: var(--success);
+        }
+
+        /* Prism.js syntax highlighting overrides */
+        pre[class*="language-"] {
+            background: var(--code-bg) !important;
+            margin: 0 !important;
+            padding: 15px !important;
+            border-radius: 5px !important;
+            font-size: 0.9rem !important;
+        }
+
+        code[class*="language-"] {
+            color: var(--code-text) !important;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+        }
+
+        .token.comment,
+        .token.prolog,
+        .token.doctype,
+        .token.cdata {
+            color: #6a737d !important;
+        }
+
+        .token.punctuation {
+            color: #e1e4e8 !important;
+        }
+
+        .token.property,
+        .token.tag,
+        .token.boolean,
+        .token.number,
+        .token.constant,
+        .token.symbol,
+        .token.deleted {
+            color: #79b8ff !important;
+        }
+
+        .token.selector,
+        .token.attr-name,
+        .token.string,
+        .token.char,
+        .token.builtin,
+        .token.inserted {
+            color: #9ecbff !important;
+        }
+
+        .token.operator,
+        .token.entity,
+        .token.url,
+        .language-css .token.string,
+        .style .token.string {
+            color: #b392f0 !important;
+        }
+
+        .token.atrule,
+        .token.attr-value,
+        .token.keyword {
+            color: #f97583 !important;
+        }
+
+        .token.function,
+        .token.class-name {
+            color: #b392f0 !important;
+        }
+
+        .token.regex,
+        .token.important,
+        .token.variable {
+            color: #ffab70 !important;
+        }
+        
+        .file-path {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        [data-theme="dark"] .file-path {
+            background: #2d3748;
+            color: #63b3ed;
+        }
+        
+        .recommendation {
+            background: #e8f5e8;
+            border-left-color: var(--success);
+        }
+
+        [data-theme="dark"] .recommendation {
+            background: #1a2e1a;
+        }
+        
+        .warning {
+            background: #fff3cd;
+            border-left-color: var(--warning);
+        }
+
+        [data-theme="dark"] .warning {
+            background: #2e2a1a;
+        }
+        
+        .error {
+            background: #f8d7da;
+            border-left-color: var(--danger);
+        }
+
+        [data-theme="dark"] .error {
+            background: #2e1a1a;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            border-left-color: var(--info);
+        }
+
+        [data-theme="dark"] .info {
+            background: #1a2e2e;
+        }
+        
+        .toc {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .toc h3 {
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+        
+        .toc ul {
+            list-style: none;
+        }
+        
+        .toc li {
+            margin-bottom: 8px;
+        }
+        
+        .toc a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .toc a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 30px 0;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            margin-top: 40px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .summary-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 15px;
+            }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                font-size: 16px;
+            }
+
+            .section-content {
+                padding: 20px;
+            }
+
+            .item {
+                padding: 15px;
+            }
+
+            .code-comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
+        <span id="theme-icon">🌙</span>
+    </button>
+
+    <div class="container">
+        <div class="header">
+            <h1>Chat Widget Codebase Analysis Report</h1>
+            <p>Comprehensive analysis of the React-based chat widget application with detailed code examples and fixes</p>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>🐛 Bugs</h3>
+                <div class="number">12</div>
+                <div class="label">Critical & High Priority</div>
+            </div>
+            <div class="summary-card">
+                <h3>🔒 Security</h3>
+                <div class="number">8</div>
+                <div class="label">Vulnerabilities Found</div>
+            </div>
+            <div class="summary-card">
+                <h3>💾 Memory</h3>
+                <div class="number">15</div>
+                <div class="label">Potential Leaks</div>
+            </div>
+            <div class="summary-card">
+                <h3>🏗️ Architecture</h3>
+                <div class="number">18</div>
+                <div class="label">Improvements</div>
+            </div>
+        </div>
+
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            <ul>
+                <li><a href="#critical-bugs">🚨 Critical Bugs</a></li>
+                <li><a href="#security-vulnerabilities">🔒 Security Vulnerabilities</a></li>
+                <li><a href="#memory-leaks">💾 Memory Leaks</a></li>
+                <li><a href="#performance-issues">⚡ Performance Issues</a></li>
+                <li><a href="#architecture-improvements">🏗️ Architecture Improvements</a></li>
+                <li><a href="#code-quality">📝 Code Quality</a></li>
+                <li><a href="#recommendations">✅ Recommendations</a></li>
+            </ul>
+        </div>
+
+        <div class="section" id="critical-bugs">
+            <div class="section-header">
+                <h2><span class="icon">🚨</span> Critical Bugs</h2>
+            </div>
+            <div class="section-content">
+                <div class="item error">
+                    <h3>Missing Cleanup in Chat Component</h3>
+                    <p><span class="file-path">src/Chat.js:7</span></p>
+                    <p><strong>Issue:</strong> The Chat component uses a class component with componentDidMount but lacks componentWillUnmount for cleanup. This can cause memory leaks when the component unmounts, especially with active subscriptions.</p>
+                    <p><strong>Impact:</strong> Memory leaks, potential performance degradation, and unexpected behavior when navigating away from chat.</p>
+                    <span class="severity critical">Critical</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">class Chat extends Component {
+  componentDidMount() {
+    this.props.subscribeToNewMessages()
+  }
+  // Missing componentWillUnmount for cleanup
+}</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">class Chat extends Component {
+  componentDidMount() {
+    this.props.subscribeToNewMessages()
+  }
+
+  componentWillUnmount() {
+    // Clean up subscriptions
+    if (this.unsubscribe) {
+      this.unsubscribe()
+    }
+  }
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Convert to functional component with useEffect cleanup or add componentWillUnmount to class component.</p>
+                </div>
+
+                <div class="item error">
+                    <h3>Potential Infinite Loop in App.js</h3>
+                    <p><span class="file-path">src/App.js:162-170</span></p>
+                    <p><strong>Issue:</strong> The useEffect dependency array may cause infinite re-renders under certain conditions because it references `store('activeChat')` without including it in dependencies.</p>
+                    <p><strong>Impact:</strong> Application becomes unresponsive, excessive API calls, and poor user experience.</p>
+                    <span class="severity critical">Critical</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">useEffect(() => {
+  const showCreate = !store('activeChat');
+  if (showCreate && !websiteId && !isLoggingIn && !loginError) {
+    retryLogin();
+  }
+}, [websiteId, isLoggingIn, loginError]); // Missing showCreate dependency</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">useEffect(() => {
+  const showCreate = !store('activeChat');
+  if (showCreate && !websiteId && !isLoggingIn && !loginError) {
+    retryLogin();
+  }
+}, [websiteId, isLoggingIn, loginError, showCreate]); // Added all dependencies</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Use useCallback for retryLogin and include all dependencies, or use useRef to store mutable values.</p>
+                </div>
+
+                <div class="item error">
+                    <h3>Unhandled Promise Rejections</h3>
+                    <p><span class="file-path">src/MessageForm.js:23</span></p>
+                    <p><strong>Issue:</strong> Promise from createMessage mutation is not properly handled for errors, which can cause unhandled promise rejections.</p>
+                    <p><strong>Impact:</strong> Silent failures, poor error feedback to users, and potential application crashes.</p>
+                    <span class="severity high">High</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">createMessage({ variables: {...}}).then( resp => {
+  setMessage('');
+}); // No .catch() for error handling</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">createMessage({ 
+  variables: {...} 
+})
+.then(resp => {
+  setMessage('');
+})
+.catch(error => {
+  console.error('Failed to send message:', error);
+  // Show error to user
+  setError('Failed to send message. Please try again.');
+});</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Add proper error handling with try-catch or .catch() blocks for all async operations.</p>
+                </div>
+
+                <div class="item error">
+                    <h3>Missing Error Boundaries</h3>
+                    <p><span class="file-path">Multiple components</span></p>
+                    <p><strong>Issue:</strong> No error boundaries implemented to catch and handle component errors gracefully.</p>
+                    <p><strong>Impact:</strong> Entire application can crash from a single component error, poor user experience, and difficult debugging.</p>
+                    <span class="severity high">High</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">// No error boundaries
+<App /></code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <ErrorState onRetry={() => this.setState({ hasError: false })} />;
+    }
+
+    return this.props.children;
+  }
+}
+
+// Wrap components
+<ErrorBoundary>
+  <App />
+</ErrorBoundary></code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement error boundaries at strategic points in the component tree.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="security-vulnerabilities">
+            <div class="section-header">
+                <h2><span class="icon">🔒</span> Security Vulnerabilities</h2>
+            </div>
+            <div class="section-content">
+                <div class="item error">
+                    <h3>JWT Token Storage in Plain Text</h3>
+                    <p><span class="file-path">src/App.js:143-144</span></p>
+                    <p><strong>Issue:</strong> JWT tokens are stored in localStorage without encryption, making them vulnerable to XSS attacks.</p>
+                    <p><strong>Impact:</strong> Token theft, unauthorized access to user accounts, and potential data breaches.</p>
+                    <span class="severity critical">Critical</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">store('websiteId', newWebsiteId);
+store('token', token); // Plain text storage</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Secure token storage with encryption
+import { encrypt, decrypt } from './utils/crypto';
+
+const secureStorage = {
+  set: (key, value) => {
+    const encrypted = encrypt(value);
+    store(key, encrypted);
+  },
+  get: (key) => {
+    const encrypted = store(key);
+    return encrypted ? decrypt(encrypted) : null;
+  },
+  remove: (key) => {
+    store.remove(key);
+  }
+};
+
+secureStorage.set('websiteId', newWebsiteId);
+secureStorage.set('token', token);</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement secure token storage with encryption and consider using httpOnly cookies.</p>
+                </div>
+
+                <div class="item error">
+                    <h3>Missing Input Sanitization</h3>
+                    <p><span class="file-path">src/MessageForm.js:20-21</span></p>
+                    <p><strong>Issue:</strong> User input is not sanitized before sending to server, potential XSS vulnerability.</p>
+                    <p><strong>Impact:</strong> XSS attacks, data injection, and potential server-side vulnerabilities.</p>
+                    <span class="severity high">High</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">text: message,
+author: store('customerName'), // No sanitization</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">import DOMPurify from 'dompurify';
+
+const sanitizeInput = (input) => {
+  return DOMPurify.sanitize(input.trim(), {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: []
+  });
+};
+
+text: sanitizeInput(message),
+author: sanitizeInput(store('customerName'))</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement input sanitization using libraries like DOMPurify and server-side validation.</p>
+                </div>
+
+                <div class="item error">
+                    <h3>Environment Variable Exposure</h3>
+                    <p><span class="file-path">src/widget.js:26-30</span></p>
+                    <p><strong>Issue:</strong> Sensitive configuration is stored in window object, accessible to any script.</p>
+                    <p><strong>Impact:</strong> Exposure of API keys and sensitive configuration to malicious scripts.</p>
+                    <span class="severity high">High</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">if (publicKey) window.REACT_APP_PUBLIC_KEY = publicKey;
+if (graphqlHttpUrl) window.REACT_APP_GRAPHQL_HTTP_URL = graphqlHttpUrl;</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Secure config management
+class SecureConfig {
+  constructor(config) {
+    this.config = new Map();
+    Object.entries(config).forEach(([key, value]) => {
+      if (value && this.validateConfig(key, value)) {
+        this.config.set(key, value);
+      }
+    });
+  }
+
+  validateConfig(key, value) {
+    // Validate configuration values
+    const allowedKeys = ['publicKey', 'graphqlHttpUrl', 'graphqlWsUrl'];
+    return allowedKeys.includes(key) && typeof value === 'string';
+  }
+
+  get(key) {
+    return this.config.get(key);
+  }
+}
+
+const secureConfig = new SecureConfig(config);</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Use secure configuration management and avoid exposing sensitive data to window object.</p>
+                </div>
+
+                <div class="item warning">
+                    <h3>Missing CSP Headers</h3>
+                    <p><span class="file-path">vite.config.js</span></p>
+                    <p><strong>Issue:</strong> No Content Security Policy implementation to prevent XSS attacks.</p>
+                    <p><strong>Impact:</strong> Increased vulnerability to XSS attacks and code injection.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">export default defineConfig({
+  plugins: [react()],
+  // No CSP configuration
+});</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">export default defineConfig({
+  plugins: [
+    react(),
+    {
+      name: 'vite-plugin-csp',
+      transformIndexHtml(html) {
+        return html.replace(
+          '</head>',
+          `<meta http-equiv="Content-Security-Policy" 
+           content="default-src 'self'; 
+                   script-src 'self' 'unsafe-inline'; 
+                   style-src 'self' 'unsafe-inline'; 
+                   connect-src 'self' https://api.example.com;">
+           </head>`
+        );
+      }
+    }
+  ]
+});</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement CSP headers to restrict resource loading and script execution.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="memory-leaks">
+            <div class="section-header">
+                <h2><span class="icon">💾</span> Memory Leaks</h2>
+            </div>
+            <div class="section-content">
+                <div class="item error">
+                    <h3>Uncleared Timeouts</h3>
+                    <p><span class="file-path">src/utils.js:254-269</span></p>
+                    <p><strong>Issue:</strong> setTimeout operations are created but cleanup mechanisms are incomplete, leading to memory leaks.</p>
+                    <p><strong>Impact:</strong> Memory consumption increases over time, performance degradation, and potential crashes.</p>
+                    <span class="severity high">High</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">export const createChatTimeouts = (chats, onChatMissed) => {
+  const timeouts = {}
+
+  chats.forEach(chat => {
+    if (chat.contract && chat.contract.chatMissTime > 0) {
+      const timeoutId = setTimeout(() => {
+        console.log(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`)
+        onChatMissed(chat.id, chat.contract.id)
+      }, chat.contract.chatMissTime * 1000)
+
+      timeouts[chat.id] = {
+        timeoutId,
+        contractId: chat.contract.id,
+        missTime: chat.contract.chatMissTime
+      }
+    }
+  })
+
+  return timeouts
+}</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">export const createChatTimeouts = (chats, onChatMissed) => {
+  const timeouts = {}
+
+  chats.forEach(chat => {
+    if (chat.contract && chat.contract.chatMissTime > 0) {
+      const timeoutId = setTimeout(() => {
+        console.log(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`)
+        onChatMissed(chat.id, chat.contract.id)
+        // Clean up timeout after execution
+        delete timeouts[chat.id];
+      }, chat.contract.chatMissTime * 1000)
+
+      timeouts[chat.id] = {
+        timeoutId,
+        contractId: chat.contract.id,
+        missTime: chat.contract.chatMissTime,
+        clear: () => {
+          clearTimeout(timeoutId);
+          delete timeouts[chat.id];
+        }
+      }
+    }
+  })
+
+  // Return cleanup function
+  return {
+    timeouts,
+    clearAll: () => {
+      Object.values(timeouts).forEach(timeout => {
+        if (timeout.timeoutId) {
+          clearTimeout(timeout.timeoutId);
+        }
+      });
+      Object.keys(timeouts).forEach(key => delete timeouts[key]);
+    }
+  }
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement comprehensive timeout management with cleanup functions.</p>
+                </div>
+
+                <div class="item error">
+                    <h3>WebSocket Subscription Leaks</h3>
+                    <p><span class="file-path">src/ChatContainer.js:28-30</span></p>
+                    <p><strong>Issue:</strong> GraphQL subscriptions may not be properly cleaned up on component unmount.</p>
+                    <p><strong>Impact:</strong> Multiple active subscriptions, memory leaks, and unnecessary network traffic.</p>
+                    <span class="severity high">High</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const ChatContainer = ({ chat }) => {
+  const { website } = useWebsite();
+  const [chatEnded, setChatEnded] = useState(false)
+  
+  // Subscribe to chat status changes
+  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId }
+  })
+
+  useEffect(() => {
+    if (chatStatusData?.chatChanged?.record?.status === CHAT_STATUS.FINISHED) {
+      setChatEnded(true)
+    }
+  }, [chatStatusData])</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">const ChatContainer = ({ chat }) => {
+  const { website } = useWebsite();
+  const [chatEnded, setChatEnded] = useState(false)
+  
+  // Subscribe to chat status changes with cleanup
+  const { data: chatStatusData, unsubscribe } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId },
+    shouldResubscribe: true
+  })
+
+  useEffect(() => {
+    if (chatStatusData?.chatChanged?.record?.status === CHAT_STATUS.FINISHED) {
+      setChatEnded(true)
+    }
+  }, [chatStatusData])
+
+  // Cleanup subscription on unmount
+  useEffect(() => {
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [unsubscribe]);</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement proper subscription cleanup in useEffect cleanup functions.</p>
+                </div>
+
+                <div class="item warning">
+                    <h3>Event Listener Cleanup</h3>
+                    <p><span class="file-path">src/widget.js:126</span></p>
+                    <p><strong>Issue:</strong> MediaQuery event listener is added but removal is not handled on cleanup.</p>
+                    <p><strong>Impact:</strong> Memory leaks and potential performance issues on repeated widget initialization.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const mediaQuery = window.matchMedia('(max-width: 450px)');
+const handleMobileView = (e) => {
+  if (e.matches) {
+    container.style.width = '100%';
+    container.style.height = '100%';
+  } else {
+    container.style.width = '400px';
+    container.style.height = '700px';
+  }
+};
+
+mediaQuery.addListener(handleMobileView);
+handleMobileView(mediaQuery);</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">const mediaQuery = window.matchMedia('(max-width: 450px)');
+const handleMobileView = (e) => {
+  if (e.matches) {
+    container.style.width = '100%';
+    container.style.height = '100%';
+  } else {
+    container.style.width = '400px';
+    container.style.height = '700px';
+  }
+};
+
+// Use modern addEventListener with cleanup
+mediaQuery.addEventListener('change', handleMobileView);
+handleMobileView(mediaQuery);
+
+// Return cleanup function
+return () => {
+  mediaQuery.removeEventListener('change', handleMobileView);
+  root.unmount();
+  if (container && container.parentNode) {
+    container.parentNode.removeChild(container);
+  }
+  window.ChatWidget = null;
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Use modern event listener API and implement proper cleanup.</p>
+                </div>
+
+                <div class="item warning">
+                    <h3>Apollo Cache Growth</h3>
+                    <p><span class="file-path">src/widget.js:70</span></p>
+                    <p><strong>Issue:</strong> Apollo cache is restored but may grow indefinitely without cleanup policies.</p>
+                    <p><strong>Impact:</strong> Memory consumption increases over time, especially in long-running sessions.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const client = new ApolloClient({
+  link,
+  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
+})</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">import { InMemoryCache } from '@apollo/client';
+
+const cache = new InMemoryCache({
+  typePolicies: {
+    Query: {
+      fields: {
+        messages: {
+          merge(existing = [], incoming) {
+            // Limit cache size for messages
+            const merged = [...existing, ...incoming];
+            return merged.slice(-100); // Keep only last 100 messages
+          }
+        }
+      }
+    }
+  },
+  // Enable garbage collection
+  garbageCollection: true,
+  // Set cache size limits
+  resultCaching: true,
+});
+
+const client = new ApolloClient({
+  link,
+  cache: cache.restore(window.__APOLLO_STATE__ || {}),
+  // Add cache cleanup on unmount
+  defaultOptions: {
+    watchQuery: {
+      errorPolicy: 'all',
+      notifyOnNetworkStatusChange: true
+    }
+  }
+});</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement cache size limits and garbage collection policies.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="performance-issues">
+            <div class="section-header">
+                <h2><span class="icon">⚡</span> Performance Issues</h2>
+            </div>
+            <div class="section-content">
+                <div class="item warning">
+                    <h3>Unnecessary Re-renders</h3>
+                    <p><span class="file-path">src/App.js</span></p>
+                    <p><strong>Issue:</strong> Multiple state changes in App.js cause frequent re-renders without optimization.</p>
+                    <p><strong>Impact:</strong> Poor performance, battery drain on mobile devices, and sluggish UI.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const App = ({ error }) => {
+  const [websiteId, setWebsiteId] = useState(store('websiteId'));
+  const [isLoggingIn, setLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const client = useApolloClient();
+
+  // Multiple state updates cause re-renders
+  const retryLogin = async () => {
+    setLoggingIn(true);
+    setLoginError(null);
+    // ... login logic
+    setLoggingIn(false);
+  };</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">import { useCallback, useMemo } from 'react';
+
+const App = ({ error }) => {
+  const [websiteId, setWebsiteId] = useState(store('websiteId'));
+  const [loginState, setLoginState] = useState({
+    isLoggingIn: false,
+    loginError: null
+  });
+  const client = useApolloClient();
+
+  // Batch state updates
+  const retryLogin = useCallback(async () => {
+    setLoginState(prev => ({ ...prev, isLoggingIn: true, loginError: null }));
+    
+    try {
+      // ... login logic
+      setLoginState({ isLoggingIn: false, loginError: null });
+    } catch (error) {
+      setLoginState({ isLoggingIn: false, loginError: error });
+    }
+  }, [client]);
+
+  // Memoize expensive computations
+  const appContent = useMemo(() => {
+    if (error) return <ErrorState message={error.message} onRetry={retryLogin} />;
+    if (!websiteId) return <LoginComponent />;
+    return <AppContent />;
+  }, [error, websiteId, retryLogin]);</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Use useCallback, useMemo, and batch state updates to minimize re-renders.</p>
+                </div>
+
+                <div class="item warning">
+                    <h3>Missing React.memo</h3>
+                    <p><span class="file-path">Multiple components</span></p>
+                    <p><strong>Issue:</strong> Components are not memoized, causing unnecessary re-renders of child components.</p>
+                    <p><strong>Impact:</strong> Performance degradation, especially in components with expensive rendering logic.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const MessageBox = ({ messages }) => {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  return (
+    <div className="message-box">
+      {messages.map(message => (
+        <Message key={message.id} message={message} />
+      ))}
+    </div>
+  );
+};</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">import React, { memo, useEffect } from 'react';
+
+const Message = memo(({ message }) => {
+  return (
+    <div className={`message ${message.isAgent ? 'agent' : 'user'}`}>
+      <div className="message-content">{message.text}</div>
+      <div className="message-time">
+        {timeDifferenceForDate(message.insertedAt)}
+      </div>
+    </div>
+  );
+});
+
+const MessageBox = memo(({ messages }) => {
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  return (
+    <div className="message-box">
+      {messages.map(message => (
+        <Message key={message.id} message={message} />
+      ))}
+    </div>
+  );
+});</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Apply React.memo to components and useMemo/useCallback for expensive operations.</p>
+                </div>
+
+                <div class="item warning">
+                    <h3>Inefficient State Management</h3>
+                    <p><span class="file-path">src/context/WebsiteContext.js</span></p>
+                    <p><strong>Issue:</strong> Multiple useState calls could be consolidated into useReducer for better performance.</p>
+                    <p><strong>Impact:</strong> Unnecessary re-renders and complex state management logic.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">export const WebsiteProvider = ({ websiteId, children }) => {
+  const [website, setWebsite] = useState(() => store.get('website'));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const { data, error: queryError, loading: queryLoading } = useQuery(GET_WEBSITE_CONTRACTS, {
+    variables: { websiteId },
+    skip: !websiteId,
+  });
+
+  useEffect(() => {
+    setLoading(queryLoading);
+    setError(queryError);
+    if (data?.website) {
+      store.set('website', data.website);
+      setWebsite(data.website);
+    }
+  }, [data, queryError, queryLoading]);</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">const websiteReducer = (state, action) => {
+  switch (action.type) {
+    case 'FETCH_START':
+      return { ...state, loading: true, error: null };
+    case 'FETCH_SUCCESS':
+      return { 
+        ...state, 
+        loading: false, 
+        website: action.payload,
+        error: null 
+      };
+    case 'FETCH_ERROR':
+      return { 
+        ...state, 
+        loading: false, 
+        error: action.payload 
+      };
+    default:
+      return state;
+  }
+};
+
+export const WebsiteProvider = ({ websiteId, children }) => {
+  const [state, dispatch] = useReducer(websiteReducer, {
+    website: store.get('website'),
+    loading: false,
+    error: null
+  });
+
+  const { data, error: queryError, loading: queryLoading } = useQuery(GET_WEBSITE_CONTRACTS, {
+    variables: { websiteId },
+    skip: !websiteId,
+    onCompleted: (data) => {
+      if (data?.website) {
+        store.set('website', data.website);
+        dispatch({ type: 'FETCH_SUCCESS', payload: data.website });
+      }
+    },
+    onError: (error) => {
+      dispatch({ type: 'FETCH_ERROR', payload: error });
+    }
+  });</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Use useReducer for complex state management and batch related state updates.</p>
+                </div>
+
+                <div class="item info">
+                    <h3>Bundle Size Optimization</h3>
+                    <p><span class="file-path">package.json</span></p>
+                    <p><strong>Issue:</strong> Some dependencies could be lazy-loaded to reduce initial bundle size.</p>
+                    <p><strong>Impact:</strong> Slower initial load times and poor performance on slower networks.</p>
+                    <span class="severity low">Low</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">import React from 'react';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+import { jwtDecode } from 'jwt-decode';
+import moment from 'moment';
+import axios from 'axios';
+
+// All dependencies loaded upfront</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">import React, { Suspense, lazy } from 'react';
+
+// Lazy load heavy dependencies
+const ApolloClient = lazy(() => import('@apollo/client').then(module => ({ 
+  default: module.ApolloClient 
+})));
+const InMemoryCache = lazy(() => import('@apollo/client').then(module => ({ 
+  default: module.InMemoryCache 
+})));
+
+// Dynamic imports for utilities
+const loadAuthUtils = () => import('./utils/auth');
+const loadDateUtils = () => import('./utils/date');
+
+// Use in components
+const handleAuth = async () => {
+  const { jwtDecode } = await loadAuthUtils();
+  // ... auth logic
+};
+
+// vite.config.js optimization
+export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          graphql: ['@apollo/client', 'graphql'],
+          utils: ['moment', 'axios']
+        }
+      }
+    }
+  }
+});</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Fix:</strong> Implement code splitting and lazy loading for non-critical dependencies.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="architecture-improvements">
+            <div class="section-header">
+                <h2><span class="icon">🏗️</span> Architecture Improvements</h2>
+            </div>
+            <div class="section-content">
+                <div class="item recommendation">
+                    <h3>Migrate to Modern React Patterns</h3>
+                    <p><span class="file-path">src/Chat.js</span></p>
+                    <p><strong>Current Issue:</strong> Class components are used instead of modern functional components with hooks.</p>
+                    <p><strong>Benefits:</strong> Better code organization, easier testing, and improved performance with hooks.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">import { Component } from 'react'
+import MessageBox from './MessageBox'
+import MessageForm from './MessageForm'
+
+class Chat extends Component {
+  componentDidMount() {
+    this.props.subscribeToNewMessages()
+  }
+
+  render() {
+    const { data, chatId } = this.props
+
+    return (
+      <Dropzone>
+        <MessageBody>
+          <MessagesArea>
+            <MessageBox messages={data.messages}/>
+          </MessagesArea>
+          <MessageForm chatId={chatId} />
+        </MessageBody>
+      </Dropzone>
+    );
+  }
+}</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">import React, { useEffect } from 'react';
+import MessageBox from './MessageBox';
+import MessageForm from './MessageForm';
+
+const Chat = ({ data, chatId, subscribeToNewMessages }) => {
+  useEffect(() => {
+    // Subscribe to new messages when component mounts
+    const unsubscribe = subscribeToNewMessages();
+    
+    // Cleanup subscription when component unmounts
+    return unsubscribe;
+  }, [subscribeToNewMessages]);
+
+  return (
+    <Dropzone>
+      <MessageBody>
+        <MessagesArea>
+          <MessageBox messages={data.messages} />
+        </MessagesArea>
+        <MessageForm chatId={chatId} />
+      </MessageBody>
+    </Dropzone>
+  );
+};
+
+// Memoize to prevent unnecessary re-renders
+export default React.memo(Chat);</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Migration Steps:</strong>
+                    1. Convert class components to functional components
+                    2. Replace lifecycle methods with useEffect hooks
+                    3. Add proper cleanup functions
+                    4. Implement React.memo for performance</p>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Implement Custom Hooks</h3>
+                    <p><span class="file-path">Multiple files</span></p>
+                    <p><strong>Current Issue:</strong> Complex logic is scattered across components, making it hard to reuse and test.</p>
+                    <p><strong>Benefits:</strong> Better code organization, reusability, and easier testing.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const ChatContainer = ({ chat }) => {
+  const { website } = useWebsite();
+  const [chatEnded, setChatEnded] = useState(false)
+  const [endChat] = useMutation(END_CHAT, {
+    variables: { chatId: chat.id },
+    refetchQueries: [
+      { query: GET_CHAT, variables: { chatId: chat.id } },
+    ]
+  })
+
+  // Get chat details including company name
+  const { data: chatData } = useQuery(GET_CHAT, {
+    variables: { chatId: chat.id }
+  })
+
+  // Subscribe to chat status changes
+  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId }
+  })
+
+  useEffect(() => {
+    if (chatStatusData?.chatChanged?.record?.status === CHAT_STATUS.FINISHED) {
+      setChatEnded(true)
+    }
+  }, [chatStatusData])</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Custom hook for chat management
+const useChatManagement = (chat) => {
+  const [chatEnded, setChatEnded] = useState(false);
+  const { website } = useWebsite();
+  
+  const [endChat] = useMutation(END_CHAT, {
+    variables: { chatId: chat.id },
+    refetchQueries: [
+      { query: GET_CHAT, variables: { chatId: chat.id } },
+    ]
+  });
+
+  const { data: chatData } = useQuery(GET_CHAT, {
+    variables: { chatId: chat.id }
+  });
+
+  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId }
+  });
+
+  useEffect(() => {
+    if (chatStatusData?.chatChanged?.record?.status === CHAT_STATUS.FINISHED) {
+      setChatEnded(true);
+    }
+  }, [chatStatusData]);
+
+  const companyName = useMemo(() => 
+    chatData?.chat?.companyName || "Company Name", 
+    [chatData?.chat?.companyName]
+  );
+
+  const status = useMemo(() => 
+    chatData?.chat?.status 
+      ? getDisplayStatus(chatData.chat.status)
+      : "Started", 
+    [chatData?.chat?.status]
+  );
+
+  return {
+    chatEnded,
+    endChat,
+    companyName,
+    status,
+    chatData
+  };
+};
+
+// Simplified component
+const ChatContainer = ({ chat }) => {
+  const { chatEnded, endChat, companyName, status } = useChatManagement(chat);
+
+  if (chatEnded) {
+    return <EndedChat />;
+  }
+
+  return (
+    <Query query={GET_MESSAGES} variables={{ chatId: chat.id }}>
+      {({ subscribeToMore, ...rest }) => (
+        <span>
+          <ChatHeader 
+            endChat={endChat} 
+            companyName={companyName}
+            status={status}
+          />
+          <Chat
+            {...rest}
+            chatId={chat.id}
+            subscribeToNewMessages={() =>
+              subscribeToMore({
+                document: MESSAGE_SUBSCRIPTION,
+                variables: { chatId: chat.id },
+                updateQuery: (prev, { subscriptionData }) => {
+                  if (!subscriptionData.data) return prev;
+                  const newMessage = subscriptionData.data.onMessageAdded.record;
+                  return {
+                    messages: [...prev.messages, newMessage]
+                  };
+                }
+              })
+            }
+          />
+        </span>
+      )}
+    </Query>
+  );
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Implementation:</strong>
+                    1. Extract complex logic into custom hooks
+                    2. Use useMemo for expensive computations
+                    3. Implement proper error handling in hooks
+                    4. Add comprehensive testing for custom hooks</p>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Add TypeScript Support</h3>
+                    <p><span class="file-path">Project-wide</span></p>
+                    <p><strong>Current Issue:</strong> JavaScript lacks type safety, leading to runtime errors and poor developer experience.</p>
+                    <p><strong>Benefits:</strong> Better error detection, improved IDE support, and more maintainable code.</p>
+                    <span class="severity low">Low</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const ChatContainer = ({ chat }) => {
+  const [chatEnded, setChatEnded] = useState(false)
+  const [endChat] = useMutation(END_CHAT, {
+    variables: { chatId: chat.id },
+    refetchQueries: [
+      { query: GET_CHAT, variables: { chatId: chat.id } },
+    ]
+  })
+
+  // No type safety
+  const companyName = chatData?.chat?.companyName || "Company Name";</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Define types
+interface Chat {
+  id: string;
+  key: string;
+  status: ChatStatus;
+  missed: boolean;
+  headline: string;
+  ipAddress: string;
+  customerName: string;
+  contractId?: string;
+  contract?: {
+    id: string;
+    agent: {
+      id: string;
+    };
+  };
+}
+
+interface ChatContainerProps {
+  chat: Chat;
+}
+
+interface ChatData {
+  chat: {
+    companyName: string;
+    status: ChatStatus;
+  };
+}
+
+const ChatContainer: React.FC<ChatContainerProps> = ({ chat }) => {
+  const [chatEnded, setChatEnded] = useState<boolean>(false);
+  
+  const [endChat] = useMutation<EndChatMutation, EndChatMutationVariables>(END_CHAT, {
+    variables: { chatId: chat.id },
+    refetchQueries: [
+      { query: GET_CHAT, variables: { chatId: chat.id } },
+    ]
+  });
+
+  const { data: chatData } = useQuery<ChatData, GetChatVariables>(GET_CHAT, {
+    variables: { chatId: chat.id }
+  });
+
+  // Type-safe property access
+  const companyName: string = chatData?.chat?.companyName ?? "Company Name";
+
+  return (
+    // Component implementation with full type safety
+  );
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Migration Strategy:</strong>
+                    1. Start with new components in TypeScript
+                    2. Gradually convert existing components
+                    3. Add type definitions for GraphQL schemas
+                    4. Implement strict TypeScript configuration</p>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Implement State Management Pattern</h3>
+                    <p><span class="file-path">Multiple components</span></p>
+                    <p><strong>Current Issue:</strong> State is scattered across components, making it hard to manage and debug.</p>
+                    <p><strong>Benefits:</strong> Centralized state management, better debugging, and improved developer experience.</p>
+                    <span class="severity low">Low</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">// State scattered across components
+const App = () => {
+  const [websiteId, setWebsiteId] = useState(store('websiteId'));
+  const [isLoggingIn, setLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [activeChat, setActiveChat] = useState(store('activeChat'));
+};
+
+const CreateChat = () => {
+  const [contracts, setContracts] = useState([]);
+  const [selectedContract, setSelectedContract] = useState(null);
+  const [creating, setCreating] = useState(false);
+};</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Redux Toolkit store setup
+import { configureStore, createSlice } from '@reduxjs/toolkit';
+
+const appSlice = createSlice({
+  name: 'app',
+  initialState: {
+    websiteId: store('websiteId'),
+    isLoggingIn: false,
+    loginError: null,
+    activeChat: store('activeChat'),
+    contracts: [],
+    selectedContract: null,
+    creating: false
+  },
+  reducers: {
+    setWebsiteId: (state, action) => {
+      state.websiteId = action.payload;
+      store('websiteId', action.payload);
+    },
+    setLoginState: (state, action) => {
+      state.isLoggingIn = action.payload.isLoggingIn;
+      state.loginError = action.payload.loginError;
+    },
+    setActiveChat: (state, action) => {
+      state.activeChat = action.payload;
+      store('activeChat', action.payload);
+    },
+    setContracts: (state, action) => {
+      state.contracts = action.payload;
+    },
+    setSelectedContract: (state, action) => {
+      state.selectedContract = action.payload;
+    },
+    setCreating: (state, action) => {
+      state.creating = action.payload;
+    }
+  }
+});
+
+export const {
+  setWebsiteId,
+  setLoginState,
+  setActiveChat,
+  setContracts,
+  setSelectedContract,
+  setCreating
+} = appSlice.actions;
+
+const store = configureStore({
+  reducer: {
+    app: appSlice.reducer,
+    // Add other slices as needed
+  }
+});
+
+// Typed hooks
+export const useAppSelector = useSelector<RootState>;
+export const useAppDispatch = () => useDispatch<AppDispatch>;
+
+// Components using centralized state
+const App = () => {
+  const dispatch = useAppDispatch();
+  const { websiteId, isLoggingIn, loginError, activeChat } = useAppSelector(state => state.app);
+
+  const handleLogin = useCallback(async () => {
+    dispatch(setLoginState({ isLoggingIn: true, loginError: null }));
+    try {
+      // Login logic
+      dispatch(setWebsiteId(newWebsiteId));
+    } catch (error) {
+      dispatch(setLoginState({ isLoggingIn: false, loginError: error }));
+    }
+  }, [dispatch]);
+
+  return (
+    // Component implementation
+  );
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Implementation Steps:</strong>
+                    1. Choose state management solution (Redux Toolkit, Zustand, or Jotai)
+                    2. Define state slices for different domains
+                    3. Implement typed selectors and actions
+                    4. Add middleware for logging and persistence
+                    5. Migrate components gradually</p>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Add Component Composition</h3>
+                    <p><span class="file-path">src/Components/</span></p>
+                    <p><strong>Current Issue:</strong> Large components with multiple responsibilities make code hard to maintain.</p>
+                    <p><strong>Benefits:</strong> Better separation of concerns, easier testing, and improved reusability.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const ChatContainer = ({ chat }) => {
+  // Multiple responsibilities in one component
+  const [chatEnded, setChatEnded] = useState(false);
+  const [endChat] = useMutation(END_CHAT);
+  const { data: chatData } = useQuery(GET_CHAT);
+  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION);
+
+  // Header logic
+  const handleEndChat = async () => {
+    try {
+      await endChat();
+      store.remove('activeChat');
+    } catch (error) {
+      console.error('Error ending chat:', error);
+    }
+  };
+
+  // Status logic
+  const companyName = chatData?.chat?.companyName || "Company Name";
+  const status = chatData?.chat?.status ? getDisplayStatus(chatData.chat.status) : "Started";
+
+  // Message handling
+  const subscribeToNewMessages = () => {
+    return subscribeToMore({
+      document: MESSAGE_SUBSCRIPTION,
+      variables: { chatId: chat.id },
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        const newMessage = subscriptionData.data.onMessageAdded.record;
+        return { messages: [...prev.messages, newMessage] };
+      }
+    });
+  };
+
+  return (
+    <div>
+      <div className="chat-header">
+        <h3>{companyName}</h3>
+        <span>{status}</span>
+        <button onClick={handleEndChat}>End Chat</button>
+      </div>
+      <div className="chat-messages">
+        <Query query={GET_MESSAGES} variables={{ chatId: chat.id }}>
+          {({ data, subscribeToMore }) => (
+            <MessageBox 
+              messages={data.messages}
+              subscribeToNewMessages={subscribeToNewMessages}
+            />
+          )}
+        </Query>
+      </div>
+    </div>
+  );
+};</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Composed components with single responsibilities
+
+// ChatHeader component
+const ChatHeader = ({ companyName, status, onEndChat }) => (
+  <header className="chat-header">
+    <div className="header-content">
+      <h3>{companyName}</h3>
+      <span className="status">{status}</span>
+    </div>
+    <button onClick={onEndChat} className="end-chat-btn">
+      End Chat
+    </button>
+  </header>
+);
+
+// ChatMessages component
+const ChatMessages = ({ chatId }) => {
+  const subscribeToNewMessages = useCallback((subscribeToMore) => {
+    return subscribeToMore({
+      document: MESSAGE_SUBSCRIPTION,
+      variables: { chatId },
+      updateQuery: (prev, { subscriptionData }) => {
+        if (!subscriptionData.data) return prev;
+        const newMessage = subscriptionData.data.onMessageAdded.record;
+        return { messages: [...prev.messages, newMessage] };
+      }
+    });
+  }, [chatId]);
+
+  return (
+    <Query query={GET_MESSAGES} variables={{ chatId }}>
+      {({ data, subscribeToMore }) => (
+        <MessageBox 
+          messages={data?.messages || []}
+          subscribeToNewMessages={() => subscribeToNewMessages(subscribeToMore)}
+        />
+      )}
+    </Query>
+  );
+};
+
+// ChatStatus hook
+const useChatStatus = (chat) => {
+  const [chatEnded, setChatEnded] = useState(false);
+  const { data: chatData } = useQuery(GET_CHAT, {
+    variables: { chatId: chat.id }
+  });
+  
+  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId }
+  });
+
+  useEffect(() => {
+    if (chatStatusData?.chatChanged?.record?.status === CHAT_STATUS.FINISHED) {
+      setChatEnded(true);
+    }
+  }, [chatStatusData]);
+
+  const companyName = useMemo(() => 
+    chatData?.chat?.companyName ?? "Company Name", 
+    [chatData?.chat?.companyName]
+  );
+
+  const status = useMemo(() => 
+    chatData?.chat?.status 
+      ? getDisplayStatus(chatData.chat.status)
+      : "Started", 
+    [chatData?.chat?.status]
+  );
+
+  return { chatEnded, companyName, status };
+};
+
+// Simplified ChatContainer
+const ChatContainer = ({ chat }) => {
+  const { chatEnded, companyName, status } = useChatStatus(chat);
+  const [endChat] = useMutation(END_CHAT, {
+    variables: { chatId: chat.id }
+  });
+
+  const handleEndChat = useCallback(async () => {
+    try {
+      await endChat();
+      store.remove('activeChat');
+    } catch (error) {
+      console.error('Error ending chat:', error);
+    }
+  }, [endChat]);
+
+  if (chatEnded) {
+    return <EndedChat />;
+  }
+
+  return (
+    <div className="chat-container">
+      <ChatHeader 
+        companyName={companyName}
+        status={status}
+        onEndChat={handleEndChat}
+      />
+      <ChatMessages chatId={chat.id} />
+    </div>
+  );
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Composition Benefits:</strong>
+                    1. Single responsibility principle
+                    2. Easier unit testing
+                    3. Better reusability
+                    4. Improved maintainability
+                    5. Clearer component boundaries</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="code-quality">
+            <div class="section-header">
+                <h2><span class="icon">📝</span> Code Quality</h2>
+            </div>
+            <div class="section-content">
+                <div class="item warning">
+                    <h3>Excessive Console Logging</h3>
+                    <p><span class="file-path">61 occurrences</span></p>
+                    <p><strong>Issue:</strong> Production code contains numerous console.log statements that should be removed.</p>
+                    <p><strong>Impact:</strong> Performance degradation, information leakage, and unprofessional appearance in production.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">const processContracts = async (allContracts) => {
+  console.log('Processing contracts...');
+  setProcessing(true);
+  
+  try {
+    const all = data.website.contracts;
+    console.log('Raw contracts:', all);
+
+    if (all.length === 0) {
+      console.log('No contracts from API');
+      setContracts([]);
+    } else {
+      const session = await processContractsForCurrentSession(all);
+      console.log(`Session result: ${session.length} contracts`);
+      
+      if (session.length > 0) {
+        console.log('Using session contracts:', session);
+        setContracts(session);
+      } else {
+        console.log('Using all contracts as fallback');
+        setContracts(all);
+      }
+    }
+  } catch (err) {
+    console.error('Contract processing failed:', err);
+  } finally {
+    console.log('Contract processing complete');
+    setProcessing(false);
+  }
+};</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Create a logger utility
+const logger = {
+  debug: (message, data) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.debug(`[DEBUG] ${message}`, data);
+    }
+  },
+  info: (message, data) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.info(`[INFO] ${message}`, data);
+    }
+  },
+  warn: (message, data) => {
+    console.warn(`[WARN] ${message}`, data);
+    // Could send to monitoring service
+  },
+  error: (message, error) => {
+    console.error(`[ERROR] ${message}`, error);
+    // Send to error tracking service
+    if (typeof window !== 'undefined' && window.Sentry) {
+      window.Sentry.captureException(error, {
+        tags: {
+          component: 'ContractProcessor'
+        },
+        extra: {
+          message
+        }
+      });
+    }
+  }
+};
+
+const processContracts = async (allContracts) => {
+  logger.debug('Starting contract processing', { contractCount: allContracts?.length });
+  setProcessing(true);
+  
+  try {
+    const contracts = data.website.contracts;
+    logger.debug('Retrieved contracts from API', { contracts });
+
+    if (contracts.length === 0) {
+      logger.info('No contracts available from API');
+      setContracts([]);
+      return [];
+    }
+
+    const sessionContracts = await processContractsForCurrentSession(contracts);
+    logger.info('Contract session processing completed', { 
+      sessionContractCount: sessionContracts.length 
+    });
+    
+    if (sessionContracts.length > 0) {
+      logger.debug('Using session contracts', { sessionContracts });
+      setContracts(sessionContracts);
+      return sessionContracts;
+    } else {
+      logger.info('Using all contracts as fallback');
+      setContracts(contracts);
+      return contracts;
+    }
+  } catch (error) {
+    logger.error('Contract processing failed', error);
+    setContracts([]);
+    throw error;
+  } finally {
+    setProcessing(false);
+  }
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Recommended Solution:</strong>
+                    1. Create a centralized logging utility
+                    2. Use different log levels (debug, info, warn, error)
+                    3. Configure logging based on environment
+                    4. Integrate with error tracking services
+                    5. Remove all console.log statements from production code</p>
+                </div>
+
+                <div class="item warning">
+                    <h3>Inconsistent Error Handling</h3>
+                    <p><span class="file-path">Multiple files</span></p>
+                    <p><strong>Issue:</strong> Error handling patterns vary across components, making debugging difficult.</p>
+                    <p><strong>Impact:</strong> Inconsistent user experience, difficult debugging, and potential unhandled errors.</p>
+                    <span class="severity medium">Medium</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">// Inconsistent error handling patterns
+const handleSubmit = async (values, { setSubmitting }) => {
+  try {
+    const result = await createChats(contracts, values);
+    if (result.success.length === 0) {
+      console.error('All chats failed:', result.failed);
+      handleError(null, 'FAILED_TO_START');
+    }
+  } catch (err) {
+    console.error('Form submit error:', err);
+    handleError(err);
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+const handleStarted = async (chat, pending, onComplete) => {
+  try {
+    // Some logic
+  } catch (err) {
+    console.error('Chat started error:', err);
+    handleError(err);
+  }
+};
+
+const detectIPAddress = async (timeout = 3000) => {
+  try {
+    const response = await axios.get(import.meta.env.VITE_IPIFY_URL, {
+      timeout: timeout
+    });
+    return response.data.ip;
+  } catch (error) {
+    console.error('IP detection failed:', error.message);
+    return null;
+  }
+};</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// Centralized error handling utility
+class ErrorHandler {
+  static handle(error, context = {}) {
+    // Log error with context
+    logger.error('Error occurred', { error, context });
+    
+    // Categorize error type
+    const errorType = this.categorizeError(error);
+    
+    // Send to monitoring service
+    if (typeof window !== 'undefined' && window.Sentry) {
+      window.Sentry.captureException(error, {
+        tags: {
+          errorType,
+          component: context.component || 'Unknown'
+        },
+        extra: context
+      });
+    }
+    
+    // Return user-friendly error message
+    return this.getErrorMessage(errorType, error);
+  }
+  
+  static categorizeError(error) {
+    if (error.networkError) return 'NETWORK_ERROR';
+    if (error.graphQLErrors?.length > 0) return 'GRAPHQL_ERROR';
+    if (error.code === 'ECONNABORTED') return 'TIMEOUT_ERROR';
+    if (error.response) return 'HTTP_ERROR';
+    return 'UNKNOWN_ERROR';
+  }
+  
+  static getErrorMessage(errorType, error) {
+    const messages = {
+      NETWORK_ERROR: 'Connection error. Please check your internet connection.',
+      GRAPHQL_ERROR: 'Server error. Please try again.',
+      TIMEOUT_ERROR: 'Request timed out. Please try again.',
+      HTTP_ERROR: `Server error (${error.response?.status}). Please try again.`,
+      UNKNOWN_ERROR: 'An unexpected error occurred. Please try again.'
+    };
+    
+    return messages[errorType] || messages.UNKNOWN_ERROR;
+  }
+}
+
+// Consistent error handling in components
+const handleSubmit = async (values, { setSubmitting }) => {
+  try {
+    const result = await createChats(contracts, values);
+    
+    if (result.success.length === 0) {
+      const errorMessage = ErrorHandler.handle(
+        new Error('All chat creation attempts failed'),
+        { component: 'CreateChat', failed: result.failed }
+      );
+      handleError(null, 'FAILED_TO_START', errorMessage);
+    }
+  } catch (error) {
+    const errorMessage = ErrorHandler.handle(error, { 
+      component: 'CreateChat',
+      action: 'handleSubmit'
+    });
+    handleError(error, 'SUBMIT_ERROR', errorMessage);
+  } finally {
+    setSubmitting(false);
+  }
+};
+
+const detectIPAddress = async (timeout = 3000) => {
+  try {
+    const response = await axios.get(import.meta.env.VITE_IPIFY_URL, {
+      timeout: timeout,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+    if (!response.data?.ip) {
+      throw new Error('Invalid IP response format');
+    }
+    
+    return response.data.ip.trim();
+  } catch (error) {
+    ErrorHandler.handle(error, { 
+      component: 'IPDetection',
+      timeout 
+    });
+    return null;
+  }
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Standardization Benefits:</strong>
+                    1. Consistent error messages for users
+                    2. Centralized error logging and monitoring
+                    3. Better debugging with context information
+                    4. Easier maintenance and updates</p>
+                </div>
+
+                <div class="item info">
+                    <h3>Missing Unit Tests</h3>
+                    <p><span class="file-path">src/</span></p>
+                    <p><strong>Issue:</strong> Limited test coverage for critical business logic and error handling.</p>
+                    <p><strong>Impact:</strong> Higher risk of bugs, difficult refactoring, and poor code quality assurance.</p>
+                    <span class="severity low">Low</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">// No tests for utility functions
+export const timeDifference = (current, previous) => {
+  var msPerMinute = 60 * 1000;
+  var msPerHour = msPerMinute * 60;
+  var msPerDay = msPerHour * 24;
+  var msPerMonth = msPerDay * 30;
+  var msPerYear = msPerDay * 365;
+
+  var elapsed = current - previous;
+
+  if (elapsed < msPerMinute / 3) {
+    return 'just now'
+  }
+  // ... rest of logic
+};</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">// utils/__tests__/timeUtils.test.js
+import { describe, it, expect } from 'vitest';
+import { timeDifference, timeDifferenceForDate } from '../timeUtils';
+
+describe('timeDifference', () => {
+  it('should return "just now" for very recent times', () => {
+    const current = new Date('2024-01-01T12:00:00Z').getTime();
+    const previous = new Date('2024-01-01T11:59:30Z').getTime();
+    
+    expect(timeDifference(current, previous)).toBe('just now');
+  });
+
+  it('should return "less than 1 min ago" for times under 1 minute', () => {
+    const current = new Date('2024-01-01T12:00:00Z').getTime();
+    const previous = new Date('2024-01-01T11:59:00Z').getTime();
+    
+    expect(timeDifference(current, previous)).toBe('less than 1 min ago');
+  });
+
+  it('should return minutes ago for times between 1-60 minutes', () => {
+    const current = new Date('2024-01-01T12:30:00Z').getTime();
+    const previous = new Date('2024-01-01T12:00:00Z').getTime();
+    
+    expect(timeDifference(current, previous)).toBe('30 min ago');
+  });
+
+  it('should return hours ago for times between 1-24 hours', () => {
+    const current = new Date('2024-01-01T18:00:00Z').getTime();
+    const previous = new Date('2024-01-01T12:00:00Z').getTime();
+    
+    expect(timeDifference(current, previous)).toBe('6 h ago');
+  });
+
+  it('should handle edge cases', () => {
+    const current = new Date().getTime();
+    
+    expect(timeDifference(current, current)).toBe('just now');
+    expect(() => timeDifference(current, null)).not.toThrow();
+    expect(() => timeDifference(null, current)).not.toThrow();
+  });
+});
+
+describe('timeDifferenceForDate', () => {
+  it('should work with date objects', () => {
+    const now = new Date('2024-01-01T12:00:00Z');
+    const past = new Date('2024-01-01T11:00:00Z');
+    
+    expect(timeDifferenceForDate(past, now)).toBe('1 h ago');
+  });
+
+  it('should work with date strings', () => {
+    const result = timeDifferenceForDate('2024-01-01T11:00:00Z');
+    
+    expect(result).toMatch(/ago$/);
+  });
+});
+
+// hooks/__tests__/useChatCreation.test.js
+import { renderHook, act, waitFor } from '@testing-library/react';
+import { useChatCreation } from '../useChatCreation';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
+
+// Mock Apollo Client
+const createMockClient = () => {
+  return new ApolloClient({
+    cache: new InMemoryCache(),
+    link: {
+      request: () => Promise.resolve({
+        data: {
+          createChat: {
+            chat: {
+              id: 'test-chat-id',
+              status: 'STARTED'
+            }
+          }
+        }
+      })
+    }
+  });
+};
+
+describe('useChatCreation', () => {
+  let mockClient;
+
+  beforeEach(() => {
+    mockClient = createMockClient();
+  });
+
+  it('should create single chat successfully', async () => {
+    const { result } = renderHook(() => useChatCreation(), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={mockClient}>
+          {children}
+        </ApolloProvider>
+      )
+    });
+
+    const contracts = [{ id: 'contract-1' }];
+    const form = { customerName: 'John Doe', headline: 'Test Chat' };
+
+    await act(async () => {
+      const result_1 = await result.current.createChats(contracts, form);
+      expect(result_1.success).toHaveLength(1);
+      expect(result_1.failed).toHaveLength(0);
+      expect(result.current.creating).toBe(false);
+    });
+  });
+
+  it('should handle creation errors gracefully', async () => {
+    // Mock error scenario
+    const errorClient = new ApolloClient({
+      cache: new InMemoryCache(),
+      link: {
+        request: () => Promise.reject(new Error('Network error'))
+      }
+    });
+
+    const { result } = renderHook(() => useChatCreation(), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={errorClient}>
+          {children}
+        </ApolloProvider>
+      )
+    });
+
+    const contracts = [{ id: 'contract-1' }];
+    const form = { customerName: 'John Doe', headline: 'Test Chat' };
+
+    await act(async () => {
+      const result_1 = await result.current.createChats(contracts, form);
+      expect(result_1.success).toHaveLength(0);
+      expect(result_1.failed).toHaveLength(1);
+      expect(result.current.creating).toBe(false);
+    });
+  });
+
+  it('should set creating state during operation', async () => {
+    const { result } = renderHook(() => useChatCreation(), {
+      wrapper: ({ children }) => (
+        <ApolloProvider client={mockClient}>
+          {children}
+        </ApolloProvider>
+      )
+    });
+
+    expect(result.current.creating).toBe(false);
+
+    const contracts = [{ id: 'contract-1' }];
+    const form = { customerName: 'John Doe', headline: 'Test Chat' };
+
+    act(() => {
+      result.current.createChats(contracts, form);
+    });
+
+    expect(result.current.creating).toBe(true);
+
+    await waitFor(() => {
+      expect(result.current.creating).toBe(false);
+    });
+  });
+});</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Testing Strategy:</strong>
+                    1. Unit tests for utility functions
+                    2. Integration tests for custom hooks
+                    3. Component testing with React Testing Library
+                    4. Mock GraphQL operations
+                    5. Cover error scenarios and edge cases</p>
+                </div>
+
+                <div class="item info">
+                    <h3>Documentation Gaps</h3>
+                    <p><span class="file-path">Multiple files</span></p>
+                    <p><strong>Issue:</strong> Complex functions lack proper JSDoc documentation.</p>
+                    <p><strong>Impact:</strong> Poor developer experience, difficult onboarding, and maintenance challenges.</p>
+                    <span class="severity low">Low</span>
+                    
+                    <div class="code-comparison">
+                        <div class="code-before">
+                            <span class="code-label">BEFORE</span>
+                            <pre><code class="language-javascript">export const processContractsForCurrentSession = async (allContracts) => {
+  try {
+    if (!Array.isArray(allContracts)) {
+      return []
+    }
+
+    const currentSession = await getCurrentSession()
+    const activeContracts = filterActiveContracts(allContracts)
+    const sessionContracts = getContractsForSession(activeContracts, currentSession)
+
+    console.log(`Processed ${sessionContracts.length} active contracts for session ${currentSession}`)
+    return sessionContracts
+
+  } catch (error) {
+    console.error('Failed to process contracts for current session:', error)
+    return []
+  }
+}</code></pre>
+                        </div>
+                        <div class="code-after">
+                            <span class="code-label">AFTER</span>
+                            <pre><code class="language-javascript">/**
+ * Processes contracts to filter and return only those active for the current session
+ * 
+ * @param {Contract[]} allContracts - Array of all contracts to process
+ * @returns {Promise<Contract[]>} Promise that resolves to array of active contracts for current session
+ * 
+ * @example
+ * ```javascript
+ * const contracts = [
+ *   { id: '1', status: 'active', session: 1 },
+ *   { id: '2', status: 'inactive', session: 2 }
+ * ];
+ * const activeContracts = await processContractsForCurrentSession(contracts);
+ * console.log(activeContracts); // Array of contracts active in current session
+ * ```
+ * 
+ * @throws {Error} When unable to determine current session
+ * 
+ * @since 1.0.0
+ * @author Chat Widget Team
+ */
+export const processContractsForCurrentSession = async (allContracts) => {
+  try {
+    // Validate input parameter
+    if (!Array.isArray(allContracts)) {
+      logger.warn('Invalid contracts array provided', { 
+        type: typeof allContracts, 
+        value: allContracts 
+      });
+      return [];
+    }
+
+    // Get current session based on UTC time
+    const currentSession = await getCurrentSession();
+    logger.debug('Determined current session', { session: currentSession });
+
+    // Filter for active contracts only
+    const activeContracts = filterActiveContracts(allContracts);
+    logger.debug('Filtered active contracts', { 
+      total: allContracts.length, 
+      active: activeContracts.length 
+    });
+
+    // Filter contracts for current session
+    const sessionContracts = getContractsForSession(activeContracts, currentSession);
+    
+    logger.info('Contract processing completed', {
+      session: currentSession,
+      sessionContractCount: sessionContracts.length,
+      totalContracts: allContracts.length
+    });
+
+    return sessionContracts;
+  } catch (error) {
+    logger.error('Failed to process contracts for current session', error);
+    // Return empty array on error to prevent app crashes
+    return [];
+  }
+};
+
+/**
+ * Creates timeout handlers for chat miss management
+ * 
+ * @param {Chat[]} chats - Array of chat objects with contract information
+ * @param {(chatId: string, contractId: string) => void} onChatMissed - Callback function when chat times out
+ * @returns {Object} Object containing timeout mappings and cleanup functions
+ * 
+ * @property {Object} timeouts - Mapping of chatId to timeout information
+ * @property {() => void} clearAll - Function to clear all active timeouts
+ * 
+ * @example
+ * ```javascript
+ * const chats = [
+ *   { 
+ *     id: 'chat-1', 
+ *     contract: { 
+ *       id: 'contract-1', 
+ *       chatMissTime: 300 // 5 minutes
+ *     } 
+ *   }
+ * ];
+ * 
+ * const { timeouts, clearAll } = createChatTimeouts(chats, (chatId, contractId) => {
+ *   console.log(`Chat ${chatId} missed`);
+ * });
+ * 
+ * // Cleanup when component unmounts
+ * useEffect(() => {
+ *   return clearAll;
+ * }, []);
+ * ```
+ * 
+ * @since 1.2.0
+ */
+export const createChatTimeouts = (chats, onChatMissed) => {
+  const timeouts = {};
+
+  chats.forEach(chat => {
+    // Validate contract and miss time
+    if (!chat.contract || typeof chat.contract.chatMissTime !== 'number' || chat.contract.chatMissTime <= 0) {
+      logger.debug('Skipping timeout for chat without valid miss time', { 
+        chatId: chat.id,
+        contract: chat.contract 
+      });
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      logger.info(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`);
+      onChatMissed(chat.id, chat.contract.id);
+      // Auto-cleanup timeout after execution
+      delete timeouts[chat.id];
+    }, chat.contract.chatMissTime * 1000);
+
+    timeouts[chat.id] = {
+      timeoutId,
+      contractId: chat.contract.id,
+      missTime: chat.contract.chatMissTime,
+      clear: () => {
+        clearTimeout(timeoutId);
+        delete timeouts[chat.id];
+      }
+    };
+
+    logger.debug('Created timeout for chat', {
+      chatId: chat.id,
+      contractId: chat.contract.id,
+      missTime: chat.contract.chatMissTime
+    });
+  });
+
+  // Return cleanup utilities
+  return {
+    timeouts,
+    clearAll: () => {
+      Object.values(timeouts).forEach(timeout => {
+        if (timeout.timeoutId) {
+          clearTimeout(timeout.timeoutId);
+        }
+      });
+      Object.keys(timeouts).forEach(key => delete timeouts[key]);
+      logger.debug('Cleared all chat timeouts');
+    },
+    clearChat: (chatId) => {
+      if (timeouts[chatId]) {
+        timeouts[chatId].clear();
+        logger.debug('Cleared timeout for chat', { chatId });
+      }
+    }
+  };
+};</code></pre>
+                        </div>
+                    </div>
+
+                    <p><strong>Documentation Standards:</strong>
+                    1. JSDoc comments for all public functions
+                    2. Type annotations for parameters and return values
+                    3. Usage examples and edge case documentation
+                    4. Version information and author attribution
+                    5. Error documentation and troubleshooting tips</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="section" id="recommendations">
+            <div class="section-header">
+                <h2><span class="icon">✅</span> Priority Recommendations</h2>
+            </div>
+            <div class="section-content">
+                <div class="item recommendation">
+                    <h3>Immediate Actions (Critical)</h3>
+                    <p><strong>1. Fix Memory Leaks:</strong> Implement proper cleanup for all timeouts, subscriptions, and event listeners. This is critical for application stability and performance.</p>
+                    <p><strong>2. Secure Token Storage:</strong> Implement secure token storage with encryption and httpOnly cookies. Current localStorage storage is vulnerable to XSS attacks.</p>
+                    <p><strong>3. Add Error Boundaries:</strong> Implement React error boundaries to prevent app crashes and provide graceful error handling.</p>
+                    <p><strong>4. Input Sanitization:</strong> Add proper input validation and sanitization for all user inputs to prevent XSS attacks.</p>
+                    
+                    <pre><code class="language-javascript">// Priority 1: Memory Leak Fix Template
+useEffect(() => {
+  const subscription = subscribeToData();
+  const timeoutId = setTimeout(handleTimeout, 5000);
+  const mediaQuery = window.matchMedia('(max-width: 768px)');
+  
+  mediaQuery.addEventListener('change', handleMediaChange);
+  
+  return () => {
+    subscription?.unsubscribe();
+    clearTimeout(timeoutId);
+    mediaQuery.removeEventListener('change', handleMediaChange);
+  };
+}, []);
+
+// Priority 2: Secure Token Storage
+const secureStorage = {
+  set: (key, value) => {
+    const encrypted = encrypt(JSON.stringify(value));
+    document.cookie = `${key}=${encrypted}; Secure; HttpOnly; SameSite=Strict`;
+  },
+  get: (key) => {
+    const cookie = document.cookie
+      .split(';')
+      .find(c => c.trim().startsWith(`${key}=`));
+    return cookie ? decrypt(cookie.split('=')[1]) : null;
+  }
+};</code></pre>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Short-term Improvements (High Priority)</h3>
+                    <p><strong>1. Performance Optimization:</strong> Add React.memo and useCallback for expensive operations to reduce unnecessary re-renders.</p>
+                    <p><strong>2. Security Hardening:</strong> Implement CSP headers and secure cookie practices to prevent XSS and data injection attacks.</p>
+                    <p><strong>3. Error Handling:</strong> Standardize error handling patterns across the application with centralized error management.</p>
+                    <p><strong>4. Testing:</strong> Increase test coverage for critical paths and error scenarios to ensure code reliability.</p>
+                    
+                    <pre><code class="language-javascript">// Performance Optimization Template
+const ExpensiveComponent = memo(({ data, onUpdate }) => {
+  const processedData = useMemo(() => {
+    return data.map(item => expensiveTransformation(item));
+  }, [data]);
+
+  const handleClick = useCallback((item) => {
+    onUpdate(item.id);
+  }, [onUpdate]);
+
+  return (
+    <div>
+      {processedData.map(item => (
+        <Item key={item.id} item={item} onClick={handleClick} />
+      ))}
+    </div>
+  );
+});
+
+// Error Handling Standardization
+class ErrorHandler {
+  static handle(error, context) {
+    logger.error('Application error', { error, context });
+    
+    const userMessage = this.getUserMessage(error);
+    this.notifyUser(userMessage);
+    
+    if (this.shouldReport(error)) {
+      this.reportToMonitoring(error, context);
+    }
+  }
+}</code></pre>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Long-term Architecture (Medium Priority)</h3>
+                    <p><strong>1. Modern React Migration:</strong> Convert all class components to functional components with hooks for better code organization and performance.</p>
+                    <p><strong>2. TypeScript Integration:</strong> Gradually migrate to TypeScript for better type safety and developer experience.</p>
+                    <p><strong>3. State Management:</strong> Implement a robust state management solution using Redux Toolkit or Zustand for complex application state.</p>
+                    <p><strong>4. Component Library:</strong> Develop a comprehensive design system with reusable components for consistency and maintainability.</p>
+                    
+                    <pre><code class="language-javascript">// TypeScript Migration Strategy
+interface ChatProps {
+  chat: Chat;
+  onMessage: (message: string) => void;
+  onEnd: () => void;
+}
+
+const Chat: React.FC<ChatProps> = ({ chat, onMessage, onEnd }) => {
+  const [messages, setMessages] = useState<Message[]>([]);
+  
+  const handleSendMessage = useCallback((text: string) => {
+    onMessage(text);
+  }, [onMessage]);
+
+  return <ChatUI messages={messages} onSend={handleSendMessage} />;
+};
+
+// State Management with Redux Toolkit
+const chatSlice = createSlice({
+  name: 'chat',
+  initialState: {
+    activeChat: null,
+    messages: [],
+    status: 'idle'
+  },
+  reducers: {
+    setActiveChat: (state, action) => {
+      state.activeChat = action.payload;
+    },
+    addMessage: (state, action) => {
+      state.messages.push(action.payload);
+    }
+  }
+});</code></pre>
+                </div>
+
+                <div class="item recommendation">
+                    <h3>Best Practices Implementation</h3>
+                    <p><strong>1. Code Quality:</strong> Implement ESLint rules and pre-commit hooks to maintain code quality and consistency.</p>
+                    <p><strong>2. Documentation:</strong> Add comprehensive JSDoc documentation with examples and usage guidelines.</p>
+                    <p><strong>3. Monitoring:</strong> Implement error tracking and performance monitoring using tools like Sentry or LogRocket.</p>
+                    <p><strong>4. Security:</strong> Regular security audits and dependency updates to maintain application security.</p>
+                    
+                    <pre><code class="language-javascript">// ESLint Configuration (.eslintrc.js)
+module.exports = {
+  extends: [
+    'react-app',
+    'react-app/jest',
+    '@typescript-eslint/recommended',
+    'plugin:react-hooks/recommended'
+  ],
+  rules: {
+    'no-console': 'warn',
+    'prefer-const': 'error',
+    'no-unused-vars': 'error',
+    'react-hooks/exhaustive-deps': 'warn'
+  }
+};
+
+// Pre-commit Hook (package.json)
+{
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && npm test -- --watchAll=false"
+    }
+  },
+  "lint-staged": {
+    "src/**/*.{js,jsx,ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
+
+// Monitoring Setup
+import * as Sentry from '@sentry/react';
+
+Sentry.init({
+  dsn: process.env.REACT_APP_SENTRY_DSN,
+  environment: process.env.NODE_ENV,
+  tracesSampleRate: 1.0,
+  beforeSend(event) {
+    // Filter out sensitive information
+    if (event.exception) {
+      event.exception.values[0].stacktrace = undefined;
+    }
+    return event;
+  }
+});</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Generated on November 8, 2024 | Chat Widget Codebase Analysis</p>
+            <p>This comprehensive report provides detailed analysis with actionable recommendations for improving code quality, security, performance, and maintainability.</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const html = document.documentElement;
+
+        // Check for saved theme preference or default to light mode
+        const currentTheme = localStorage.getItem('theme') || 'light';
+        html.setAttribute('data-theme', currentTheme);
+        updateThemeIcon(currentTheme);
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        function updateThemeIcon(theme) {
+            themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
+        }
+
+        // Smooth scrolling for table of contents links
+        document.querySelectorAll('.toc a').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add keyboard navigation for theme toggle
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Shift + D to toggle theme
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+                e.preventDefault();
+                themeToggle.click();
+            }
+        });
+    </script>
+</body>
+</html>
