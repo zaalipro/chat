@@ -29011,7 +29011,12 @@ const MessagesArea = dt.div`
 `;
 class Chat extends reactExports.Component {
   componentDidMount() {
-    this.props.subscribeToNewMessages();
+    this.unsubscribe = this.props.subscribeToNewMessages();
+  }
+  componentWillUnmount() {
+    if (this.unsubscribe) {
+      this.unsubscribe();
+    }
   }
   render() {
     const { data, chatId } = this.props;
@@ -29528,7 +29533,7 @@ const App = ({ error }) => {
   const [isLoggingIn, setLoggingIn] = reactExports.useState(false);
   const [loginError, setLoginError] = reactExports.useState(null);
   const client2 = useApolloClient();
-  const retryLogin = () => __async(null, null, function* () {
+  const retryLogin = reactExports.useCallback(() => __async(null, null, function* () {
     var _a2, _b;
     setLoggingIn(true);
     setLoginError(null);
@@ -29554,13 +29559,13 @@ const App = ({ error }) => {
     } finally {
       setLoggingIn(false);
     }
-  });
+  }), [client2]);
   reactExports.useEffect(() => {
     const showCreate = !store("activeChat");
     if (showCreate && !websiteId && !isLoggingIn && !loginError) {
       retryLogin();
     }
-  }, [websiteId, isLoggingIn, loginError]);
+  }, [websiteId, isLoggingIn, loginError, retryLogin]);
   if (error) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ErrorState, { message: error.message, onRetry: retryLogin });
   }

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import CreateChat from './CreateChat'
 import Offline from './Offline'
 import ErrorState from './components/ErrorState';
@@ -112,7 +112,8 @@ const App = ({ error }) => {
   const client = useApolloClient();
 
   // Asynchronous function to handle the consumer login process.
-  const retryLogin = async () => {
+  // Wrapped in useCallback to prevent infinite re-renders
+  const retryLogin = useCallback(async () => {
     // Set logging in state to true and clear any previous errors.
     setLoggingIn(true);
     setLoginError(null);
@@ -156,7 +157,7 @@ const App = ({ error }) => {
       // Ensure the logging in flag is reset after the attempt is complete.
       setLoggingIn(false);
     }
-  };
+  }, [client]); // Added client dependency to useCallback
 
   // This effect hook triggers the login process under specific conditions.
   useEffect(() => {
@@ -167,7 +168,7 @@ const App = ({ error }) => {
     if (showCreate && !websiteId && !isLoggingIn && !loginError) {
       retryLogin();
     }
-  }, [websiteId, isLoggingIn, loginError]); // Dependencies for the effect.
+  }, [websiteId, isLoggingIn, loginError, retryLogin]); // Added retryLogin to dependencies
 
   // If there's a generic error passed as a prop, display it.
   if (error) {
