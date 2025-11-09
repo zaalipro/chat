@@ -27365,7 +27365,7 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
       console.log(`Chat ${chatId} already notified as started, skipping duplicate notification`);
     }
   }, [chatId, onChatStarted, hasNotifiedStarted]);
-  const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+  const { data, error, unsubscribe } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
     variables: { contractId },
     onData: ({ data: subscriptionData }) => {
       var _a2;
@@ -27374,6 +27374,12 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
     },
     onComplete: () => {
       console.log(`Subscription completed for chat ${chatId}`);
+    },
+    onError: (error2) => {
+      console.error(`Subscription error for chat ${chatId}:`, error2);
+      if (onError) {
+        onError(error2, chatId);
+      }
     },
     shouldResubscribe: true
     // Automatically resubscribe on connection loss
@@ -27392,6 +27398,14 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
       handleChatStarted(data.chatChanged.record);
     }
   }, [data, handleChatStarted]);
+  reactExports.useEffect(() => {
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+        console.log(`Cleaned up subscription for chat ${chatId}`);
+      }
+    };
+  }, [unsubscribe, chatId]);
   return null;
 };
 var store2$1 = { exports: {} };
@@ -30620,8 +30634,12 @@ const ChatContainer = ({ chat }) => {
   const { data: chatData } = useQuery(GET_CHAT, {
     variables: { chatId: chat.id }
   });
-  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { contractId: chat.contractId }
+  const { data: chatStatusData, unsubscribe: unsubscribeChatStatus } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId },
+    shouldResubscribe: true,
+    onError: (error) => {
+      console.error("Chat status subscription error:", error);
+    }
   });
   reactExports.useEffect(() => {
     var _a3, _b2;
@@ -30629,6 +30647,13 @@ const ChatContainer = ({ chat }) => {
       setChatEnded(true);
     }
   }, [chatStatusData]);
+  reactExports.useEffect(() => {
+    return () => {
+      if (unsubscribeChatStatus) {
+        unsubscribeChatStatus();
+      }
+    };
+  }, [unsubscribeChatStatus]);
   if (chatEnded) {
     return /* @__PURE__ */ jsxRuntimeExports.jsx(EndedChat, {});
   }
@@ -30658,6 +30683,9 @@ const ChatContainer = ({ chat }) => {
               return {
                 messages: [...prev2.messages, newMessage]
               };
+            },
+            onError: (error) => {
+              console.error("Message subscription error:", error);
             }
           })
         })

@@ -24,9 +24,13 @@ const ChatContainer = ({ chat }) => {
     variables: { chatId: chat.id }
   })
 
-  // Subscribe to chat status changes
-  const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { contractId: chat.contractId }
+  // Subscribe to chat status changes with proper cleanup
+  const { data: chatStatusData, unsubscribe: unsubscribeChatStatus } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+    variables: { contractId: chat.contractId },
+    shouldResubscribe: true,
+    onError: (error) => {
+      console.error('Chat status subscription error:', error);
+    }
   })
 
   useEffect(() => {
@@ -34,6 +38,15 @@ const ChatContainer = ({ chat }) => {
       setChatEnded(true)
     }
   }, [chatStatusData])
+
+  // Cleanup subscription on unmount
+  useEffect(() => {
+    return () => {
+      if (unsubscribeChatStatus) {
+        unsubscribeChatStatus();
+      }
+    };
+  }, [unsubscribeChatStatus])
 
   if (chatEnded) {
     return <EndedChat />
@@ -69,6 +82,9 @@ const ChatContainer = ({ chat }) => {
                     return {
                       messages: [...prev.messages, newMessage]
                     };
+                  },
+                  onError: (error) => {
+                    console.error('Message subscription error:', error);
                   }
                 })
               }

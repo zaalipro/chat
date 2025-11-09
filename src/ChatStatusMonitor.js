@@ -105,7 +105,7 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
     }
   }, [chatId, onChatStarted, hasNotifiedStarted]);
 
-  const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
+  const { data, error, unsubscribe } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
     variables: { contractId: contractId },
     onData: ({ data: subscriptionData }) => {
       const chatData = subscriptionData?.chatChanged?.record;
@@ -113,6 +113,12 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
     },
     onComplete: () => {
       console.log(`Subscription completed for chat ${chatId}`);
+    },
+    onError: (error) => {
+      console.error(`Subscription error for chat ${chatId}:`, error);
+      if (onError) {
+        onError(error, chatId);
+      }
     },
     shouldResubscribe: true // Automatically resubscribe on connection loss
   });
@@ -132,6 +138,16 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
       handleChatStarted(data.chatChanged.record);
     }
   }, [data, handleChatStarted]);
+
+  // Cleanup subscription on unmount
+  useEffect(() => {
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+        console.log(`Cleaned up subscription for chat ${chatId}`);
+      }
+    };
+  }, [unsubscribe, chatId]);
 
   // This component doesn't render anything visible
   return null;
