@@ -31148,9 +31148,71 @@ function initChatWidget(config = {}) {
     wsLink,
     authLink.concat(httpLink)
   );
+  const cache2 = new InMemoryCache({
+    // Enable garbage collection to clean up unused cache entries
+    garbageCollection: true,
+    // Configure result caching for better performance
+    resultCaching: true,
+    // Set up cache eviction policies
+    evictionPolicy: "lru",
+    // Least Recently Used eviction
+    // Configure cache size limits
+    cacheSize: 1024 * 1024 * 10
+    // 10MB cache limit
+  });
   const client2 = new ApolloClient({
     link,
-    cache: new InMemoryCache().restore(window.__APOLLO_STATE__)
+    cache: cache2.restore(window.__APOLLO_STATE__ || {}),
+    // Add cache cleanup and performance configurations
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: "all",
+        notifyOnNetworkStatusChange: true,
+        // Set fetch policy to prevent excessive cache growth
+        fetchPolicy: "cache-first",
+        // Add cache cleanup on query completion
+        pollInterval: 0
+        // Disable polling to prevent memory leaks
+      },
+      query: {
+        errorPolicy: "all",
+        fetchPolicy: "cache-first"
+      },
+      mutate: {
+        errorPolicy: "all"
+      }
+    },
+    // Add cache cleanup hooks
+    onCacheInit: (cache22) => {
+      console.log("Widget: Apollo cache initialized with memory management");
+      const cleanupInterval = setInterval(() => {
+        try {
+          if (cache22.gc) {
+            cache22.gc();
+            console.log("Widget: Apollo cache garbage collection performed");
+          }
+          const cacheSize = cache22.extract();
+          const estimatedSize = JSON.stringify(cacheSize).length;
+          console.log(`Widget: Current cache size: ${estimatedSize} bytes`);
+          if (estimatedSize > 1024 * 1024 * 5) {
+            console.warn("Widget: Cache size exceeded threshold, performing aggressive cleanup");
+            if (cache22.reset) {
+              const essentialData = {
+                __META: __spreadValues({}, cache22.extract().__META)
+              };
+              cache22.reset();
+              cache22.restore(essentialData);
+            }
+          }
+        } catch (error) {
+          console.error("Widget: Error during cache cleanup:", error);
+        }
+      }, 5 * 60 * 1e3);
+      cache22._cleanupInterval = cleanupInterval;
+    },
+    onCacheReset: () => {
+      console.log("Widget: Apollo cache reset");
+    }
   });
   const ClientApp = ({ error }) => /* @__PURE__ */ jsxRuntimeExports.jsx(ApolloProvider, { client: client2, children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ThemeProvider, { children: [
     /* @__PURE__ */ jsxRuntimeExports.jsx(GlobalStyles, {}),
@@ -31165,9 +31227,34 @@ function initChatWidget(config = {}) {
       }
     }
   `;
+  const loginCache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          // Limit login-related cache entries
+          consumerLogin: {
+            merge: false
+            // Always use latest login data
+          }
+        }
+      }
+    },
+    garbageCollection: true,
+    resultCaching: false,
+    // Disable caching for login mutations
+    cacheSize: 1024 * 512
+    // 512KB limit for login cache
+  });
   const loginClient = new ApolloClient({
     link: httpLink,
-    cache: new InMemoryCache()
+    cache: loginCache,
+    defaultOptions: {
+      mutate: {
+        errorPolicy: "all",
+        fetchPolicy: "no-cache"
+        // Don't cache login mutations
+      }
+    }
   });
   let container = document.getElementById(containerId);
   let mediaQuery = null;
@@ -31259,6 +31346,26 @@ function initChatWidget(config = {}) {
     if (mediaQuery && handleMobileView) {
       mediaQuery.removeEventListener("change", handleMobileView);
       console.log("Widget: MediaQuery event listener cleaned up");
+    }
+    try {
+      if (client2.cache._cleanupInterval) {
+        clearInterval(client2.cache._cleanupInterval);
+        console.log("Widget: Apollo cache cleanup interval cleared");
+      }
+      if (client2.cache.gc) {
+        client2.cache.gc();
+        console.log("Widget: Final Apollo cache garbage collection performed");
+      }
+      client2.cache.reset();
+      console.log("Widget: Apollo cache reset on cleanup");
+    } catch (error) {
+      console.error("Widget: Error during Apollo cache cleanup:", error);
+    }
+    try {
+      loginClient.cache.reset();
+      console.log("Widget: Login client cache reset on cleanup");
+    } catch (error) {
+      console.error("Widget: Error during login client cache cleanup:", error);
     }
     root2.unmount();
     if (container && container.parentNode) {

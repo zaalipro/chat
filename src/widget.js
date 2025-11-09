@@ -112,10 +112,81 @@ export function initChatWidget(config = {}) {
     authLink.concat(httpLink),
   )
 
+  // Create cache with size limits and garbage collection to prevent memory growth
+  const cache = new InMemoryCache({
+    // Enable garbage collection to clean up unused cache entries
+    garbageCollection: true,
+    // Configure result caching for better performance
+    resultCaching: true,
+    // Set up cache eviction policies
+    evictionPolicy: 'lru', // Least Recently Used eviction
+    // Configure cache size limits
+    cacheSize: 1024 * 1024 * 10, // 10MB cache limit
+  });
+
   const client = new ApolloClient({
     link,
-    cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
-  })
+    cache: cache.restore(window.__APOLLO_STATE__ || {}),
+    // Add cache cleanup and performance configurations
+    defaultOptions: {
+      watchQuery: {
+        errorPolicy: 'all',
+        notifyOnNetworkStatusChange: true,
+        // Set fetch policy to prevent excessive cache growth
+        fetchPolicy: 'cache-first',
+        // Add cache cleanup on query completion
+        pollInterval: 0, // Disable polling to prevent memory leaks
+      },
+      query: {
+        errorPolicy: 'all',
+        fetchPolicy: 'cache-first',
+      },
+      mutate: {
+        errorPolicy: 'all'
+      }
+    },
+    // Add cache cleanup hooks
+    onCacheInit: (cache) => {
+      console.log('Widget: Apollo cache initialized with memory management');
+      
+      // Set up periodic cache cleanup
+      const cleanupInterval = setInterval(() => {
+        try {
+          // Perform garbage collection if available
+          if (cache.gc) {
+            cache.gc();
+            console.log('Widget: Apollo cache garbage collection performed');
+          }
+          
+          // Log cache size for monitoring
+          const cacheSize = cache.extract();
+          const estimatedSize = JSON.stringify(cacheSize).length;
+          console.log(`Widget: Current cache size: ${estimatedSize} bytes`);
+          
+          // If cache is getting too large, perform aggressive cleanup
+          if (estimatedSize > 1024 * 1024 * 5) { // 5MB threshold
+            console.warn('Widget: Cache size exceeded threshold, performing aggressive cleanup');
+            if (cache.reset) {
+              // Reset cache but preserve essential data
+              const essentialData = {
+                __META: { ...cache.extract().__META }
+              };
+              cache.reset();
+              cache.restore(essentialData);
+            }
+          }
+        } catch (error) {
+          console.error('Widget: Error during cache cleanup:', error);
+        }
+      }, 5 * 60 * 1000); // Every 5 minutes
+      
+      // Store cleanup interval for later cleanup
+      cache._cleanupInterval = cleanupInterval;
+    },
+    onCacheReset: () => {
+      console.log('Widget: Apollo cache reset');
+    }
+  });
 
   const ClientApp = ({ error }) => (
     <ApolloProvider client={client}>
@@ -136,9 +207,32 @@ export function initChatWidget(config = {}) {
     }
   `;
 
+  // Create login client with similar cache configuration
+  const loginCache = new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          // Limit login-related cache entries
+          consumerLogin: {
+            merge: false // Always use latest login data
+          }
+        }
+      }
+    },
+    garbageCollection: true,
+    resultCaching: false, // Disable caching for login mutations
+    cacheSize: 1024 * 512, // 512KB limit for login cache
+  });
+
   const loginClient = new ApolloClient({
     link: httpLink,
-    cache: new InMemoryCache(),
+    cache: loginCache,
+    defaultOptions: {
+      mutate: {
+        errorPolicy: 'all',
+        fetchPolicy: 'no-cache' // Don't cache login mutations
+      }
+    }
   });
 
   // Find or create container
@@ -251,12 +345,40 @@ export function initChatWidget(config = {}) {
 
   renderApp(null, null);
 
-  // Return cleanup function with proper event listener cleanup
+  // Return cleanup function with proper event listener cleanup and cache cleanup
   return () => {
     // Clean up media query event listener if it exists
     if (mediaQuery && handleMobileView) {
       mediaQuery.removeEventListener('change', handleMobileView);
       console.log('Widget: MediaQuery event listener cleaned up');
+    }
+    
+    // Clean up Apollo cache and intervals
+    try {
+      if (client.cache._cleanupInterval) {
+        clearInterval(client.cache._cleanupInterval);
+        console.log('Widget: Apollo cache cleanup interval cleared');
+      }
+      
+      // Perform final cache garbage collection
+      if (client.cache.gc) {
+        client.cache.gc();
+        console.log('Widget: Final Apollo cache garbage collection performed');
+      }
+      
+      // Clear cache to prevent memory leaks
+      client.cache.reset();
+      console.log('Widget: Apollo cache reset on cleanup');
+    } catch (error) {
+      console.error('Widget: Error during Apollo cache cleanup:', error);
+    }
+    
+    // Clean up login client cache
+    try {
+      loginClient.cache.reset();
+      console.log('Widget: Login client cache reset on cleanup');
+    } catch (error) {
+      console.error('Widget: Error during login client cache cleanup:', error);
     }
     
     root.unmount();
