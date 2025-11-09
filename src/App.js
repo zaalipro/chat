@@ -8,6 +8,7 @@ import { CHAT_STATUS } from './constants/chatStatus';
 import { WebsiteProvider, useWebsite } from './context/WebsiteContext';
 
 import store from 'store2'
+import secureStore from './utils/crypto';
 import Query from './Components/Query'
 import ChatContainer from './ChatContainer'
 import { GET_CHAT } from './queries'
@@ -136,13 +137,24 @@ const App = ({ error }) => {
       });
       // Extract the JWT token from the mutation response.
       const token = response?.data?.consumerLogin?.jwtToken;
-      // If a token is received, decode it and store the session info.
+      // If a token is received, decode it and store the session info securely.
       if (token) {
         const decodedToken = jwtDecode(token);
         const newWebsiteId = decodedToken.user_id;
-        // Store websiteId and token in local storage for session persistence.
+        
+        // Store websiteId in regular localStorage (non-sensitive)
         store('websiteId', newWebsiteId);
-        store('token', token);
+        
+        // Store token securely with encryption
+        try {
+          await secureStore.set('token', token);
+          console.log('Token stored securely');
+        } catch (storageError) {
+          console.error('Failed to store token securely, using fallback:', storageError);
+          // Fallback to regular storage if secure storage fails
+          store('token', token);
+        }
+        
         // Update the websiteId in the component's state to trigger a re-render.
         setWebsiteId(newWebsiteId);
       } else {

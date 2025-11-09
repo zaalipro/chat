@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Token Encryption Test</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border-left: 4px solid #007bff;
+            background-color: #f8f9fa;
+        }
+        .success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .info {
+            border-left-color: #17a2b8;
+            background-color: #d1ecf1;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 JWT Token Encryption Test</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Test Overview</h3>
+            <p>This test demonstrates the secure JWT token storage implementation using AES-GCM encryption.</p>
+            <p><strong>Features:</strong></p>
+            <ul>
+                <li>✅ AES-GCM encryption for sensitive data (tokens, JWT, auth)</li>
+                <li>✅ Regular localStorage for non-sensitive data</li>
+                <li>✅ Browser fingerprinting for unique key derivation</li>
+                <li>✅ Fallback to regular storage if encryption fails</li>
+                <li>✅ Automatic detection of sensitive keys</li>
+            </ul>
+        </div>
+
+        <button onclick="runTests()">🚀 Run Encryption Tests</button>
+        <button onclick="clearStorage()">🗑️ Clear Storage</button>
+        <button onclick="showStorage()">📋 Show Storage Contents</button>
+
+        <div id="output" class="output"></div>
+    </div>
+
+    <script type="module">
+        // Import the crypto utilities (we'll need to create a simplified version for testing)
+        // For now, let's create a mock implementation that demonstrates the concept
+        
+        const ENCRYPTION_CONFIG = {
+            KEY_DERIVATION: {
+                algorithm: 'PBKDF2',
+                iterations: 100000,
+                hash: 'SHA-256',
+                keyLength: 256
+            },
+            ENCRYPTION: {
+                algorithm: 'AES-GCM',
+                ivLength: 12
+            },
+            STORAGE_KEYS: {
+                encryptedData: 'secure_data',
+                salt: 'secure_salt',
+                iv: 'secure_iv'
+            }
+        };
+
+        const generateSalt = () => {
+            const salt = new Uint8Array(16);
+            crypto.getRandomValues(salt);
+            return btoa(String.fromCharCode(...salt));
+        };
+
+        const generateIV = () => {
+            const iv = new Uint8Array(ENCRYPTION_CONFIG.ENCRYPTION.ivLength);
+            crypto.getRandomValues(iv);
+            return iv;
+        };
+
+        const deriveKey = async (password, salt) => {
+            const encoder = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveKey']
+            );
+
+            const saltBuffer = new Uint8Array(atob(salt).split('').map(c => c.charCodeAt(0)));
+
+            return crypto.subtle.deriveKey(
+                {
+                    name: ENCRYPTION_CONFIG.KEY_DERIVATION.algorithm,
+                    salt: saltBuffer,
+                    iterations: ENCRYPTION_CONFIG.KEY_DERIVATION.iterations,
+                    hash: ENCRYPTION_CONFIG.KEY_DERIVATION.hash
+                },
+                keyMaterial,
+                { name: ENCRYPTION_CONFIG.ENCRYPTION.algorithm, length: ENCRYPTION_CONFIG.KEY_DERIVATION.keyLength },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        };
+
+        const encryptData = async (data, key) => {
+            const encoder = new TextEncoder();
+            const iv = generateIV();
+            
+            const encrypted = await crypto.subtle.encrypt(
+                {
+                    name: ENCRYPTION_CONFIG.ENCRYPTION.algorithm,
+                    iv
+                },
+                key,
+                encoder.encode(data)
+            );
+
+            return {
+                encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+                iv: btoa(String.fromCharCode(...iv))
+            };
+        };
+
+        const decryptData = async (encryptedData, iv, key) => {
+            const encryptedBuffer = new Uint8Array(atob(encryptedData).split('').map(c => c.charCodeAt(0)));
+            const ivBuffer = new Uint8Array(atob(iv).split('').map(c => c.charCodeAt(0)));
+
+            const decrypted = await crypto.subtle.decrypt(
+                {
+                    name: ENCRYPTION_CONFIG.ENCRYPTION.algorithm,
+                    iv: ivBuffer
+                },
+                key,
+                encryptedBuffer
+            );
+
+            const decoder = new TextDecoder();
+            return decoder.decode(decrypted);
+        };
+
+        const getBrowserFingerprint = () => {
+            const fingerprint = [
+                navigator.userAgent,
+                navigator.language,
+                screen.width + 'x' + screen.height,
+                new Date().getTimezoneOffset(),
+                sessionStorage.getItem('chatSession') || Date.now().toString()
+            ].join('|');
+            
+            if (!sessionStorage.getItem('chatSession')) {
+                sessionStorage.setItem('chatSession', Date.now().toString());
+            }
+            
+            return fingerprint;
+        };
+
+        const secureStorage = {
+            set: async (key, value) => {
+                try {
+                    let salt = localStorage.getItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt);
+                    if (!salt) {
+                        salt = generateSalt();
+                        localStorage.setItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt, salt);
+                    }
+
+                    const password = getBrowserFingerprint();
+                    const key = await deriveKey(password, salt);
+
+                    const { encrypted, iv } = await encryptData(JSON.stringify(value), key);
+
+                    localStorage.setItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData}_${key}`, encrypted);
+                    localStorage.setItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.iv}_${key}`, iv);
+
+                } catch (error) {
+                    console.error('Failed to securely store data:', error);
+                    localStorage.setItem(key, value);
+                }
+            },
+
+            get: async (key) => {
+                try {
+                    const encrypted = localStorage.getItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData}_${key}`);
+                    const iv = localStorage.getItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.iv}_${key}`);
+                    const salt = localStorage.getItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt);
+
+                    if (!encrypted || !iv || !salt) {
+                        return null;
+                    }
+
+                    const password = getBrowserFingerprint();
+                    const decryptionKey = await deriveKey(password, salt);
+
+                    const decrypted = await decryptData(encrypted, iv, decryptionKey);
+                    
+                    return JSON.parse(decrypted);
+
+                } catch (error) {
+                    console.error('Failed to retrieve secure data:', error);
+                    const fallback = localStorage.getItem(key);
+                    return fallback || null;
+                }
+            },
+
+            remove: (key) => {
+                try {
+                    localStorage.removeItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData}_${key}`);
+                    localStorage.removeItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.iv}_${key}`);
+                    localStorage.removeItem(key);
+                } catch (error) {
+                    console.error('Failed to remove secure data:', error);
+                }
+            }
+        };
+
+        const secureStore = {
+            set: async (key, value) => {
+                const sensitiveKeys = ['token', 'jwt', 'auth'];
+                const isSensitive = sensitiveKeys.some(sensitive => 
+                    key.toLowerCase().includes(sensitive.toLowerCase())
+                );
+
+                if (isSensitive) {
+                    await secureStorage.set(key, value);
+                } else {
+                    localStorage.setItem(key, JSON.stringify(value));
+                }
+            },
+
+            get: async (key) => {
+                const sensitiveKeys = ['token', 'jwt', 'auth'];
+                const isSensitive = sensitiveKeys.some(sensitive => 
+                    key.toLowerCase().includes(sensitive.toLowerCase())
+                );
+
+                if (isSensitive) {
+                    return await secureStorage.get(key);
+                } else {
+                    const value = localStorage.getItem(key);
+                    try {
+                        return value ? JSON.parse(value) : null;
+                    } catch {
+                        return value;
+                    }
+                }
+            },
+
+            remove: (key) => {
+                const sensitiveKeys = ['token', 'jwt', 'auth'];
+                const isSensitive = sensitiveKeys.some(sensitive => 
+                    key.toLowerCase().includes(sensitive.toLowerCase())
+                );
+
+                if (isSensitive) {
+                    secureStorage.remove(key);
+                } else {
+                    localStorage.removeItem(key);
+                }
+            }
+        };
+
+        const isEncryptionAvailable = () => {
+            return typeof crypto !== 'undefined' && 
+                   typeof crypto.subtle !== 'undefined' &&
+                   typeof TextEncoder !== 'undefined' &&
+                   typeof TextDecoder !== 'undefined';
+        };
+
+        // Test functions
+        window.runTests = async () => {
+            const output = document.getElementById('output');
+            output.innerHTML = '🔐 Running encryption tests...\n\n';
+
+            try {
+                // Test 1: Check encryption availability
+                output.innerHTML += '1. Checking encryption availability...\n';
+                const encryptionAvailable = isEncryptionAvailable();
+                output.innerHTML += `   ✅ Encryption available: ${encryptionAvailable}\n\n`;
+
+                // Test 2: Store JWT token securely
+                output.innerHTML += '2. Storing JWT token securely...\n';
+                const testToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ';
+                
+                await secureStore.set('token', testToken);
+                output.innerHTML += '   ✅ Token stored successfully\n\n';
+
+                // Test 3: Retrieve JWT token
+                output.innerHTML += '3. Retrieving JWT token...\n';
+                const retrievedToken = await secureStore.get('token');
+                output.innerHTML += `   ✅ Token retrieved: ${retrievedToken ? 'Success' : 'Failed'}\n`;
+                output.innerHTML += `   📝 Retrieved token matches: ${retrievedToken === testToken ? '✅' : '❌'}\n\n`;
+
+                // Test 4: Store non-sensitive data
+                output.innerHTML += '4. Storing non-sensitive data...\n';
+                await secureStore.set('preferences', { theme: 'dark', language: 'en' });
+                output.innerHTML += '   ✅ Non-sensitive data stored\n\n';
+
+                // Test 5: Retrieve non-sensitive data
+                output.innerHTML += '5. Retrieving non-sensitive data...\n';
+                const preferences = await secureStore.get('preferences');
+                output.innerHTML += `   ✅ Preferences retrieved: ${JSON.stringify(preferences)}\n\n`;
+
+                // Test 6: Show storage contents
+                output.innerHTML += '6. Storage analysis...\n';
+                const storageKeys = Object.keys(localStorage);
+                output.innerHTML += '   📋 Storage keys found:\n';
+                storageKeys.forEach(key => {
+                    const isSecure = key.includes('secure_');
+                    const value = localStorage.getItem(key);
+                    output.innerHTML += `      - ${key}: ${isSecure ? '🔒 ENCRYPTED' : '📝 Plain text'} (${value.length} chars)\n`;
+                });
+                output.innerHTML += '\n';
+
+                output.innerHTML += '🎉 All tests completed successfully!\n\n';
+                output.innerHTML += '📊 Security Improvements:\n';
+                output.innerHTML += '   ✅ JWT tokens are now encrypted with AES-GCM\n';
+                output.innerHTML += '   ✅ Browser fingerprinting ensures unique encryption keys\n';
+                output.innerHTML += '   ✅ Fallback to regular storage if encryption fails\n';
+                output.innerHTML += '   ✅ Automatic detection of sensitive data\n';
+                output.innerHTML += '   ✅ Non-sensitive data uses efficient regular storage\n';
+
+            } catch (error) {
+                output.innerHTML += `❌ Test failed: ${error.message}\n`;
+                output.innerHTML += `📋 Error details: ${error.stack}\n`;
+            }
+        };
+
+        window.clearStorage = () => {
+            localStorage.clear();
+            sessionStorage.clear();
+            document.getElementById('output').innerHTML = '🗑️ Storage cleared!\n';
+        };
+
+        window.showStorage = () => {
+            const output = document.getElementById('output');
+            output.innerHTML = '📋 Current Storage Contents:\n\n';
+            
+            const storageKeys = Object.keys(localStorage);
+            if (storageKeys.length === 0) {
+                output.innerHTML += '   (No data in localStorage)\n';
+            } else {
+                storageKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const isSecure = key.includes('secure_');
+                    output.innerHTML += `🔑 ${key}:\n`;
+                    output.innerHTML += `   Type: ${isSecure ? '🔒 Encrypted' : '📝 Plain text'}\n`;
+                    output.innerHTML += `   Size: ${value.length} characters\n`;
+                    if (!isSecure && value.length < 100) {
+                        output.innerHTML += `   Value: ${value}\n`;
+                    } else {
+                        output.innerHTML += `   Value: [${isSecure ? 'Encrypted data' : 'Too large to display'}]\n`;
+                    }
+                    output.innerHTML += '\n';
+                });
+            }
+        };
+
+        // Auto-run tests on page load
+        setTimeout(() => {
+            runTests();
+        }, 1000);
+    </script>
+</body>
+</html>

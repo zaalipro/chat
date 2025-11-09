@@ -8,17 +8,40 @@ import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from 'graphql-ws';
 import App from './App';
 import store from 'store2'
+import secureStore from './utils/crypto';
 import { jwtDecode } from 'jwt-decode'
 import ThemeProvider from './components/styled/design-system/ThemeProvider';
 import GlobalStyles from './components/styled/design-system/GlobalStyles';
 import { WebsiteProvider } from './context/WebsiteContext';
 
 const httpLink = createHttpLink({ uri: import.meta.env.VITE_GRAPHQL_HTTP_URL })
-const authLink = setContext((_, { headers }) => {
-  const token = store("token");
-  if (token === null) {
+
+const authLink = setContext(async (_, { headers }) => {
+  let token = null;
+  
+  // Try to get token from secure storage first
+  try {
+    token = await secureStore.get("token");
+    console.log('Token retrieved successfully from secure storage');
+  } catch (error) {
+    console.error('Failed to retrieve token from secure storage:', error);
+    // Fallback to regular storage
+    try {
+      token = store("token");
+      console.log('Token retrieved from fallback storage');
+    } catch (fallbackError) {
+      console.error('Failed to retrieve token from fallback storage:', fallbackError);
+      token = null;
+    }
+  }
+  
+  // Ensure token is a string and not null/undefined
+  if (!token || typeof token !== 'string') {
+    console.log('No valid token available, proceeding without authentication');
     return headers;
   }
+  
+  console.log('Adding authorization header with token');
   return {
     headers: {
       ...headers,
@@ -31,9 +54,34 @@ const wsLink = new GraphQLWsLink(createClient({
   url: import.meta.env.VITE_GRAPHQL_WS_URL,
   options: {
     reconnect: true,
-    connectionParams: () => ({
-      authToken: store("token")
-    })
+    connectionParams: async () => {
+      let authToken = null;
+      
+      // Try to get token from secure storage first
+      try {
+        authToken = await secureStore.get("token");
+        console.log('Auth token retrieved successfully from secure storage for WebSocket');
+      } catch (error) {
+        console.error('Failed to retrieve auth token from secure storage for WebSocket:', error);
+        // Fallback to regular storage
+        try {
+          authToken = store("token");
+          console.log('Auth token retrieved from fallback storage for WebSocket');
+        } catch (fallbackError) {
+          console.error('Failed to retrieve auth token from fallback storage for WebSocket:', fallbackError);
+          authToken = null;
+        }
+      }
+      
+      // Ensure authToken is a string and not null/undefined
+      if (!authToken || typeof authToken !== 'string') {
+        console.log('No valid auth token available for WebSocket connection');
+        return {};
+      }
+      
+      console.log('Adding auth token to WebSocket connection params');
+      return { authToken };
+    }
   }
 }));
 
@@ -87,13 +135,24 @@ const loginClient = new ApolloClient({
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
-const renderApp = (token, error, targetElement = null) => {
+const renderApp = async (token, error, targetElement = null) => {
   try {
     if (token) {
       try {
         const decodedToken = jwtDecode(token);
         store('websiteId', decodedToken.user_id)
-        store("token", token);
+        
+        // Store token securely
+        try {
+          await secureStore.set("token", token);
+          console.log('Token stored securely in renderApp');
+        } catch (storageError) {
+          console.error('Failed to store token securely in renderApp, using fallback:', storageError);
+          // Fallback to regular storage
+          store("token", token);
+          console.log('Token stored using fallback storage in renderApp');
+        }
+        
       } catch (tokenError) {
         console.error('Failed to decode token:', tokenError)
       }

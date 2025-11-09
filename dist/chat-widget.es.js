@@ -28641,6 +28641,261 @@ function jwtDecode(token2, options) {
     throw new InvalidTokenError(`Invalid token specified: invalid json for part #${pos + 1} (${e.message})`);
   }
 }
+const ENCRYPTION_CONFIG = {
+  // Key derivation parameters
+  KEY_DERIVATION: {
+    algorithm: "PBKDF2",
+    iterations: 1e5,
+    hash: "SHA-256",
+    keyLength: 256
+    // bits
+  },
+  // Encryption algorithm
+  ENCRYPTION: {
+    algorithm: "AES-GCM",
+    ivLength: 12
+    // bytes
+  },
+  // Storage keys
+  STORAGE_KEYS: {
+    encryptedData: "secure_data",
+    salt: "secure_salt",
+    iv: "secure_iv"
+  }
+};
+const generateSalt = () => {
+  const salt = new Uint8Array(16);
+  crypto.getRandomValues(salt);
+  return btoa(String.fromCharCode(...salt));
+};
+const generateIV = () => {
+  const iv = new Uint8Array(ENCRYPTION_CONFIG.ENCRYPTION.ivLength);
+  crypto.getRandomValues(iv);
+  return iv;
+};
+const deriveKey = (password, salt) => __async(null, null, function* () {
+  const encoder = new TextEncoder();
+  const keyMaterial = yield crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    "PBKDF2",
+    false,
+    ["deriveKey"]
+  );
+  const saltBuffer = new Uint8Array(atob(salt).split("").map((c) => c.charCodeAt(0)));
+  return crypto.subtle.deriveKey(
+    {
+      name: ENCRYPTION_CONFIG.KEY_DERIVATION.algorithm,
+      salt: saltBuffer,
+      iterations: ENCRYPTION_CONFIG.KEY_DERIVATION.iterations,
+      hash: ENCRYPTION_CONFIG.KEY_DERIVATION.hash
+    },
+    keyMaterial,
+    { name: ENCRYPTION_CONFIG.ENCRYPTION.algorithm, length: ENCRYPTION_CONFIG.KEY_DERIVATION.keyLength },
+    false,
+    ["encrypt", "decrypt"]
+  );
+});
+const encryptData = (data, encryptionKey) => __async(null, null, function* () {
+  const encoder = new TextEncoder();
+  const iv = generateIV();
+  const encrypted = yield crypto.subtle.encrypt(
+    {
+      name: ENCRYPTION_CONFIG.ENCRYPTION.algorithm,
+      iv
+    },
+    encryptionKey,
+    encoder.encode(data)
+  );
+  return {
+    encrypted: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+    iv: btoa(String.fromCharCode(...iv))
+  };
+});
+const decryptData = (encryptedData, iv, decryptionKey) => __async(null, null, function* () {
+  const encryptedBuffer = new Uint8Array(atob(encryptedData).split("").map((c) => c.charCodeAt(0)));
+  const ivBuffer = new Uint8Array(atob(iv).split("").map((c) => c.charCodeAt(0)));
+  const decrypted = yield crypto.subtle.decrypt(
+    {
+      name: ENCRYPTION_CONFIG.ENCRYPTION.algorithm,
+      iv: ivBuffer
+    },
+    decryptionKey,
+    encryptedBuffer
+  );
+  const decoder = new TextDecoder();
+  return decoder.decode(decrypted);
+});
+const getBrowserFingerprint = () => {
+  const fingerprint = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + "x" + screen.height,
+    (/* @__PURE__ */ new Date()).getTimezoneOffset(),
+    // Add session-specific component
+    sessionStorage.getItem("chatSession") || Date.now().toString()
+  ].join("|");
+  if (!sessionStorage.getItem("chatSession")) {
+    sessionStorage.setItem("chatSession", Date.now().toString());
+  }
+  return fingerprint;
+};
+const secureStorage = {
+  /**
+   * Stores data securely with encryption
+   * @param {string} storageKey - Storage key
+   * @param {string} value - Value to store
+   * @returns {Promise<void>}
+   */
+  set: (storageKey, value) => __async(null, null, function* () {
+    try {
+      let salt = localStorage.getItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt);
+      if (!salt) {
+        salt = generateSalt();
+        localStorage.setItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt, salt);
+      }
+      const password = getBrowserFingerprint();
+      const encryptionKey = yield deriveKey(password, salt);
+      const { encrypted, iv } = yield encryptData(JSON.stringify(value), encryptionKey);
+      localStorage.setItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData}_${storageKey}`, encrypted);
+      localStorage.setItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.iv}_${storageKey}`, iv);
+    } catch (error) {
+      console.error("Failed to securely store data:", error);
+      localStorage.setItem(storageKey, value);
+    }
+  }),
+  /**
+   * Retrieves and decrypts stored data
+   * @param {string} storageKey - Storage key
+   * @returns {Promise<string|null>} Decrypted value or null
+   */
+  get: (storageKey) => __async(null, null, function* () {
+    try {
+      const encrypted = localStorage.getItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData}_${storageKey}`);
+      const iv = localStorage.getItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.iv}_${storageKey}`);
+      const salt = localStorage.getItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt);
+      if (!encrypted || !iv || !salt) {
+        return null;
+      }
+      const password = getBrowserFingerprint();
+      const decryptionKey = yield deriveKey(password, salt);
+      const decrypted = yield decryptData(encrypted, iv, decryptionKey);
+      return JSON.parse(decrypted);
+    } catch (error) {
+      console.error("Failed to retrieve secure data:", error);
+      const fallback = localStorage.getItem(storageKey);
+      return fallback || null;
+    }
+  }),
+  /**
+   * Removes stored data securely
+   * @param {string} storageKey - Storage key
+   */
+  remove: (storageKey) => {
+    try {
+      localStorage.removeItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData}_${storageKey}`);
+      localStorage.removeItem(`${ENCRYPTION_CONFIG.STORAGE_KEYS.iv}_${storageKey}`);
+      localStorage.removeItem(storageKey);
+    } catch (error) {
+      console.error("Failed to remove secure data:", error);
+    }
+  },
+  /**
+   * Clears all secure storage data
+   */
+  clear: () => {
+    try {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith(ENCRYPTION_CONFIG.STORAGE_KEYS.encryptedData) || key.startsWith(ENCRYPTION_CONFIG.STORAGE_KEYS.iv)) {
+          localStorage.removeItem(key);
+        }
+      });
+      localStorage.removeItem(ENCRYPTION_CONFIG.STORAGE_KEYS.salt);
+      sessionStorage.removeItem("chatSession");
+    } catch (error) {
+      console.error("Failed to clear secure storage:", error);
+    }
+  }
+};
+const secureStore = {
+  /**
+   * Securely stores a value (encrypts sensitive keys like 'token')
+   * @param {string} key - Storage key
+   * @param {any} value - Value to store
+   * @returns {Promise<void>}
+   */
+  set: (key, value) => __async(null, null, function* () {
+    const sensitiveKeys = ["token", "jwt", "auth"];
+    const isSensitive = sensitiveKeys.some(
+      (sensitive) => key.toLowerCase().includes(sensitive.toLowerCase())
+    );
+    if (isSensitive) {
+      yield secureStorage.set(key, value);
+    } else {
+      localStorage.setItem(key, JSON.stringify(value));
+    }
+  }),
+  /**
+   * Retrieves a value (decrypts if sensitive)
+   * @param {string} key - Storage key
+   * @returns {Promise<any>} Retrieved value
+   */
+  get: (key) => __async(null, null, function* () {
+    const sensitiveKeys = ["token", "jwt", "auth"];
+    const isSensitive = sensitiveKeys.some(
+      (sensitive) => key.toLowerCase().includes(sensitive.toLowerCase())
+    );
+    if (isSensitive) {
+      return yield secureStorage.get(key);
+    } else {
+      const value = localStorage.getItem(key);
+      try {
+        return value ? JSON.parse(value) : null;
+      } catch (e) {
+        return value;
+      }
+    }
+  }),
+  /**
+   * Removes a value from storage
+   * @param {string} key - Storage key
+   */
+  remove: (key) => {
+    const sensitiveKeys = ["token", "jwt", "auth"];
+    const isSensitive = sensitiveKeys.some(
+      (sensitive) => key.toLowerCase().includes(sensitive.toLowerCase())
+    );
+    if (isSensitive) {
+      secureStorage.remove(key);
+    } else {
+      localStorage.removeItem(key);
+    }
+  },
+  /**
+   * Clears all storage
+   */
+  clear: () => {
+    secureStorage.clear();
+    localStorage.clear();
+  }
+};
+const isEncryptionAvailable = () => {
+  return typeof crypto !== "undefined" && typeof crypto.subtle !== "undefined" && typeof TextEncoder !== "undefined" && typeof TextDecoder !== "undefined";
+};
+const fallbackStorage = {
+  set: (key, value) => localStorage.setItem(key, JSON.stringify(value)),
+  get: (key) => {
+    const value = localStorage.getItem(key);
+    try {
+      return value ? JSON.parse(value) : null;
+    } catch (e) {
+      return value;
+    }
+  },
+  remove: (key) => localStorage.removeItem(key),
+  clear: () => localStorage.clear()
+};
+const secureStore$1 = isEncryptionAvailable() ? secureStore : fallbackStorage;
 var propTypes = { exports: {} };
 var ReactPropTypesSecret_1;
 var hasRequiredReactPropTypesSecret;
@@ -30625,7 +30880,13 @@ const App = ({ error }) => {
         const decodedToken = jwtDecode(token2);
         const newWebsiteId = decodedToken.user_id;
         store("websiteId", newWebsiteId);
-        store("token", token2);
+        try {
+          yield secureStore$1.set("token", token2);
+          console.log("Token stored securely");
+        } catch (storageError) {
+          console.error("Failed to store token securely, using fallback:", storageError);
+          store("token", token2);
+        }
         setWebsiteId(newWebsiteId);
       } else {
         throw new Error("Login response did not contain a token.");
@@ -30753,17 +31014,32 @@ function initChatWidget(config = {}) {
   const httpLink = createHttpLink({
     uri: graphqlHttpUrl || "http://localhost:5001/graphql"
   });
-  const authLink = setContext((_2, { headers }) => {
-    const token2 = store("token");
-    if (token2 === null) {
+  const authLink = setContext((_0, _1) => __async(null, [_0, _1], function* (_2, { headers }) {
+    let token2 = null;
+    try {
+      token2 = yield secureStore$1.get("token");
+      console.log("Widget: Token retrieved successfully from secure storage");
+    } catch (error) {
+      console.error("Widget: Failed to retrieve token from secure storage:", error);
+      try {
+        token2 = store("token");
+        console.log("Widget: Token retrieved from fallback storage");
+      } catch (fallbackError) {
+        console.error("Widget: Failed to retrieve token from fallback storage:", fallbackError);
+        token2 = null;
+      }
+    }
+    if (!token2 || typeof token2 !== "string") {
+      console.log("Widget: No valid token available, proceeding without authentication");
       return headers;
     }
+    console.log("Widget: Adding authorization header with token");
     return {
       headers: __spreadProps(__spreadValues({}, headers), {
         authorization: `Bearer ${token2}`
       })
     };
-  });
+  }));
   const wsLink = new GraphQLWsLink(createClient({
     url: graphqlWsUrl || "ws://localhost:5001/graphql"
   }));
@@ -30832,24 +31108,31 @@ function initChatWidget(config = {}) {
   `;
   document.head.appendChild(style);
   const root2 = ReactDOM.createRoot(container);
-  const renderApp = (token2, error) => {
+  const renderApp = (token2, error) => __async(null, null, function* () {
     try {
       if (token2) {
         try {
           const decodedToken = jwtDecode(token2);
           store("websiteId", decodedToken.user_id);
-          store("token", token2);
+          try {
+            yield secureStore$1.set("token", token2);
+            console.log("Widget: Token stored securely in renderApp");
+          } catch (storageError) {
+            console.error("Widget: Failed to store token securely in renderApp, using fallback:", storageError);
+            store("token", token2);
+            console.log("Widget: Token stored using fallback storage in renderApp");
+          }
         } catch (tokenError) {
-          console.error("Failed to decode token:", tokenError);
+          console.error("Widget: Failed to decode token:", tokenError);
         }
       }
       root2.render(
         /* @__PURE__ */ jsxRuntimeExports.jsx(React$1.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(ClientApp, { error }) })
       );
     } catch (renderError) {
-      console.error("Failed to render app even with fallbacks:", renderError);
+      console.error("Widget: Failed to render app even with fallbacks:", renderError);
     }
-  };
+  });
   const attemptLogin = () => {
     loginClient.mutate({
       mutation: CONSUMER_LOGIN2,
@@ -30861,7 +31144,7 @@ function initChatWidget(config = {}) {
       const token2 = (_b = (_a2 = response == null ? void 0 : response.data) == null ? void 0 : _a2.consumerLogin) == null ? void 0 : _b.jwtToken;
       renderApp(token2, null);
     }).catch((error) => {
-      console.error("Login mutation failed", error);
+      console.error("Widget: Login mutation failed", error);
       renderApp(null, new Error("Failed to initialize chat. Please try again."));
     });
   };
