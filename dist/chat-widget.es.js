@@ -24378,52 +24378,84 @@ dt.div`
     border-radius: 0;
   }
 `;
-const TextField = ({ form, name, label, placeholder = "" }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormField, { children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { htmlFor: name, children: label }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx(
-    FormInput,
-    {
-      id: name,
-      $error: form.errors[name],
-      type: "text",
-      name,
-      placeholder,
-      onChange: form.handleChange,
-      onBlur: form.handleBlur,
-      value: form.values[name]
+const TextField = ({ form, name, label, placeholder = "" }) => {
+  const handleChange = (event) => {
+    try {
+      form.handleChange(event);
+    } catch (error) {
+      console.error("Error in TextField handleChange:", error);
     }
-  ),
-  form.touched[name] && form.errors[name] && /* @__PURE__ */ jsxRuntimeExports.jsxs(FormError, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(FormErrorHeader, { children: [
-      label,
-      " is not valid"
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: form.errors[name] })
-  ] })
-] });
-const TextAreaField = ({ form, name, label, placeholder = "" }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(FormField, { children: [
-  /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { htmlFor: name, children: label }),
-  /* @__PURE__ */ jsxRuntimeExports.jsx(
-    FormTextarea,
-    {
-      id: name,
-      $error: form.errors[name],
-      name,
-      placeholder,
-      onChange: form.handleChange,
-      onBlur: form.handleBlur,
-      value: form.values[name],
-      rows: 4
+  };
+  const handleBlur = (event) => {
+    try {
+      form.handleBlur(event);
+    } catch (error) {
+      console.error("Error in TextField handleBlur:", error);
     }
-  ),
-  form.touched[name] && form.errors[name] && /* @__PURE__ */ jsxRuntimeExports.jsxs(FormError, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsxs(FormErrorHeader, { children: [
-      label,
-      " is not valid"
-    ] }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: form.errors[name] })
-  ] })
-] });
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(FormField, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { htmlFor: name, children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      FormInput,
+      {
+        id: name,
+        $error: form.errors[name],
+        type: "text",
+        name,
+        placeholder,
+        onChange: handleChange,
+        onBlur: handleBlur,
+        value: form.values[name]
+      }
+    ),
+    form.touched[name] && form.errors[name] && /* @__PURE__ */ jsxRuntimeExports.jsxs(FormError, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(FormErrorHeader, { children: [
+        label,
+        " is not valid"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: form.errors[name] })
+    ] })
+  ] });
+};
+const TextAreaField = ({ form, name, label, placeholder = "" }) => {
+  const handleChange = (event) => {
+    try {
+      form.handleChange(event);
+    } catch (error) {
+      console.error("Error in TextAreaField handleChange:", error);
+    }
+  };
+  const handleBlur = (event) => {
+    try {
+      form.handleBlur(event);
+    } catch (error) {
+      console.error("Error in TextAreaField handleBlur:", error);
+    }
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(FormField, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(FormLabel, { htmlFor: name, children: label }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      FormTextarea,
+      {
+        id: name,
+        $error: form.errors[name],
+        name,
+        placeholder,
+        onChange: handleChange,
+        onBlur: handleBlur,
+        value: form.values[name],
+        rows: 4
+      }
+    ),
+    form.touched[name] && form.errors[name] && /* @__PURE__ */ jsxRuntimeExports.jsxs(FormError, { children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs(FormErrorHeader, { children: [
+        label,
+        " is not valid"
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: form.errors[name] })
+    ] })
+  ] });
+};
 const WaitingForAgent = ({ pendingChatsCount = 0, onCancel }) => {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: {
     padding: "40px 20px",
