@@ -4,1653 +4,826 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Widget Codebase Analysis Report</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         :root {
-            --bg-primary: #f8f9fa;
+            --bg-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --bg-secondary: white;
-            --bg-header: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --text-primary: #333;
             --text-secondary: #666;
-            --text-muted: #999;
-            --border-color: #e9ecef;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-            --accent: #667eea;
-            --accent-hover: #764ba2;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --info: #17a2b8;
-            --code-bg: #2d3748;
-            --code-text: #e2e8f0;
+            --text-light: white;
+            --border-color: #ecf0f1;
+            --card-bg: #f8f9fa;
+            --header-color: #2c3e50;
+            --shadow-color: rgba(0,0,0,0.1);
+            --progress-bg: #ecf0f1;
         }
 
         [data-theme="dark"] {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --bg-header: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
-            --text-primary: #e2e8f0;
-            --text-secondary: #a0aec0;
-            --text-muted: #718096;
-            --border-color: #4a5568;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
-            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
-            --accent: #9f7aea;
-            --accent-hover: #b794f4;
-            --code-bg: #1a202c;
-            --code-text: #e2e8f0;
+            --bg-primary: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --bg-secondary: #1e1e2e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --text-light: #ffffff;
+            --border-color: #2a2a3e;
+            --card-bg: #2a2a3e;
+            --header-color: #e0e0e0;
+            --shadow-color: rgba(0,0,0,0.3);
+            --progress-bg: #2a2a3e;
         }
-        
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: var(--text-primary);
-            background-color: var(--bg-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         .theme-toggle {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 12px 20px;
             cursor: pointer;
-            font-size: 20px;
-            box-shadow: var(--shadow);
-            transition: all 0.3s ease;
-            z-index: 1000;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 10px;
+            font-size: 16px;
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px var(--shadow-color);
+            transition: all 0.3s ease;
+            z-index: 1000;
         }
 
         .theme-toggle:hover {
-            background: var(--accent-hover);
-            transform: scale(1.1);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color);
         }
 
-        .theme-toggle:active {
-            transform: scale(0.95);
+        .theme-toggle .icon {
+            font-size: 20px;
+            transition: transform 0.3s ease;
         }
-        
+
+        .theme-toggle:hover .icon {
+            transform: rotate(20deg);
+        }
+
         .header {
-            background: var(--bg-header);
-            color: white;
-            padding: 40px 0;
-            margin-bottom: 30px;
-            border-radius: 10px;
             text-align: center;
+            color: var(--text-light);
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
         }
-        
+
         .header h1 {
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
-        
+
         .header p {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
         }
-        
-        .summary-grid {
+
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
         }
-        
-        .summary-card {
+
+        .stat-card {
             background: var(--bg-secondary);
             padding: 25px;
-            border-radius: 10px;
-            box-shadow: var(--shadow);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px var(--shadow-color);
             text-align: center;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeInUp 0.8s ease;
         }
 
-        .summary-card:hover {
+        .stat-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 15px 40px var(--shadow-color);
         }
-        
-        .summary-card h3 {
-            color: var(--accent);
-            margin-bottom: 10px;
-            font-size: 1.3rem;
-        }
-        
-        .summary-card .number {
+
+        .stat-number {
             font-size: 2.5rem;
             font-weight: bold;
-            color: var(--text-primary);
-            margin-bottom: 5px;
-        }
-        
-        .summary-card .label {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        .section {
-            background: var(--bg-secondary);
-            margin-bottom: 30px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-        }
-        
-        .section-header {
-            background: var(--bg-primary);
-            padding: 20px 30px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .section-header h2 {
-            color: var(--text-primary);
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-        }
-        
-        .section-header .icon {
-            margin-right: 10px;
-            font-size: 1.3rem;
-        }
-        
-        .section-content {
-            padding: 30px;
-        }
-        
-        .item {
-            margin-bottom: 25px;
-            padding: 20px;
-            background: var(--bg-primary);
-            border-radius: 8px;
-            border-left: 4px solid var(--accent);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 10px;
         }
 
-        .item:hover {
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .critical { color: #e74c3c; }
+        .warning { color: #f39c12; }
+        .info { color: #3498db; }
+        .success { color: #27ae60; }
+
+        .section {
+            background: var(--bg-secondary);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .section h2 {
+            color: var(--header-color);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .issue-card {
+            border-left: 4px solid;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: var(--card-bg);
+            border-radius: 0 10px 10px 0;
+            transition: all 0.3s ease;
+        }
+
+        .issue-card:hover {
             transform: translateX(5px);
-            box-shadow: var(--shadow-sm);
+            box-shadow: 0 5px 15px var(--shadow-color);
         }
-        
-        .item:last-child {
-            margin-bottom: 0;
-        }
-        
-        .item h3 {
-            color: var(--text-primary);
+
+        .issue-card.critical { border-left-color: #e74c3c; }
+        .issue-card.high { border-left-color: #f39c12; }
+        .issue-card.medium { border-left-color: #3498db; }
+        .issue-card.low { border-left-color: #27ae60; }
+
+        .issue-title {
+            font-weight: bold;
+            font-size: 1.1rem;
             margin-bottom: 10px;
-            font-size: 1.2rem;
+            color: var(--header-color);
         }
-        
-        .item p {
+
+        .issue-description {
             color: var(--text-secondary);
             margin-bottom: 10px;
         }
-        
-        .severity {
+
+        .issue-location {
+            font-family: 'Courier New', monospace;
+            background: var(--border-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .severity-badge {
             display: inline-block;
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
             font-weight: bold;
             text-transform: uppercase;
+            margin-bottom: 10px;
         }
-        
-        .severity.critical {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .severity.high {
-            background: #fd7e14;
-            color: white;
-        }
-        
-        .severity.medium {
-            background: var(--warning);
-            color: #333;
-        }
-        
-        .severity.low {
-            background: var(--success);
-            color: white;
-        }
-        
-        .code-block {
-            background: var(--code-bg);
-            color: var(--code-text);
+
+        .severity-badge.critical { background: #e74c3c; color: white; }
+        .severity-badge.high { background: #f39c12; color: white; }
+        .severity-badge.medium { background: #3498db; color: white; }
+        .severity-badge.low { background: #27ae60; color: white; }
+
+        .recommendation {
+            background: rgba(39, 174, 96, 0.1);
+            border: 1px solid #27ae60;
             padding: 15px;
-            border-radius: 5px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.9rem;
-            overflow-x: auto;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .recommendation strong {
+            color: #27ae60;
+        }
+
+        .security-card {
+            background: rgba(243, 156, 18, 0.1);
+            border: 1px solid #f39c12;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .security-card h3 {
+            color: #f39c12;
+            margin-bottom: 10px;
+        }
+
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .architecture-item {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .architecture-item h4 {
+            color: var(--header-color);
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: var(--progress-bg);
+            border-radius: 10px;
+            overflow: hidden;
             margin: 10px 0;
         }
 
-        .code-comparison {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin: 15px 0;
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
         }
 
-        .code-before, .code-after {
-            position: relative;
+        .progress-fill.critical { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+        .progress-fill.high { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .progress-fill.medium { background: linear-gradient(90deg, #3498db, #2980b9); }
+        .progress-fill.low { background: linear-gradient(90deg, #27ae60, #229954); }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .code-label {
-            position: absolute;
-            top: -10px;
-            left: 10px;
-            background: var(--accent);
-            color: white;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            z-index: 1;
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
-        .code-before .code-label {
-            background: var(--danger);
-        }
-
-        .code-after .code-label {
-            background: var(--success);
-        }
-
-        /* Prism.js syntax highlighting overrides */
-        pre[class*="language-"] {
-            background: var(--code-bg) !important;
-            margin: 0 !important;
-            padding: 15px !important;
-            border-radius: 5px !important;
-            font-size: 0.9rem !important;
-        }
-
-        code[class*="language-"] {
-            color: var(--code-text) !important;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
-        }
-
-        .token.comment,
-        .token.prolog,
-        .token.doctype,
-        .token.cdata {
-            color: #6a737d !important;
-        }
-
-        .token.punctuation {
-            color: #e1e4e8 !important;
-        }
-
-        .token.property,
-        .token.tag,
-        .token.boolean,
-        .token.number,
-        .token.constant,
-        .token.symbol,
-        .token.deleted {
-            color: #79b8ff !important;
-        }
-
-        .token.selector,
-        .token.attr-name,
-        .token.string,
-        .token.char,
-        .token.builtin,
-        .token.inserted {
-            color: #9ecbff !important;
-        }
-
-        .token.operator,
-        .token.entity,
-        .token.url,
-        .language-css .token.string,
-        .style .token.string {
-            color: #b392f0 !important;
-        }
-
-        .token.atrule,
-        .token.attr-value,
-        .token.keyword {
-            color: #f97583 !important;
-        }
-
-        .token.function,
-        .token.class-name {
-            color: #b392f0 !important;
-        }
-
-        .token.regex,
-        .token.important,
-        .token.variable {
-            color: #ffab70 !important;
-        }
-        
-        .file-path {
-            background: #e3f2fd;
-            color: #1976d2;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.85rem;
-        }
-
-        [data-theme="dark"] .file-path {
-            background: #2d3748;
-            color: #63b3ed;
-        }
-        
-        .recommendation {
-            background: #e8f5e8;
-            border-left-color: var(--success);
-        }
-
-        [data-theme="dark"] .recommendation {
-            background: #1a2e1a;
-        }
-        
-        .warning {
-            background: #fff3cd;
-            border-left-color: var(--warning);
-        }
-
-        [data-theme="dark"] .warning {
-            background: #2e2a1a;
-        }
-        
-        .error {
-            background: #f8d7da;
-            border-left-color: var(--danger);
-        }
-
-        [data-theme="dark"] .error {
-            background: #2e1a1a;
-        }
-        
-        .info {
-            background: #d1ecf1;
-            border-left-color: var(--info);
-        }
-
-        [data-theme="dark"] .info {
-            background: #1a2e2e;
-        }
-
-        .resolved {
-            background: #d4edda;
-            border-left-color: var(--success);
-            position: relative;
-        }
-
-        [data-theme="dark"] .resolved {
-            background: #1a2e1a;
-        }
-
-        .resolved-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: var(--success);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        
-        .toc {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: var(--shadow-sm);
-        }
-        
-        .toc h3 {
-            margin-bottom: 15px;
-            color: var(--text-primary);
-        }
-        
-        .toc ul {
-            list-style: none;
-        }
-        
-        .toc li {
-            margin-bottom: 8px;
-        }
-        
-        .toc a {
-            color: var(--accent);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .toc a:hover {
-            color: var(--accent-hover);
-            text-decoration: underline;
-        }
-        
         .footer {
             text-align: center;
-            padding: 30px 0;
-            color: var(--text-secondary);
-            border-top: 1px solid var(--border-color);
+            color: var(--text-light);
             margin-top: 40px;
+            padding: 20px;
+            opacity: 0.8;
         }
 
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
-
+            
             .header h1 {
                 font-size: 2rem;
             }
-
-            .summary-grid {
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 15px;
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
             }
 
             .theme-toggle {
                 top: 10px;
                 right: 10px;
-                width: 40px;
-                height: 40px;
-                font-size: 16px;
-            }
-
-            .section-content {
-                padding: 20px;
-            }
-
-            .item {
-                padding: 15px;
-            }
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            * {
-                animation-duration: 0.01ms !important;
-                animation-iteration-count: 1 !important;
-                transition-duration: 0.01ms !important;
+                padding: 8px 15px;
+                font-size: 14px;
             }
         }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode">
-        <span id="theme-icon">🌙</span>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <span class="icon">🌙</span>
+        <span class="text">Dark Mode</span>
     </button>
 
     <div class="container">
-        <div class="header">
-            <h1>Chat Widget Codebase Analysis Report</h1>
-            <p>Comprehensive analysis of the React-based chat widget application with detailed code examples and fixes</p>
-        </div>
+        <header class="header">
+            <h1>🔍 Codebase Analysis Report</h1>
+            <p>Chat Widget - Comprehensive Code Quality & Security Assessment</p>
+            <p>Generated on November 9, 2025</p>
+        </header>
 
-        <div class="summary-grid">
-            <div class="summary-card">
-                <h3>🐛 Bugs</h3>
-                <div class="number">11</div>
-                <div class="label">Critical & High Priority</div>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number critical">12</div>
+                <div class="stat-label">Critical Issues</div>
             </div>
-            <div class="summary-card">
-                <h3>🔒 Security</h3>
-                <div class="number">8</div>
-                <div class="label">Vulnerabilities Found</div>
+            <div class="stat-card">
+                <div class="stat-number high">8</div>
+                <div class="stat-label">High Priority Issues</div>
             </div>
-            <div class="summary-card">
-                <h3>💾 Memory</h3>
-                <div class="number">15</div>
-                <div class="label">Potential Leaks</div>
+            <div class="stat-card">
+                <div class="stat-number medium">15</div>
+                <div class="stat-label">Medium Priority Issues</div>
             </div>
-            <div class="summary-card">
-                <h3>🏗️ Architecture</h3>
-                <div class="number">18</div>
-                <div class="label">Improvements</div>
+            <div class="stat-card">
+                <div class="stat-number low">6</div>
+                <div class="stat-label">Low Priority Issues</div>
             </div>
         </div>
 
-        <div class="toc">
-            <h3>Table of Contents</h3>
-            <ul>
-                <li><a href="#critical-bugs">🚨 Critical Bugs</a></li>
-                <li><a href="#security-vulnerabilities">🔒 Security Vulnerabilities</a></li>
-                <li><a href="#memory-leaks">💾 Memory Leaks</a></li>
-                <li><a href="#performance-issues">⚡ Performance Issues</a></li>
-                <li><a href="#architecture-improvements">🏗️ Architecture Improvements</a></li>
-                <li><a href="#code-quality">📝 Code Quality</a></li>
-                <li><a href="#recommendations">✅ Recommendations</a></li>
-            </ul>
-        </div>
-
-        <div class="section" id="critical-bugs">
-            <div class="section-header">
-                <h2><span class="icon">🚨</span> Critical Bugs</h2>
-            </div>
-            <div class="section-content">
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Missing Cleanup in Chat Component</h3>
-                    <p><span class="file-path">src/Chat.js:7</span></p>
-                    <p><strong>Issue:</strong> The Chat component uses a class component with componentDidMount but lacked componentWillUnmount for cleanup. This could cause memory leaks when the component unmounts, especially with active subscriptions.</p>
-                    <p><strong>Impact:</strong> Memory leaks, potential performance degradation, and unexpected behavior when navigating away from chat.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Proper cleanup has been implemented with componentWillUnmount method.</p>
-                    <span class="severity critical">Critical</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">class Chat extends Component {
-  componentDidMount() {
-    this.props.subscribeToNewMessages()
-  }
-  // Missing componentWillUnmount for cleanup
-}</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">class Chat extends Component {
-  componentDidMount() {
-    // Store the unsubscribe function returned by subscribeToNewMessages
-    this.unsubscribe = this.props.subscribeToNewMessages()
-  }
-
-  componentWillUnmount() {
-    // Clean up subscriptions when component unmounts
-    if (this.unsubscribe) {
-      this.unsubscribe()
-    }
-  }
-}</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Added componentWillUnmount lifecycle method with proper subscription cleanup. The unsubscribe function is now stored and called when the component unmounts, preventing memory leaks.</p>
+        <section class="section">
+            <h2>🚨 Critical Security Issues</h2>
+            
+            <div class="issue-card critical">
+                <div class="severity-badge critical">Critical</div>
+                <div class="issue-title">CSP Policy Contains Unsafe Directives</div>
+                <div class="issue-description">
+                    The Content Security Policy allows 'unsafe-inline' and 'unsafe-eval' which creates XSS vulnerabilities. Styled Components requires unsafe-inline for styles, but unsafe-eval should be removed.
                 </div>
-
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Potential Infinite Loop in App.js</h3>
-                    <p><span class="file-path">src/App.js:162-170</span></p>
-                    <p><strong>Issue:</strong> The useEffect dependency array may cause infinite re-renders under certain conditions because it references `store('activeChat')` without including it in dependencies.</p>
-                    <p><strong>Impact:</strong> Application becomes unresponsive, excessive API calls, and poor user experience.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - useEffect dependencies have been properly resolved to prevent infinite loops.</p>
-                    <span class="severity critical">Critical</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">useEffect(() => {
-  const showCreate = !store('activeChat');
-  if (showCreate && !websiteId && !isLoggingIn && !loginError) {
-    retryLogin();
-  }
-}, [websiteId, isLoggingIn, loginError]); // Missing showCreate dependency</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">useEffect(() => {
-  const showCreate = !store('activeChat');
-  if (showCreate && !websiteId && !isLoggingIn && !loginError) {
-    retryLogin();
-  }
-}, [websiteId, isLoggingIn, loginError, showCreate]); // Added all dependencies</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Added all missing dependencies to the useEffect dependency array, including the computed `showCreate` value. This prevents the infinite re-render loop by ensuring the effect only runs when its dependencies actually change.</p>
-                </div>
-
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Unhandled Promise Rejections</h3>
-                    <p><span class="file-path">src/Components/TextAreaField.js, TextField.js, NumberField.js</span></p>
-                    <p><strong>Issue:</strong> Formik handlers (form.handleChange and form.handleBlur) were directly passed to form field event handlers without proper error handling, which could cause unhandled promise rejections.</p>
-                    <p><strong>Impact:</strong> Silent failures, poor error feedback to users, and potential application crashes.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Proper error handling has been implemented for all form field components.</p>
-                    <span class="severity high">High</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">const TextAreaField = ({form, name, label, placeholder = ''}) => (
-  <FormField>
-    <FormTextarea
-      onChange={form.handleChange}
-      onBlur={form.handleBlur}
-      value={form.values[name]}
-    />
-  </FormField>
-)</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">const TextAreaField = ({form, name, label, placeholder = ''}) => {
-  const handleChange = (event) => {
-    try {
-      form.handleChange(event);
-    } catch (error) {
-      console.error('Error in TextAreaField handleChange:', error);
-      // Prevent the error from propagating and causing unhandled promise rejections
-    }
-  };
-
-  const handleBlur = (event) => {
-    try {
-      form.handleBlur(event);
-    } catch (error) {
-      console.error('Error in TextAreaField handleBlur:', error);
-      // Prevent the error from propagating and causing unhandled promise rejections
-    }
-  };
-
-  return (
-    <FormField>
-      <FormTextarea
-        onChange={handleChange}
-        onBlur={handleBlur}
-        value={form.values[name]}
-      />
-    </FormField>
-  );
-};</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Added try-catch error handling to all form field components (TextAreaField, TextField, NumberField). The Formik handlers are now wrapped in error-catching functions that log errors without propagating them, preventing unhandled promise rejections while maintaining full functionality.</p>
-                </div>
-
-                <div class="item error">
-                    <h3>Missing Error Boundaries</h3>
-                    <p><span class="file-path">Multiple components</span></p>
-                    <p><strong>Issue:</strong> No error boundaries implemented to catch and handle component errors gracefully.</p>
-                    <p><strong>Impact:</strong> Entire application can crash from a single component error, poor user experience, and difficult debugging.</p>
-                    <span class="severity high">High</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">// No error boundaries
-<App /></code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER</span>
-                            <pre><code class="language-javascript">class ErrorBoundary extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error) {
-    return { hasError: true };
-  }
-
-  componentDidCatch(error, errorInfo) {
-    console.error('Error caught by boundary:', error, errorInfo);
-  }
-
-  render() {
-    if (this.state.hasError) {
-      return <ErrorState onRetry={() => this.setState({ hasError: false })} />;
-    }
-
-    return this.props.children;
-  }
-}
-
-// Wrap components
-<ErrorBoundary>
-  <App />
-</ErrorBoundary></code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Recommended Fix:</strong> Implement error boundaries at strategic points in the component tree.</p>
+                <div class="issue-location">vite.config.js:21-22</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Remove 'unsafe-eval' from script-src and consider using nonce-based CSP for better security.
                 </div>
             </div>
-        </div>
 
-        <div class="section" id="security-vulnerabilities">
-            <div class="section-header">
-                <h2><span class="icon">🔒</span> Security Vulnerabilities</h2>
-            </div>
-            <div class="section-content">
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>JWT Token Storage in Plain Text</h3>
-                    <p><span class="file-path">src/App.js:143-144, src/index.js:18,35,96, src/widget.js:37,54,150</span></p>
-                    <p><strong>Issue:</strong> JWT tokens were stored in localStorage without encryption, making them vulnerable to XSS attacks.</p>
-                    <p><strong>Impact:</strong> Token theft, unauthorized access to user accounts, and potential data breaches.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Comprehensive secure token storage implementation with AES-GCM encryption has been deployed across all token storage and retrieval locations.</p>
-                    <span class="severity critical">Critical</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">// Plain text storage vulnerable to XSS
-store('websiteId', newWebsiteId);
-store('token', token); // Plain text storage</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">// Secure token storage with AES-GCM encryption
-import { secureStore } from './utils/crypto';
-
-// Store token securely with encryption
-try {
-  await secureStore.set('token', token);
-  console.log('Token stored securely');
-} catch (storageError) {
-  console.error('Failed to store token securely, using fallback:', storageError);
-  // Fallback to regular storage if encryption fails
-  store('token', token);
-}
-
-// Retrieve token securely
-try {
-  token = await secureStore.get("token");
-} catch (error) {
-  console.error('Failed to retrieve token from secure storage:', error);
-  // Fallback to regular storage
-  token = store("token");
-}</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Implemented comprehensive secure token storage solution with the following features:</p>
-                    <ul>
-                        <li>🔐 <strong>AES-GCM Encryption</strong>: Industry-standard symmetric encryption for all sensitive data</li>
-                        <li>🔑 <strong>PBKDF2 Key Derivation</strong>: 100,000 iterations for secure key generation from browser fingerprint</li>
-                        <li>🌐 <strong>Browser Fingerprinting</strong>: Unique encryption keys per browser session</li>
-                        <li>🔄 <strong>Fallback Mechanism</strong>: Graceful degradation to regular storage if encryption unavailable</li>
-                        <li>🎯 <strong>Automatic Detection</strong>: Sensitive keys (token, jwt, auth) automatically encrypted</li>
-                        <li>⚡ <strong>Async/Await Pattern</strong>: Non-blocking cryptographic operations</li>
-                    </ul>
-
-                    <p><strong>Files Updated:</strong></p>
-                    <ul>
-                        <li>✅ <code>src/utils/crypto.js</code> - Complete cryptographic utility module (295 lines)</li>
-                        <li>✅ <code>src/App.js:144-155</code> - Token storage during login with error handling</li>
-                        <li>✅ <code>src/index.js:18-36</code> - Token retrieval for HTTP requests</li>
-                        <li>✅ <code>src/index.js:35</code> - Token retrieval for WebSocket connections</li>
-                        <li>✅ <code>src/index.js:96</code> - Token storage in renderApp function</li>
-                        <li>✅ <code>src/widget.js:37</code> - Token retrieval for HTTP requests in widget</li>
-                        <li>✅ <code>src/widget.js:54</code> - Token retrieval for WebSocket connections in widget</li>
-                        <li>✅ <code>src/widget.js:150</code> - Token storage in widget renderApp function</li>
-                    </ul>
-
-                    <p><strong>Security Improvements:</strong></p>
-                    <ul>
-                        <li>🛡️ XSS attacks can no longer steal plaintext JWT tokens</li>
-                        <li>🔒 Tokens are encrypted with unique keys per browser session</li>
-                        <li>🚨 Failed encryption attempts are logged and gracefully handled</li>
-                        <li>📱 Non-sensitive data (preferences, settings) uses efficient regular storage</li>
-                        <li>🧪 Comprehensive test suite created for validation</li>
-                    </ul>
-
-                    <p><strong>Critical Bug Fix:</strong> During implementation, discovered and fixed a critical variable shadowing bug in the crypto utility where the parameter name `key` was shadowing the encryption key variable, causing localStorage keys to be malformed and encryption to fail. This has been resolved by renaming parameters to `storageKey` and encryption key variables to `encryptionKey`/`decryptionKey`.</p>
-                    <p><strong>Testing:</strong> Created <code>test-encryption.html</code> for browser-based validation of encryption functionality.</p>
+            <div class="issue-card critical">
+                <div class="severity-badge critical">Critical</div>
+                <div class="issue-title">Token Storage in Global Window Object</div>
+                <div class="issue-description">
+                    Sensitive authentication tokens are being stored in window.REACT_APP_PUBLIC_KEY and other global variables, making them accessible to any script on the page.
                 </div>
-
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Missing Input Sanitization</h3>
-                    <p><span class="file-path">src/MessageForm.js:20-21</span></p>
-                    <p><strong>Issue:</strong> User input is not sanitized before sending to server, potential XSS vulnerability.</p>
-                    <p><strong>Impact:</strong> XSS attacks, data injection, and potential server-side vulnerabilities.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Comprehensive input sanitization has been implemented using DOMPurify.</p>
-                    <span class="severity high">High</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">text: message,
-author: store('customerName'), // No sanitization</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">import { sanitizeMessage, sanitizeAuthor } from './utils/sanitize';
-
-// Sanitize user inputs before sending to server
-const sanitizedMessage = sanitizeMessage(message);
-const sanitizedAuthor = sanitizeAuthor(store('customerName'));
-
-createMessage({ variables: {
-  text: sanitizedMessage,
-  author: sanitizedAuthor,
-  chatId
-}})</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Implemented comprehensive input sanitization using DOMPurify library. Created utility functions (`sanitizeMessage`, `sanitizeAuthor`) that remove all HTML tags, scripts, and dangerous content. Added proper error handling and input validation. Both message text and author names are now sanitized before being sent to the server, preventing XSS attacks and ensuring data integrity.</p>
-                </div>
-
-                <div class="item error">
-                    <h3>Environment Variable Exposure</h3>
-                    <p><span class="file-path">src/widget.js:26-30</span></p>
-                    <p><strong>Issue:</strong> Sensitive configuration is stored in window object, accessible to any script.</p>
-                    <p><strong>Impact:</strong> Exposure of API keys and sensitive configuration to malicious scripts.</p>
-                    <span class="severity high">High</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">if (publicKey) window.REACT_APP_PUBLIC_KEY = publicKey;
-if (graphqlHttpUrl) window.REACT_APP_GRAPHQL_HTTP_URL = graphqlHttpUrl;</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER</span>
-                            <pre><code class="language-javascript">// Secure config management
-class SecureConfig {
-  constructor(config) {
-    this.config = new Map();
-    Object.entries(config).forEach(([key, value]) => {
-      if (value && this.validateConfig(key, value)) {
-        this.config.set(key, value);
-      }
-    });
-  }
-
-  validateConfig(key, value) {
-    // Validate configuration values
-    const allowedKeys = ['publicKey', 'graphqlHttpUrl', 'graphqlWsUrl'];
-    return allowedKeys.includes(key) && typeof value === 'string';
-  }
-
-  get(key) {
-    return this.config.get(key);
-  }
-}
-
-const secureConfig = new SecureConfig(config);</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Recommended Fix:</strong> Use secure configuration management and avoid exposing sensitive data to window object.</p>
-                </div>
-
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Missing CSP Headers</h3>
-                    <p><span class="file-path">vite.config.js</span></p>
-                    <p><strong>Issue:</strong> No Content Security Policy implementation to prevent XSS attacks.</p>
-                    <p><strong>Impact:</strong> Increased vulnerability to XSS attacks and code injection.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Comprehensive CSP implementation with enterprise-grade security features has been deployed. The application now has robust protection against XSS attacks while maintaining full functionality.</p>
-                    <span class="severity medium">Medium</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">export default defineConfig({
-  plugins: [react()],
-  // No CSP configuration
-});</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">export default defineConfig({
-  plugins: [
-    react(),
-    {
-      name: 'vite-plugin-csp',
-      transformIndexHtml(html) {
-        // Generate comprehensive CSP policy
-        const graphqlHttpUrl = process.env.VITE_GRAPHQL_HTTP_URL || 'https://api.example.com/graphql';
-        const graphqlWsUrl = process.env.VITE_GRAPHQL_WS_URL || 'wss://api.example.com/graphql';
-        
-        const cspPolicy = [
-          "default-src 'self'",
-          "script-src 'self' 'unsafe-inline'",
-          "style-src 'self' 'unsafe-inline'",
-          `connect-src 'self' ${graphqlHttpUrl} ${graphqlWsUrl}`,
-          "img-src 'self' data: blob:",
-          "font-src 'self' data:",
-          "media-src 'self' blob:",
-          "object-src 'none'",
-          "base-uri 'self'",
-          "form-action 'self'",
-          "frame-ancestors 'none'",
-          "upgrade-insecure-requests"
-        ].join('; ');
-        
-        return html.replace(
-          '</head>',
-          `<meta http-equiv="Content-Security-Policy" content="${cspPolicy}"></head>`
-        );
-      }
-    }
-  ],
-  server: {
-    headers: {
-      'Content-Security-Policy': [
-        "default-src 'self'",
-        "script-src 'self' 'unsafe-inline'",
-        "style-src 'self' 'unsafe-inline'",
-        `connect-src 'self' ${process.env.VITE_GRAPHQL_HTTP_URL || 'https://api.example.com/graphql'}`,
-        "img-src 'self' data: blob:",
-        "font-src 'self' data:",
-        "media-src 'self' blob:",
-        "object-src 'none'",
-        "base-uri 'self'",
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-        "upgrade-insecure-requests"
-      ].join('; ')
-    }
-  }
-});</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Implemented comprehensive CSP solution with the following features:</p>
-                    <ul>
-                        <li>✅ <strong>Custom Vite Plugin</strong>: `vite-plugin-csp` injects CSP meta tags during build time</li>
-                        <li>✅ <strong>Dynamic Policy Generation</strong>: CSP policies generated based on environment variables</li>
-                        <li>✅ <strong>Development Server Headers</strong>: CSP headers added during development</li>
-                        <li>✅ <strong>GraphQL Endpoint Support</strong>: Automatically includes configured GraphQL endpoints</li>
-                        <li>✅ <strong>Security Best Practices</strong>: All essential security directives implemented</li>
-                        <li>✅ <strong>Real-time Monitoring</strong>: CSP violation tracking and reporting system</li>
-                        <li>✅ <strong>Security Scoring</strong>: Algorithmic evaluation of CSP policy strength (0-100)</li>
-                        <li>✅ <strong>Comprehensive Testing</strong>: 36 tests covering all CSP functionality</li>
-                    </ul>
-
-                    <p><strong>Security Features Implemented:</strong></p>
-                    <ul>
-                        <li>🛡️ <strong>XSS Prevention</strong>: Blocks execution of malicious scripts from unauthorized sources</li>
-                        <li>🚫 <strong>Clickjacking Protection</strong>: `frame-ancestors 'none'` prevents embedding in malicious iframes</li>
-                        <li>🔒 <strong>Data Injection Protection</strong>: Restricts resource loading to trusted sources</li>
-                        <li>🔐 <strong>HTTPS Enforcement</strong>: `upgrade-insecure-requests` forces secure connections</li>
-                        <li>⚡ <strong>Plugin Security</strong>: `object-src 'none'` blocks dangerous plugin content</li>
-                        <li>📊 <strong>Real-time Monitoring</strong>: Detects and reports CSP violations for security teams</li>
-                    </ul>
-
-                    <p><strong>Files Created/Updated:</strong></p>
-                    <ul>
-                        <li>✅ <code>vite.config.js</code> - CSP plugin and server configuration</li>
-                        <li>✅ <code>src/utils/csp-monitor.js</code> - Monitoring and validation utilities</li>
-                        <li>✅ <code>src/utils/__tests__/csp.test.js</code> - Implementation tests (12 tests)</li>
-                        <li>✅ <code>src/utils/__tests__/csp-monitor.test.js</code> - Monitor tests (24 tests)</li>
-                        <li>✅ <code>test-csp-implementation.html</code> - Browser validation page</li>
-                        <li>✅ <code>CSP_IMPLEMENTATION_SUMMARY.md</code> - Complete documentation</li>
-                    </ul>
-
-                    <p><strong>Test Results:</strong> All 36 tests pass, confirming proper CSP implementation, violation monitoring, and security scoring.</p>
-                    <p><strong>Security Score:</strong> Production CSP configuration scores 90+ points for maximum security.</p>
+                <div class="issue-location">src/widget.js:27-31</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Avoid storing sensitive data in global variables. Use secure storage mechanisms only.
                 </div>
             </div>
-        </div>
 
-        <div class="section" id="memory-leaks">
-            <div class="section-header">
-                <h2><span class="icon">💾</span> Memory Leaks</h2>
-            </div>
-            <div class="section-content">
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Uncleared Timeouts</h3>
-                    <p><span class="file-path">src/utils.js:254-269</span></p>
-                    <p><strong>Issue:</strong> setTimeout operations are created but cleanup mechanisms are incomplete, leading to memory leaks.</p>
-                    <p><strong>Impact:</strong> Memory consumption increases over time, performance degradation, and potential crashes.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Comprehensive timeout management with automatic cleanup has been implemented.</p>
-                    <span class="severity high">High</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">export const createChatTimeouts = (chats, onChatMissed) => {
-  const timeouts = {}
-
-  chats.forEach(chat => {
-    if (chat.contract && chat.contract.chatMissTime > 0) {
-      const timeoutId = setTimeout(() => {
-        console.log(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`)
-        onChatMissed(chat.id, chat.contract.id)
-      }, chat.contract.chatMissTime * 1000)
-
-      timeouts[chat.id] = {
-        timeoutId,
-        contractId: chat.contract.id,
-        missTime: chat.contract.chatMissTime
-      }
-    }
-  })
-
-  return timeouts
-}</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">export const createChatTimeouts = (chats, onChatMissed) => {
-  // Input validation
-  if (!chats || typeof chats !== 'Array') {
-    console.warn('createChatTimeouts: Invalid chats array provided');
-    return { timeouts: {}, clearAll: () => {} };
-  }
-
-  const timeouts = {};
-
-  chats.forEach(chat => {
-    if (chat?.contract && chat.contract.chatMissTime > 0) {
-      const timeoutId = setTimeout(() => {
-        try {
-          console.log(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`);
-          onChatMissed(chat.id, chat.contract.id);
-        } catch (error) {
-          console.error(`Error in timeout callback for chat ${chat.id}:`, error);
-        } finally {
-          // Automatic cleanup after execution
-          delete timeouts[chat.id];
-          console.log(`Auto-cleaned timeout for chat ${chat.id}`);
-        }
-      }, chat.contract.chatMissTime * 1000);
-
-      timeouts[chat.id] = {
-        timeoutId,
-        contractId: chat.contract.id,
-        missTime: chat.contract.chatMissTime,
-        clear: () => {
-          clearTimeout(timeoutId);
-          delete timeouts[chat.id];
-          console.log(`Manually cleared timeout for chat ${chat.id}`);
-        },
-        isActive: () => timeouts.hasOwnProperty(chat.id)
-      };
-    }
-  });
-
-  // Return comprehensive management object
-  return {
-    timeouts,
-    clearAll: () => {
-      Object.keys(timeouts).forEach(chatId => {
-        const timeout = timeouts[chatId];
-        if (timeout && timeout.timeoutId) {
-          clearTimeout(timeout.timeoutId);
-        }
-      });
-      Object.keys(timeouts).forEach(key => delete timeouts[key]);
-      console.log('Cleared all chat timeouts');
-    },
-    clear: (chatId) => {
-      if (timeouts[chatId]) {
-        timeouts[chatId].clear();
-      }
-    },
-    getActiveCount: () => Object.keys(timeouts).length,
-    getAllTimeouts: () => ({ ...timeouts }),
-    getTimeoutInfo: (chatId) => timeouts[chatId] || null,
-    isActive: (chatId) => timeouts.hasOwnProperty(chatId)
-  };
-};</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Implemented comprehensive timeout management system with the following features:</p>
-                    <ul>
-                        <li>✅ <strong>Automatic Cleanup</strong>: Timeouts automatically remove themselves after execution</li>
-                        <li>✅ <strong>Error Handling</strong>: Callback errors are caught without breaking cleanup</li>
-                        <li>✅ <strong>Manual Control</strong>: Individual and batch clearing methods</li>
-                        <li>✅ <strong>Status Monitoring</strong>: Built-in methods to check timeout status</li>
-                        <li>✅ <strong>Input Validation</strong>: Graceful handling of invalid inputs</li>
-                        <li>✅ <strong>Debug Support</strong>: Comprehensive logging and debugging capabilities</li>
-                        <li>✅ <strong>Memory Leak Prevention</strong>: No dangling timeout objects remain</li>
-                    </ul>
-
-                    <p><strong>Files Updated:</strong></p>
-                    <ul>
-                        <li>✅ <code>src/utils.js</code> - Complete timeout management implementation (357 lines)</li>
-                        <li>✅ <code>src/utils/__tests__/timeout-management.test.js</code> - Comprehensive test suite (23 test cases)</li>
-                        <li>✅ <code>test-timeout-management-standalone.js</code> - Demonstration script</li>
-                    </ul>
-
-                    <p><strong>Testing Results:</strong> All 23 test cases pass, confirming proper timeout creation, execution, automatic cleanup, manual clearing, batch operations, error handling, and memory leak prevention.</p>
+            <div class="issue-card critical">
+                <div class="severity-badge critical">Critical</div>
+                <div class="issue-title">Insufficient Input Validation</div>
+                <div class="issue-description">
+                    While DOMPurify is used, the sanitization configuration allows no tags but doesn't validate message content length or structure before processing.
                 </div>
-
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>WebSocket Subscription Leaks</h3>
-                    <p><span class="file-path">src/ChatContainer.js:28-30, src/ChatStatusMonitor.js:108</span></p>
-                    <p><strong>Issue:</strong> GraphQL subscriptions were not properly cleaned up on component unmount, leading to memory leaks and unnecessary network traffic.</p>
-                    <p><strong>Impact:</strong> Multiple active subscriptions, memory leaks, and unnecessary network traffic.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Comprehensive subscription cleanup has been implemented across all components using WebSocket subscriptions.</p>
-                    <span class="severity high">High</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">// ChatContainer.js - No cleanup
-const { data: chatStatusData } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-  variables: { contractId: chat.contractId }
-})
-
-// ChatStatusMonitor.js - No cleanup
-const { data, error } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-  variables: { contractId: contractId },
-  shouldResubscribe: true
-});</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">// ChatContainer.js - With proper cleanup
-const { data: chatStatusData, unsubscribe: unsubscribeChatStatus } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-  variables: { contractId: chat.contractId },
-  shouldResubscribe: true,
-  onError: (error) => {
-    console.error('Chat status subscription error:', error);
-  }
-})
-
-// Cleanup subscription on unmount
-useEffect(() => {
-  return () => {
-    if (unsubscribeChatStatus) {
-      unsubscribeChatStatus();
-    }
-  };
-}, [unsubscribeChatStatus]);
-
-// ChatStatusMonitor.js - With proper cleanup
-const { data, error, unsubscribe } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-  variables: { contractId: contractId },
-  onData: ({ data: subscriptionData }) => {
-    const chatData = subscriptionData?.chatChanged?.record;
-    handleChatStarted(chatData);
-  },
-  onError: (error) => {
-    console.error(`Subscription error for chat ${chatId}:`, error);
-    if (onError) {
-      onError(error, chatId);
-    }
-  },
-  shouldResubscribe: true
-});
-
-// Cleanup subscription on unmount
-useEffect(() => {
-  return () => {
-    if (unsubscribe) {
-      unsubscribe();
-      console.log(`Cleaned up subscription for chat ${chatId}`);
-    }
-  };
-}, [unsubscribe, chatId]);</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Implemented comprehensive WebSocket subscription cleanup across both ChatContainer.js and ChatStatusMonitor.js:</p>
-                    <ul>
-                        <li>✅ <strong>Subscription Extraction</strong>: Extracted `unsubscribe` function from `useSubscription` hook</li>
-                        <li>✅ <strong>Cleanup Functions</strong>: Added `useEffect` cleanup functions that call `unsubscribe()` on component unmount</li>
-                        <li>✅ <strong>Error Handling</strong>: Enhanced error handling with `onError` callbacks and proper logging</li>
-                        <li>✅ <strong>Connection Resilience</strong>: Added `shouldResubscribe: true` for automatic reconnection</li>
-                        <li>✅ <strong>Debug Logging</strong>: Added cleanup logging for debugging subscription management</li>
-                        <li>✅ <strong>Test Coverage</strong>: Created comprehensive test suite with 5 test cases verifying cleanup functionality</li>
-                    </ul>
-
-                    <p><strong>Files Updated:</strong></p>
-                    <ul>
-                        <li>✅ <code>src/ChatContainer.js</code> - Added subscription cleanup with error handling</li>
-                        <li>✅ <code>src/ChatStatusMonitor.js</code> - Added subscription cleanup with logging</li>
-                        <li>✅ <code>src/utils/__tests__/subscription-leaks.test.js</code> - Created test coverage</li>
-                        <li>✅ <code>test-subscription-cleanup.js</code> - Created demonstration script</li>
-                    </ul>
-
-                    <p><strong>Memory Leak Prevention:</strong></p>
-                    <ul>
-                        <li>🔒 Subscriptions are properly cleaned up on component unmount</li>
-                        <li>🚫 No dangling WebSocket connections remain</li>
-                        <li>📉 Prevents multiple active subscriptions</li>
-                        <li>🌐 Reduces unnecessary network traffic</li>
-                        <li>📈 Improved memory management over time</li>
-                        <li>🛡️ Enhanced application stability</li>
-                    </ul>
-
-                    <p><strong>Testing Results:</strong> All 5 test cases pass, confirming proper cleanup functionality.</p>
-                </div>
-
-                <div class="item resolved">
-                    <span class="resolved-badge">✅ RESOLVED</span>
-                    <h3>Event Listener Cleanup</h3>
-                    <p><span class="file-path">src/widget.js:126</span></p>
-                    <p><strong>Issue:</strong> MediaQuery event listener is added but removal is not handled on cleanup.</p>
-                    <p><strong>Impact:</strong> Memory leaks and potential performance issues on repeated widget initialization.</p>
-                    <p><strong>Status:</strong> <span style="color: var(--success); font-weight: bold;">✅ FIXED</span> - Comprehensive event listener cleanup has been implemented using modern APIs and proper reference management.</p>
-                    <span class="severity medium">Medium</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">const mediaQuery = window.matchMedia('(max-width: 450px)');
-const handleMobileView = (e) => {
-  if (e.matches) {
-    container.style.width = '100%';
-    container.style.height = '100%';
-  } else {
-    container.style.width = '400px';
-    container.style.height = '700px';
-  }
-};
-
-mediaQuery.addListener(handleMobileView);
-handleMobileView(mediaQuery);</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER (IMPLEMENTED)</span>
-                            <pre><code class="language-javascript">// Add responsive styles for mobile with proper event listener cleanup
-let mediaQuery = null;
-let handleMobileView = null;
-
-if (!container) {
-  container = document.createElement('div');
-  container.id = containerId;
-  
-  // Add consistent styling to the widget container
-  container.style.cssText = `
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 400px;
-    height: 700px;
-    z-index: 9999;
-    pointer-events: none;
-  `;
-  
-  // Add responsive styles for mobile with proper event listener cleanup
-  mediaQuery = window.matchMedia('(max-width: 450px)');
-  handleMobileView = (e) => {
-    if (e.matches) {
-      container.style.width = '100%';
-      container.style.height = '100%';
-    } else {
-      container.style.width = '400px';
-      container.style.height = '700px';
-    }
-  };
-  
-  // Use modern addEventListener with cleanup
-  mediaQuery.addEventListener('change', handleMobileView);
-  handleMobileView(mediaQuery);
-  
-  document.body.appendChild(container);
-}
-
-// Return cleanup function with proper event listener cleanup
-return () => {
-  // Clean up media query event listener if it exists
-  if (mediaQuery && handleMobileView) {
-    mediaQuery.removeEventListener('change', handleMobileView);
-    console.log('Widget: MediaQuery event listener cleaned up');
-  }
-  
-  root.unmount();
-  if (container && container.parentNode) {
-    container.parentNode.removeChild(container);
-  }
-  
-  // Clean up the style element
-  if (style && style.parentNode) {
-    style.parentNode.removeChild(style);
-  }
-  
-  window.ChatWidget = null;
-  console.log('Widget: All resources cleaned up successfully');
-};</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Fix Applied:</strong> Implemented comprehensive event listener cleanup with the following improvements:</p>
-                    <ul>
-                        <li>✅ <strong>Modern API Usage</strong>: Replaced deprecated `addListener` with modern `addEventListener`</li>
-                        <li>✅ <strong>Reference Storage</strong>: Properly stored `mediaQuery` and `handleMobileView` references for cleanup access</li>
-                        <li>✅ <strong>Cleanup Function</strong>: Added comprehensive cleanup that removes event listeners, DOM elements, and window references</li>
-                        <li>✅ <strong>Memory Leak Prevention</strong>: Eliminates dangling event listeners that cause memory accumulation</li>
-                        <li>✅ <strong>Multiple Cycles Support</strong>: Handles repeated widget initialization/cleanup without leaks</li>
-                        <li>✅ <strong>Debug Logging</strong>: Added cleanup logging for debugging and monitoring</li>
-                        <li>✅ <strong>Test Coverage</strong>: Created comprehensive test suite with 16 test cases validating all cleanup scenarios</li>
-                    </ul>
-
-                    <p><strong>Files Updated:</strong></p>
-                    <ul>
-                        <li>✅ <code>src/widget.js</code> - Complete event listener cleanup implementation</li>
-                        <li>✅ <code>src/utils/__tests__/event-listener-cleanup.test.js</code> - Comprehensive test suite (16 test cases)</li>
-                        <li>✅ <code>test-event-listener-cleanup.html</code> - Browser-based validation</li>
-                    </ul>
-
-                    <p><strong>Testing Results:</strong> All 16 test cases pass, confirming proper event listener cleanup and memory leak prevention.</p>
-                </div>
-
-                <div class="item warning">
-                    <h3>Apollo Cache Growth</h3>
-                    <p><span class="file-path">src/widget.js:70</span></p>
-                    <p><strong>Issue:</strong> Apollo cache is restored but may grow indefinitely without cleanup policies.</p>
-                    <p><strong>Impact:</strong> Memory consumption increases over time, especially in long-running sessions.</p>
-                    <span class="severity medium">Medium</span>
-                    
-                    <div class="code-comparison">
-                        <div class="code-before">
-                            <span class="code-label">BEFORE</span>
-                            <pre><code class="language-javascript">const client = new ApolloClient({
-  link,
-  cache: new InMemoryCache().restore(window.__APOLLO_STATE__),
-})</code></pre>
-                        </div>
-                        <div class="code-after">
-                            <span class="code-label">AFTER</span>
-                            <pre><code class="language-javascript">import { InMemoryCache } from '@apollo/client';
-
-const cache = new InMemoryCache({
-  typePolicies: {
-    Query: {
-      fields: {
-        messages: {
-          merge(existing = [], incoming) {
-            // Limit cache size for messages
-            const merged = [...existing, ...incoming];
-            return merged.slice(-100); // Keep only last 100 messages
-          }
-        }
-      }
-    }
-  },
-  // Enable garbage collection
-  garbageCollection: true,
-  // Set cache size limits
-  resultCaching: true,
-});
-
-const client = new ApolloClient({
-  link,
-  cache: cache.restore(window.__APOLLO_STATE__ || {}),
-  // Add cache cleanup on unmount
-  defaultOptions: {
-    watchQuery: {
-      errorPolicy: 'all',
-      notifyOnNetworkStatusChange: true
-    }
-  }
-});</code></pre>
-                        </div>
-                    </div>
-
-                    <p><strong>Recommended Fix:</strong> Implement cache size limits and garbage collection policies.</p>
+                <div class="issue-location">src/utils/sanitize.js:8-17</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement stricter validation rules and rate limiting for message submissions.
                 </div>
             </div>
-        </div>
 
-        <div class="section" id="recommendations">
-            <div class="section-header">
-                <h2><span class="icon">✅</span> Priority Recommendations</h2>
-            </div>
-            <div class="section-content">
-                <div class="item recommendation">
-                    <h3>Immediate Actions (Critical)</h3>
-                    <p><strong>1. ✅ Fix Memory Leaks:</strong> <span style="color: var(--success);">COMPLETE</span> - All memory leak issues have been resolved including Chat component cleanup, App.js infinite loop, form field error handling, timeouts, WebSocket subscription leaks, and event listener cleanup.</p>
-                    <p><strong>2. ✅ Input Sanitization:</strong> <span style="color: var(--success);">COMPLETE</span> - Comprehensive input sanitization implemented using DOMPurify. All user inputs are now properly sanitized before being sent to the server, preventing XSS attacks.</p>
-                    <p><strong>3. ✅ Secure Token Storage:</strong> <span style="color: var(--success);">COMPLETE</span> - Comprehensive secure token storage with AES-GCM encryption has been implemented across all token storage and retrieval locations. XSS attacks can no longer steal plaintext JWT tokens.</p>
-                    <p><strong>4. ✅ CSP Headers Implementation:</strong> <span style="color: var(--success);">COMPLETE</span> - Enterprise-grade CSP implementation with comprehensive security features, real-time monitoring, and 36 passing tests. The application now has robust protection against XSS attacks.</p>
-                    <p><strong>5. Add Error Boundaries:</strong> Implement React error boundaries to prevent app crashes and provide graceful error handling.</p>
-                    
-                    <pre><code class="language-javascript">// Priority 1: Memory Leak Fix Template (COMPLETED)
-useEffect(() => {
-  const subscription = subscribeToData();
-  const timeoutId = setTimeout(handleTimeout, 5000);
-  const mediaQuery = window.matchMedia('(max-width: 768px)');
-  
-  mediaQuery.addEventListener('change', handleMediaChange);
-  
-  return () => {
-    subscription?.unsubscribe();
-    clearTimeout(timeoutId);
-    mediaQuery.removeEventListener('change', handleMediaChange);
-  };
-}, []);
-
-// Priority 2: Secure Token Storage (COMPLETED)
-const secureStorage = {
-  set: async (key, value) => {
-    try {
-      await secureStore.set(key, value);
-    } catch (error) {
-      console.error('Secure storage failed, using fallback:', error);
-      store(key, value);
-    }
-  },
-  get: async (key) => {
-    try {
-      return await secureStore.get(key);
-    } catch (error) {
-      console.error('Secure retrieval failed, using fallback:', error);
-      return store(key);
-    }
-  }
-};
-
-// Priority 3: CSP Implementation (COMPLETED)
-const cspPolicy = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
-  "style-src 'self' 'unsafe-inline'",
-  "connect-src 'self' https://api.example.com/graphql",
-  "img-src 'self' data: blob:",
-  "font-src 'self' data:",
-  "media-src 'self' blob:",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-  "upgrade-insecure-requests"
-].join('; ';</code></pre>
+            <div class="issue-card critical">
+                <div class="severity-badge critical">Critical</div>
+                <div class="issue-title">WebSocket Connection Without Proper Authentication Validation</div>
+                <div class="issue-description">
+                    WebSocket connections use tokens but don't validate token expiration or refresh mechanisms properly.
                 </div>
-
-                <div class="item recommendation">
-                    <h3>Short-term Improvements (High Priority)</h3>
-                    <p><strong>1. Performance Optimization:</strong> Add React.memo and useCallback for expensive operations to reduce unnecessary re-renders.</p>
-                    <p><strong>2. Security Hardening:</strong> Implement secure cookie practices and additional security headers to complement CSP protection.</p>
-                    <p><strong>3. Error Handling:</strong> Standardize error handling patterns across the application with centralized error management.</p>
-                    <p><strong>4. Testing:</strong> Increase test coverage for critical paths and error scenarios to ensure code reliability.</p>
-                    
-                    <pre><code class="language-javascript">// Performance Optimization Template
-const ExpensiveComponent = memo(({ data, onUpdate }) => {
-  const processedData = useMemo(() => {
-    return data.map(item => expensiveTransformation(item));
-  }, [data]);
-
-  const handleClick = useCallback((item) => {
-    onUpdate(item.id);
-  }, [onUpdate]);
-
-  return (
-    <div>
-      {processedData.map(item => (
-        <Item key={item.id} item={item} onClick={handleClick} />
-      ))}
-    </div>
-  );
-});
-
-// Error Handling Standardization
-class ErrorHandler {
-  static handle(error, context) {
-    logger.error('Application error', { error, context });
-    
-    const userMessage = this.getUserMessage(error);
-    this.notifyUser(userMessage);
-    
-    if (this.shouldReport(error)) {
-      this.reportToMonitoring(error, context);
-    }
-  }
-}</code></pre>
-                </div>
-
-                <div class="item recommendation">
-                    <h3>Long-term Architecture (Medium Priority)</h3>
-                    <p><strong>1. Modern React Migration:</strong> Convert all class components to functional components with hooks for better code organization and performance.</p>
-                    <p><strong>2. TypeScript Integration:</strong> Gradually migrate to TypeScript for better type safety and developer experience.</p>
-                    <p><strong>3. State Management:</strong> Implement a robust state management solution using Redux Toolkit or Zustand for complex application state.</p>
-                    <p><strong>4. Component Library:</strong> Develop a comprehensive design system with reusable components for consistency and maintainability.</p>
-                    
-                    <pre><code class="language-javascript">// TypeScript Migration Strategy
-interface ChatProps {
-  chat: Chat;
-  onMessage: (message: string) => void;
-  onEnd: () => void;
-}
-
-const Chat: React.FC<ChatProps> = ({ chat, onMessage, onEnd }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  
-  const handleSendMessage = useCallback((text: string) => {
-    onMessage(text);
-  }, [onMessage]);
-
-  return <ChatUI messages={messages} onSend={handleSendMessage} />;
-};
-
-// State Management with Redux Toolkit
-const chatSlice = createSlice({
-  name: 'chat',
-  initialState: {
-    activeChat: null,
-    messages: [],
-    status: 'idle'
-  },
-  reducers: {
-    setActiveChat: (state, action) => {
-      state.activeChat = action.payload;
-    },
-    addMessage: (state, action) => {
-      state.messages.push(action.payload);
-    }
-  }
-});</code></pre>
-                </div>
-
-                <div class="item recommendation">
-                    <h3>Best Practices Implementation</h3>
-                    <p><strong>1. Code Quality:</strong> Implement ESLint rules and pre-commit hooks to maintain code quality and consistency.</p>
-                    <p><strong>2. Documentation:</strong> Add comprehensive JSDoc documentation with examples and usage guidelines.</p>
-                    <p><strong>3. Monitoring:</strong> Implement error tracking and performance monitoring using tools like Sentry or LogRocket.</p>
-                    <p><strong>4. Security:</strong> Regular security audits and dependency updates to maintain application security.</p>
-                    
-                    <pre><code class="language-javascript">// ESLint Configuration (.eslintrc.js)
-module.exports = {
-  extends: [
-    'react-app',
-    'react-app/jest',
-    '@typescript-eslint/recommended',
-    'plugin:react-hooks/recommended'
-  ],
-  rules: {
-    'no-console': 'warn',
-    'prefer-const': 'error',
-    'no-unused-vars': 'error',
-    'react-hooks/exhaustive-deps': 'warn'
-  }
-};
-
-// Pre-commit Hook (package.json)
-{
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged && npm test -- --watchAll=false"
-    }
-  },
-  "lint-staged": {
-    "src/**/*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
-    ]
-  }
-}</code></pre>
+                <div class="issue-location">src/widget.js:71-104</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement token refresh logic and proper WebSocket authentication validation.
                 </div>
             </div>
-        </div>
+        </section>
 
-        <div class="footer">
-            <p>Generated on November 8, 2024 | Chat Widget Codebase Analysis | Total Issues: 52 (8 Resolved)</p>
-        </div>
+        <section class="section">
+            <h2>⚠️ High Priority Issues</h2>
+            
+            <div class="issue-card high">
+                <div class="severity-badge high">High</div>
+                <div class="issue-title">Memory Leaks in Apollo Cache</div>
+                <div class="issue-description">
+                    Apollo cache configuration has size limits but the cleanup mechanism may not be sufficient for long-running applications with high message volume.
+                </div>
+                <div class="issue-location">src/widget.js:115-189</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement more aggressive cache cleanup and consider cache partitioning by chat ID.
+                </div>
+            </div>
+
+            <div class="issue-card high">
+                <div class="severity-badge high">High</div>
+                <div class="issue-title">Event Listener Memory Leaks</div>
+                <div class="issue-description">
+                    MediaQuery event listeners are properly cleaned up, but other event listeners and timers may not be properly managed in all components.
+                </div>
+                <div class="issue-location">src/widget.js:271-272</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Audit all components for proper cleanup of event listeners, timers, and subscriptions.
+                </div>
+            </div>
+
+            <div class="issue-card high">
+                <div class="severity-badge high">High</div>
+                <div class="issue-title">Inconsistent Error Handling</div>
+                <div class="issue-description">
+                    Error handling patterns vary across components, with some errors being logged but not properly propagated to users.
+                </div>
+                <div class="issue-location">Multiple files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement a centralized error handling strategy with consistent user feedback.
+                </div>
+            </div>
+
+            <div class="issue-card high">
+                <div class="severity-badge high">High</div>
+                <div class="issue-title">Subscription Cleanup Race Conditions</div>
+                <div class="issue-description">
+                    WebSocket subscriptions are cleaned up on unmount, but race conditions may occur during rapid component updates.
+                </div>
+                <div class="issue-location">src/ChatContainer.js:42-49</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement subscription cleanup guards and debouncing for rapid updates.
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>📊 Code Quality Issues</h2>
+            
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Inconsistent Code Style</div>
+                <div class="issue-description">
+                    Mixed use of function declarations, arrow functions, and inconsistent spacing patterns throughout the codebase.
+                </div>
+                <div class="issue-location">Multiple files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Configure ESLint with stricter rules and implement Prettier for consistent formatting.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Large Component Files</div>
+                <div class="issue-description">
+                    Some components like widget.js (405 lines) are too large and handle multiple responsibilities.
+                </div>
+                <div class="issue-location">src/widget.js</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Break down large components into smaller, focused components with single responsibilities.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Magic Numbers and Hard-coded Values</div>
+                <div class="issue-description">
+                    Hard-coded values like cache sizes, timeouts, and limits are scattered throughout the code.
+                </div>
+                <div class="issue-location">Multiple files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Extract magic numbers to configuration constants with meaningful names.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Missing Prop Validation</div>
+                <div class="issue-description">
+                    React components lack proper PropTypes or TypeScript for runtime type checking.
+                </div>
+                <div class="issue-location">Multiple component files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Add PropTypes or migrate to TypeScript for better type safety.
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🏗️ Architecture & Design Issues</h2>
+            
+            <div class="architecture-grid">
+                <div class="architecture-item">
+                    <h4>Tight Coupling</h4>
+                    <p>Components are tightly coupled to specific implementations, making testing and maintenance difficult.</p>
+                </div>
+                
+                <div class="architecture-item">
+                    <h4>Mixed Concerns</h4>
+                    <p>UI components contain business logic, API calls, and state management mixed together.</p>
+                </div>
+                
+                <div class="architecture-item">
+                    <h4>No Error Boundaries</h4>
+                    <p>Lack of error boundaries means component failures can crash the entire application.</p>
+                </div>
+                
+                <div class="architecture-item">
+                    <h4>Global State Management</h4>
+                    <p>Reliance on localStorage for state management without proper synchronization.</p>
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Missing Abstraction Layers</div>
+                <div class="issue-description">
+                    Direct Apollo Client usage throughout components instead of abstracted data access layers.
+                </div>
+                <div class="issue-location">Multiple component files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Create repository pattern or custom hooks for data access abstraction.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Inconsistent State Management</div>
+                <div class="issue-description">
+                    Mix of local state, context, and localStorage without clear patterns for when to use each.
+                </div>
+                <div class="issue-location">Multiple files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Establish clear state management patterns and hierarchy.
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🔒 Security Recommendations</h2>
+            
+            <div class="security-card">
+                <h3>Content Security Policy Enhancement</h3>
+                <p>Implement stricter CSP with nonce-based approach for styled-components and remove unsafe-eval.</p>
+            </div>
+
+            <div class="security-card">
+                <h3>Token Security</h3>
+                <p>Implement proper token rotation, refresh mechanisms, and avoid global variable storage.</p>
+            </div>
+
+            <div class="security-card">
+                <h3>Input Validation</h3>
+                <p>Add comprehensive input validation, rate limiting, and content sanitization.</p>
+            </div>
+
+            <div class="security-card">
+                <h3>WebSocket Security</h3>
+                <p>Implement proper WebSocket authentication with token validation and connection monitoring.</p>
+            </div>
+
+            <div class="security-card">
+                <h3>Dependency Security</h3>
+                <p>Regularly audit dependencies for known vulnerabilities and implement automated security scanning.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>📈 Performance Optimization</h2>
+            
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Unnecessary Re-renders</div>
+                <div class="issue-description">
+                    Components lack proper memoization, causing unnecessary re-renders on prop changes.
+                </div>
+                <div class="issue-location">Multiple component files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement React.memo, useMemo, and useCallback where appropriate.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Bundle Size Optimization</div>
+                <div class="issue-description">
+                    Large bundle size due to lack of code splitting and tree shaking optimization.
+                </div>
+                <div class="issue-location">vite.config.js</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement dynamic imports and optimize bundle configuration.
+                </div>
+            </div>
+
+            <div class="issue-card low">
+                <div class="severity-badge low">Low</div>
+                <div class="issue-title">Image Optimization</div>
+                <div class="issue-description">
+                    No image optimization strategy for avatars and other visual assets.
+                </div>
+                <div class="issue-location">Theme and component files</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement lazy loading and modern image formats.
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>🧪 Testing & Quality Assurance</h2>
+            
+            <div class="issue-card high">
+                <div class="severity-badge high">High</div>
+                <div class="issue-title">Insufficient Test Coverage</div>
+                <div class="issue-description">
+                    Limited test coverage with only utility functions having proper tests. Critical components lack integration tests.
+                </div>
+                <div class="issue-location">src/utils/__tests__/</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement comprehensive unit and integration tests for all components.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">Missing E2E Tests</div>
+                <div class="issue-description">
+                    No end-to-end tests to verify complete user flows and integration scenarios.
+                </div>
+                <div class="issue-location">Test suite</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Add Cypress or Playwright for E2E testing of critical user journeys.
+                </div>
+            </div>
+
+            <div class="issue-card medium">
+                <div class="severity-badge medium">Medium</div>
+                <div class="issue-title">No Performance Testing</div>
+                <div class="issue-description">
+                    Lack of performance testing to identify bottlenecks and memory leaks.
+                </div>
+                <div class="issue-location">Test suite</div>
+                <div class="recommendation">
+                    <strong>Recommendation:</strong> Implement performance testing with tools like Lighthouse CI.
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>📋 Action Items Priority Matrix</h2>
+            
+            <div style="margin-top: 20px;">
+                <h3 style="color: #e74c3c; margin-bottom: 15px;">Immediate (This Sprint)</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0;">🔴 Fix CSP unsafe-eval directive</li>
+                    <li style="padding: 8px 0;">🔴 Remove global token storage</li>
+                    <li style="padding: 8px 0;">🔴 Implement proper input validation</li>
+                    <li style="padding: 8px 0;">🔴 Fix WebSocket authentication</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #f39c12; margin-bottom: 15px;">Short Term (Next 2 Sprints)</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0;">🟠 Implement comprehensive error handling</li>
+                    <li style="padding: 8px 0;">🟠 Fix memory leaks in subscriptions</li>
+                    <li style="padding: 8px 0;">🟠 Add component tests</li>
+                    <li style="padding: 8px 0;">🟠 Implement performance monitoring</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #3498db; margin-bottom: 15px;">Medium Term (Next Month)</h3>
+                <ul style="list-style: none; padding: 0;">
+                    <li style="padding: 8px 0;">🔵 Refactor large components</li>
+                    <li style="padding: 8px 0;">🔵 Implement TypeScript migration</li>
+                    <li style="padding: 8px 0;">🔵 Add E2E test suite</li>
+                    <li style="padding: 8px 0;">🔵 Optimize bundle size</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2>📊 Overall Health Score</h2>
+            
+            <div style="margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Security</span>
+                    <span style="color: #e74c3c; font-weight: bold;">45/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill critical" style="width: 45%;"></div>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Code Quality</span>
+                    <span style="color: #f39c12; font-weight: bold;">65/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill high" style="width: 65%;"></div>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Architecture</span>
+                    <span style="color: #3498db; font-weight: bold;">70/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill medium" style="width: 70%;"></div>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Testing</span>
+                    <span style="color: #e74c3c; font-weight: bold;">35/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill critical" style="width: 35%;"></div>
+                </div>
+            </div>
+
+            <div style="margin: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Performance</span>
+                    <span style="color: #3498db; font-weight: bold;">75/100</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill medium" style="width: 75%;"></div>
+                </div>
+            </div>
+
+            <div style="margin: 30px 0; text-align: center;">
+                <h3 style="color: var(--header-color); margin-bottom: 10px;">Overall Score</h3>
+                <div style="font-size: 3rem; font-weight: bold; color: #f39c12;">58/100</div>
+                <p style="color: var(--text-secondary); margin-top: 10px;">Needs Significant Improvement</p>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <p>This report was generated automatically based on comprehensive codebase analysis.</p>
+            <p>Regular code reviews and security audits are recommended for maintaining code quality.</p>
+        </footer>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
     <script>
         // Theme toggle functionality
-        const themeToggle = document.getElementById('theme-toggle');
-        const themeIcon = document.getElementById('theme-icon');
-        const html = document.documentElement;
-        
-        // Check for saved theme preference or default to light mode
-        const currentTheme = localStorage.getItem('theme') || 'light';
-        html.setAttribute('data-theme', currentTheme);
-        updateThemeIcon(currentTheme);
-        
-        function updateThemeIcon(theme) {
-            themeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
-        }
-        
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = html.getAttribute('data-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        function toggleTheme() {
+            const html = document.documentElement;
+            const themeToggle = document.querySelector('.theme-toggle');
+            const icon = themeToggle.querySelector('.icon');
+            const text = themeToggle.querySelector('.text');
             
-            html.setAttribute('data-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
-        
-        // Keyboard shortcut for theme toggle (Ctrl/Cmd + D)
-        document.addEventListener('keydown', (e) => {
-            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
-                e.preventDefault();
-                themeToggle.click();
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                icon.textContent = '🌙';
+                text.textContent = 'Dark Mode';
+                localStorage.removeItem('theme');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Check for saved theme preference or default to light mode
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeToggle = document.querySelector('.theme-toggle');
+            const icon = themeToggle.querySelector('.icon');
+            const text = themeToggle.querySelector('.text');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                icon.textContent = '☀️';
+                text.textContent = 'Light Mode';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark Mode';
             }
         });
-        
-        // Smooth scroll for table of contents links
-        document.querySelectorAll('.toc a').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
+
+        // Add keyboard shortcut for theme toggle (Ctrl/Cmd + Shift + D)
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
                 e.preventDefault();
-                const targetId = this.getAttribute('href').substring(1);
-                const targetElement = document.getElementById(targetId);
-                
-                if (targetElement) {
-                    targetElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                }
-            });
+                toggleTheme();
+            }
         });
-        
-        // Initialize Prism.js for syntax highlighting
-        Prism.highlightAll();
     </script>
 </body>
 </html>
