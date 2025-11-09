@@ -17,6 +17,7 @@ import Rate from './Rate'
 import { processContractsForCurrentSession, selectContract } from './utils';
 
 import { Container, Panel } from './components/styled/App';
+import { configureStyledComponentsForCSP, validateCSPCompatibility } from './utils/styled-csp-integration';
 
 const CONSUMER_LOGIN = gql`
   mutation consumerLogin($publicKey: UUID!) {
@@ -111,6 +112,29 @@ const App = ({ error }) => {
   const [loginError, setLoginError] = useState(null);
   // Gets the Apollo Client instance from the context provided by ApolloProvider.
   const client = useApolloClient();
+
+  // Initialize CSP integration on app startup
+  useEffect(() => {
+    // Configure styled-components to work with CSP
+    try {
+      configureStyledComponentsForCSP();
+      
+      // Validate CSP compatibility in development
+      if (process.env.NODE_ENV === 'development') {
+        const validation = validateCSPCompatibility();
+        if (validation.recommendations.length > 0) {
+          console.group('🔒 CSP Compatibility Check');
+          console.log('CSP Validation Results:', validation);
+          validation.recommendations.forEach(rec => {
+            console.warn('Recommendation:', rec);
+          });
+          console.groupEnd();
+        }
+      }
+    } catch (cspError) {
+      console.error('Failed to initialize CSP integration:', cspError);
+    }
+  }, []);
 
   // Asynchronous function to handle the consumer login process.
   // Wrapped in useCallback to prevent infinite re-renders

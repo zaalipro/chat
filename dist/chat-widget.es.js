@@ -30892,6 +30892,175 @@ const Rate = ({ chat, setCreate }) => {
     ] }) })
   ] });
 };
+class CSPStyleSheetManager {
+  constructor() {
+    this.nonce = null;
+    this.styleElements = /* @__PURE__ */ new Map();
+    this.init();
+  }
+  init() {
+    if (typeof document !== "undefined") {
+      const nonceMeta = document.querySelector('meta[name="csp-nonce"]');
+      if (nonceMeta) {
+        this.nonce = nonceMeta.getAttribute("content");
+      }
+    }
+    if (typeof window !== "undefined" && window.CSP_NONCE) {
+      this.nonce = window.CSP_NONCE;
+    }
+  }
+  /**
+   * Create style element with nonce
+   * @param {string} css - CSS content
+   * @param {string} id - Style element ID
+   * @returns {HTMLStyleElement} Style element
+   */
+  createStyleElement(css, id) {
+    if (typeof document === "undefined") {
+      return null;
+    }
+    const styleElement = document.createElement("style");
+    styleElement.textContent = css;
+    if (this.nonce) {
+      styleElement.setAttribute("nonce", this.nonce);
+    }
+    if (id) {
+      styleElement.setAttribute("data-styled-id", id);
+      styleElement.id = id;
+    }
+    styleElement.setAttribute("data-styled-components", "true");
+    return styleElement;
+  }
+  /**
+   * Inject style element into DOM
+   * @param {HTMLStyleElement} styleElement - Style element to inject
+   * @param {string} position - Insert position ('head' or 'body')
+   */
+  injectStyleElement(styleElement, position2 = "head") {
+    if (!styleElement || typeof document === "undefined") {
+      return;
+    }
+    const target = position2 === "head" ? document.head : document.body;
+    target.appendChild(styleElement);
+    const id = styleElement.id || styleElement.getAttribute("data-styled-id");
+    if (id) {
+      this.styleElements.set(id, styleElement);
+    }
+  }
+  /**
+   * Remove style element from DOM
+   * @param {string} id - Style element ID
+   */
+  removeStyleElement(id) {
+    if (typeof document === "undefined") {
+      return;
+    }
+    const styleElement = this.styleElements.get(id);
+    if (styleElement && styleElement.parentNode) {
+      styleElement.parentNode.removeChild(styleElement);
+      this.styleElements.delete(id);
+    }
+  }
+  /**
+   * Update style element content
+   * @param {string} id - Style element ID
+   * @param {string} newCss - New CSS content
+   */
+  updateStyleElement(id, newCss) {
+    const styleElement = this.styleElements.get(id);
+    if (styleElement) {
+      styleElement.textContent = newCss;
+    }
+  }
+  /**
+   * Get all injected style elements
+   * @returns {Map} Map of style elements
+   */
+  getStyleElements() {
+    return new Map(this.styleElements);
+  }
+  /**
+   * Clear all injected styles
+   */
+  clearAllStyles() {
+    this.styleElements.forEach((styleElement, id) => {
+      if (styleElement.parentNode) {
+        styleElement.parentNode.removeChild(styleElement);
+      }
+    });
+    this.styleElements.clear();
+  }
+  /**
+   * Get current nonce
+   * @returns {string|null} Current nonce
+   */
+  getNonce() {
+    return this.nonce;
+  }
+  /**
+   * Update nonce (useful for SPAs)
+   * @param {string} newNonce - New nonce
+   */
+  updateNonce(newNonce) {
+    this.nonce = newNonce;
+    this.styleElements.forEach((styleElement) => {
+      if (newNonce) {
+        styleElement.setAttribute("nonce", newNonce);
+      } else {
+        styleElement.removeAttribute("nonce");
+      }
+    });
+  }
+}
+const styleSheetManager = new CSPStyleSheetManager();
+function configureStyledComponentsForCSP() {
+  if (typeof window !== "undefined" && window.styledComponents) {
+    const nonce = styleSheetManager.getNonce();
+    if (nonce) {
+      window.styledComponents = __spreadProps(__spreadValues({}, window.styledComponents), {
+        nonce
+      });
+    }
+  }
+}
+function validateCSPCompatibility() {
+  const validation = {
+    hasNonce: false,
+    hasCSPMeta: false,
+    hasNonceMeta: false,
+    styledComponentsWorking: false,
+    recommendations: []
+  };
+  if (typeof document !== "undefined") {
+    const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+    if (cspMeta) {
+      validation.hasCSPMeta = true;
+      const cspContent = cspMeta.getAttribute("content");
+      if (cspContent.includes("'nonce-")) {
+        validation.hasNonce = true;
+      }
+      if (cspContent.includes("'unsafe-inline'")) {
+        validation.recommendations.push("Consider replacing unsafe-inline with nonce-based CSP");
+      }
+      if (cspContent.includes("'unsafe-eval'")) {
+        validation.recommendations.push("Remove unsafe-eval from CSP for better security");
+      }
+    }
+    const nonceMeta = document.querySelector('meta[name="csp-nonce"]');
+    if (nonceMeta) {
+      validation.hasNonceMeta = true;
+    }
+    const styledElements = document.querySelectorAll("style[data-styled-components]");
+    validation.styledComponentsWorking = styledElements.length > 0;
+  }
+  if (!validation.hasNonce && !validation.hasCSPMeta) {
+    validation.recommendations.push("Implement CSP with nonce-based approach");
+  }
+  if (validation.hasCSPMeta && !validation.hasNonce) {
+    validation.recommendations.push("Update CSP to use nonce-based approach");
+  }
+  return validation;
+}
 const CONSUMER_LOGIN = gql`
   mutation consumerLogin($publicKey: UUID!) {
     consumerLogin(input: {
@@ -30962,6 +31131,14 @@ const App = ({ error }) => {
   const [isLoggingIn, setLoggingIn] = reactExports.useState(false);
   const [loginError, setLoginError] = reactExports.useState(null);
   const client2 = useApolloClient();
+  reactExports.useEffect(() => {
+    try {
+      configureStyledComponentsForCSP();
+      if (false) ;
+    } catch (cspError) {
+      console.error("Failed to initialize CSP integration:", cspError);
+    }
+  }, []);
   const retryLogin = reactExports.useCallback(() => __async(null, null, function* () {
     var _a2, _b;
     setLoggingIn(true);
