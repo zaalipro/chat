@@ -30526,7 +30526,7 @@ const MessageForm = ({ chatId }) => {
   const [inputHasFocus, setInputFocus] = reactExports.useState(true);
   const [message, setMessage] = reactExports.useState("");
   return /* @__PURE__ */ jsxRuntimeExports.jsx(Mutation, { mutation: CREATE_MESSAGE, children: (createMessage, { data }) => {
-    const handleSubmit = () => {
+    const handleSubmit = reactExports.useCallback(() => {
       if (message.length < 1) {
         return;
       }
@@ -30546,8 +30546,8 @@ const MessageForm = ({ chatId }) => {
         console.error("Input validation failed:", sanitizeError);
         return;
       }
-    };
-    const onKeyDown = (e) => {
+    }, [message, chatId]);
+    const onKeyDown = reactExports.useCallback((e) => {
       if (e.keyCode === 13) {
         if (e.shiftKey) {
           return;
@@ -30555,7 +30555,13 @@ const MessageForm = ({ chatId }) => {
         handleSubmit();
         e.preventDefault();
       }
-    };
+    }, [handleSubmit]);
+    const handleFocus = reactExports.useCallback(() => {
+      setInputFocus(true);
+    }, []);
+    const handleBlur = reactExports.useCallback(() => {
+      setInputFocus(false);
+    }, []);
     return /* @__PURE__ */ jsxRuntimeExports.jsx(ChatInput, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs(ChatInputShadow, { children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(
         InputField,
@@ -30567,12 +30573,8 @@ const MessageForm = ({ chatId }) => {
           autoFocus: true,
           onChange: (e) => setMessage(e.target.value),
           onKeyDown,
-          onFocus: () => {
-            setInputFocus(true);
-          },
-          onBlur: () => {
-            setInputFocus(false);
-          }
+          onFocus: handleFocus,
+          onBlur: handleBlur
         }
       ),
       /* @__PURE__ */ jsxRuntimeExports.jsx(SubmitButton, { onClick: handleSubmit, children: "Send" })
@@ -31751,6 +31753,62 @@ class MemoryLeakDetector {
     this.suspiciousGrowthCount = 0;
   }
 }
+class MediaQueryManager {
+  constructor() {
+    this.listeners = /* @__PURE__ */ new Map();
+    this.legacyFallbacks = /* @__PURE__ */ new Map();
+  }
+  addListener(query, handler) {
+    const mediaQuery = window.matchMedia(query);
+    const listenerId = `${query}_${Date.now()}`;
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handler);
+      this.listeners.set(listenerId, {
+        mediaQuery,
+        handler,
+        type: "modern"
+      });
+    } else {
+      mediaQuery.addListener(handler);
+      this.legacyFallbacks.set(listenerId, {
+        mediaQuery,
+        handler,
+        type: "legacy"
+      });
+      console.warn("Widget: Using legacy addListener fallback for MediaQuery");
+    }
+    handler(mediaQuery);
+    return listenerId;
+  }
+  removeListener(listenerId) {
+    if (this.listeners.has(listenerId)) {
+      const { mediaQuery, handler } = this.listeners.get(listenerId);
+      mediaQuery.removeEventListener("change", handler);
+      this.listeners.delete(listenerId);
+      return true;
+    }
+    if (this.legacyFallbacks.has(listenerId)) {
+      const { mediaQuery, handler } = this.legacyFallbacks.get(listenerId);
+      mediaQuery.removeListener(handler);
+      this.legacyFallbacks.delete(listenerId);
+      return true;
+    }
+    return false;
+  }
+  cleanup() {
+    this.listeners.forEach(({ mediaQuery, handler }, listenerId) => {
+      mediaQuery.removeEventListener("change", handler);
+      console.log(`Widget: Modern MediaQuery listener ${listenerId} cleaned up`);
+    });
+    this.listeners.clear();
+    this.legacyFallbacks.forEach(({ mediaQuery, handler }, listenerId) => {
+      mediaQuery.removeListener(handler);
+      console.log(`Widget: Legacy MediaQuery listener ${listenerId} cleaned up`);
+    });
+    this.legacyFallbacks.clear();
+    console.log("Widget: All MediaQuery listeners cleaned up");
+  }
+}
 function initChatWidget(config = {}) {
   const {
     containerId = "chat-widget-root",
@@ -31932,8 +31990,7 @@ function initChatWidget(config = {}) {
     }
   });
   let container = document.getElementById(containerId);
-  let mediaQuery = null;
-  let handleMobileView = null;
+  let mediaQueryManager = null;
   if (!container) {
     container = document.createElement("div");
     container.id = containerId;
@@ -31946,18 +32003,21 @@ function initChatWidget(config = {}) {
       z-index: 9999;
       pointer-events: none;
     `;
-    mediaQuery = window.matchMedia("(max-width: 450px)");
-    handleMobileView = (e) => {
-      if (e.matches) {
-        container.style.width = "100%";
-        container.style.height = "100%";
-      } else {
-        container.style.width = "400px";
-        container.style.height = "700px";
+    mediaQueryManager = new MediaQueryManager();
+    const handleMobileView = (e) => {
+      try {
+        if (e.matches) {
+          container.style.width = "100%";
+          container.style.height = "100%";
+        } else {
+          container.style.width = "400px";
+          container.style.height = "700px";
+        }
+      } catch (error) {
+        console.error("Widget: Error in mobile view handler:", error);
       }
     };
-    mediaQuery.addEventListener("change", handleMobileView);
-    handleMobileView(mediaQuery);
+    mediaQueryManager.addListener("(max-width: 450px)", handleMobileView);
     document.body.appendChild(container);
   }
   container.style.pointerEvents = "none";
@@ -32031,9 +32091,10 @@ function initChatWidget(config = {}) {
   }
   renderApp(null, null);
   return () => {
-    if (mediaQuery && handleMobileView) {
-      mediaQuery.removeEventListener("change", handleMobileView);
-      console.log("Widget: MediaQuery event listener cleaned up");
+    console.log("Widget: Starting comprehensive cleanup...");
+    if (mediaQueryManager) {
+      mediaQueryManager.cleanup();
+      console.log("Widget: MediaQuery manager and all listeners cleaned up");
     }
     try {
       if (client2.cache._cacheMonitor) {
@@ -32069,6 +32130,7 @@ function initChatWidget(config = {}) {
       style.parentNode.removeChild(style);
     }
     window.ChatWidget = null;
+    window.chatInitialization = null;
     console.log("Widget: All resources cleaned up successfully");
   };
 }

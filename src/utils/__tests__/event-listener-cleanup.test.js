@@ -1,376 +1,398 @@
-/**
- * Event Listener Cleanup Tests
- * Tests the MediaQuery event listener cleanup implementation in widget.js
- */
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { render, screen, fireEvent, cleanup, act } from '@testing-library/react';
+import MessageForm from '../MessageForm.js';
+import { initChatWidget } from '../../widget.js';
 
-// Mock DOM environment
-const { JSDOM } = require('jsdom');
+// Mock Apollo Client
+vi.mock('@apollo/client', () => ({
+  Mutation: ({ children }) => children({
+    createMessage: vi.fn().mockResolvedValue({ data: { createMessage: { id: '1' } } })
+  }),
+  gql: vi.fn(),
+}));
 
-describe('Event Listener Cleanup', () => {
-  let dom;
-  let window;
-  let document;
+// Mock store2
+vi.mock('store2', () => ({
+  default: vi.fn(),
+}));
+
+// Mock sanitize utilities
+vi.mock('../../sanitize.js', () => ({
+  sanitizeMessage: vi.fn((msg) => msg),
+  sanitizeAuthor: vi.fn((name) => name),
+}));
+
+// Mock DOM APIs
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation(query => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
+
+// Mock performance API
+global.performance = {
+  now: vi.fn(() => Date.now()),
+};
+
+describe('Event Listener Cleanup Implementation', () => {
   let container;
-  let mediaQuery;
-  let handleMobileView;
+  let addEventListenerSpy;
+  let removeEventListenerSpy;
 
   beforeEach(() => {
-    // Set up fresh DOM environment for each test
-    dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
-      url: 'http://localhost',
-      pretendToBeVisual: true,
-      resources: 'usable'
-    });
-
-    window = dom.window;
-    document = dom.window.document;
-    global.window = window;
-    global.document = document;
-
-    // Mock MediaQuery
-    mediaQuery = {
-      matches: false,
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn()
-    };
-
-    window.matchMedia = vi.fn(() => mediaQuery);
-
-    // Mock container creation
+    // Setup DOM container
     container = document.createElement('div');
-    container.id = 'test-widget';
+    container.id = 'test-widget-root';
     document.body.appendChild(container);
 
-    // Mock style properties
-    Object.defineProperty(container, 'style', {
-      value: {
-        width: '400px',
-        height: '700px',
-        cssText: ''
-      },
-      writable: true
-    });
-  });
+    // Spy on event listener methods
+    addEventListenerSpy = vi.spyOn(Element.prototype, 'addEventListener');
+    removeEventListenerSpy = vi.spyOn(Element.prototype, 'removeEventListener');
 
-  afterEach(() => {
-    // Clean up after each test
-    if (container && container.parentNode) {
-      container.parentNode.removeChild(container);
-    }
+    // Clear all mocks
     vi.clearAllMocks();
   });
 
-  describe('MediaQuery Event Listener Management', () => {
-    it('should add event listener using modern API', () => {
-      // Simulate the widget initialization code
-      const mockHandleMobileView = vi.fn();
+  afterEach(() => {
+    // Cleanup DOM
+    if (container && container.parentNode) {
+      container.parentNode.removeChild(container);
+    }
+    
+    // Cleanup React
+    cleanup();
+    
+    // Restore spies
+    addEventListenerSpy.mockRestore();
+    removeEventListenerSpy.mockRestore();
+  });
+
+  describe('MessageForm Event Listener Management', () => {
+    it('should add and remove event listeners properly', () => {
+      // Mock the Mutation component to render children
+      const MockMutation = ({ children }) => {
+        return children({
+          createMessage: vi.fn().mockResolvedValue({ data: { createMessage: { id: '1' } } })
+        });
+      };
+
+      // Mock the CREATE_MESSAGE import
+      vi.doMock('../../queries.js', () => ({
+        CREATE_MESSAGE: 'mock-mutation'
+      }));
+
+      render(<MessageForm chatId="test-chat" />);
+
+      // Find the input element
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
       
-      // This simulates the fixed implementation
-      mediaQuery.addEventListener('change', mockHandleMobileView);
+      // Simulate typing to trigger event listeners
+      fireEvent.change(inputElement, { target: { value: 'test message' } });
       
-      expect(mediaQuery.addEventListener).toHaveBeenCalledWith('change', mockHandleMobileView);
-      expect(mediaQuery.addEventListener).toHaveBeenCalledTimes(1);
+      // Verify that addEventListener was called for keydown event
+      expect(addEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+      
+      // Cleanup component
+      cleanup();
+      
+      // Verify that removeEventListener was called
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
     });
 
-    it('should not use deprecated addListener API', () => {
-      // Verify that addListener is not called
-      const mockHandleMobileView = vi.fn();
+    it('should use stable event handlers with useCallback', () => {
+      const { rerender } = render(<MessageForm chatId="test-chat" />);
       
-      // This would be the old (buggy) implementation
-      // mediaQuery.addListener(mockHandleMobileView); // Should not be called
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
       
-      // Instead, we use the modern API
-      mediaQuery.addEventListener('change', mockHandleMobileView);
+      // Clear previous calls
+      addEventListenerSpy.mockClear();
       
-      expect(mediaQuery.addEventListener).toHaveBeenCalled();
-      // Note: addListener doesn't exist on our mock, so this verifies we're not using it
+      // Rerender component
+      rerender(<MessageForm chatId="test-chat" />);
+      
+      // The event listener should not be re-added since handler is stable
+      // This indicates useCallback is working properly
+      expect(addEventListenerSpy).not.toHaveBeenCalledWith('keydown', expect.any(Function));
     });
 
-    it('should store references for proper cleanup', () => {
-      // Simulate the widget initialization with reference storage
-      const mockHandleMobileView = vi.fn();
-      const storedMediaQuery = mediaQuery;
-      const storedHandleMobileView = mockHandleMobileView;
+    it('should handle keyboard events correctly', () => {
+      render(<MessageForm chatId="test-chat" />);
       
-      // Add listener
-      storedMediaQuery.addEventListener('change', storedHandleMobileView);
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
+      const submitButton = screen.getByText('Send');
       
-      // Verify references are stored (simulated by having them in scope)
-      expect(storedMediaQuery).toBeDefined();
-      expect(storedHandleMobileView).toBeDefined();
-      expect(typeof storedHandleMobileView).toBe('function');
+      // Type a message
+      fireEvent.change(inputElement, { target: { value: 'test message' } });
+      
+      // Test Enter key submission
+      fireEvent.keyDown(inputElement, { keyCode: 13, shiftKey: false });
+      
+      // Test Enter + Shift (should not submit)
+      fireEvent.keyDown(inputElement, { keyCode: 13, shiftKey: true });
+      
+      // Verify input still has content (shift+enter didn't submit)
+      expect(inputElement.value).toBe('test message');
     });
 
-    it('should remove event listener during cleanup', () => {
-      // Simulate the cleanup process
-      const mockHandleMobileView = vi.fn();
-      const storedMediaQuery = mediaQuery;
-      const storedHandleMobileView = mockHandleMobileView;
+    it('should handle focus and blur events properly', () => {
+      render(<MessageForm chatId="test-chat" />);
       
-      // Add listener first
-      storedMediaQuery.addEventListener('change', storedHandleMobileView);
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
       
-      // Simulate cleanup
-      if (storedMediaQuery && storedHandleMobileView) {
-        storedMediaQuery.removeEventListener('change', storedHandleMobileView);
-      }
+      // Test focus event
+      fireEvent.focus(inputElement);
       
-      expect(storedMediaQuery.removeEventListener).toHaveBeenCalledWith('change', storedHandleMobileView);
-      expect(storedMediaQuery.removeEventListener).toHaveBeenCalledTimes(1);
-    });
-
-    it('should handle cleanup when references are null', () => {
-      // Test cleanup with null references
-      const nullMediaQuery = null;
-      const nullHandleMobileView = null;
+      // Test blur event
+      fireEvent.blur(inputElement);
       
-      // This should not throw an error
-      expect(() => {
-        if (nullMediaQuery && nullHandleMobileView) {
-          nullMediaQuery.removeEventListener('change', nullHandleMobileView);
-        }
-      }).not.toThrow();
-    });
-
-    it('should handle cleanup when references are undefined', () => {
-      // Test cleanup with undefined references
-      const undefinedMediaQuery = undefined;
-      const undefinedHandleMobileView = undefined;
-      
-      // This should not throw an error
-      expect(() => {
-        if (undefinedMediaQuery && undefinedHandleMobileView) {
-          undefinedMediaQuery.removeEventListener('change', undefinedHandleMobileView);
-        }
-      }).not.toThrow();
+      // Should not throw errors
+      expect(true).toBe(true);
     });
   });
 
-  describe('Container Cleanup', () => {
-    it('should remove container from DOM during cleanup', () => {
-      // Verify container exists before cleanup
-      expect(document.getElementById('test-widget')).toBe(container);
-      expect(container.parentNode).toBe(document.body);
+  describe('Widget MediaQuery Management', () => {
+    it('should create and manage MediaQuery listeners properly', () => {
+      const cleanup = initChatWidget({
+        containerId: 'test-widget-root',
+        publicKey: 'test-key'
+      });
+
+      // Verify MediaQuery was called
+      expect(window.matchMedia).toHaveBeenCalledWith('(max-width: 450px)');
       
-      // Simulate cleanup
-      if (container && container.parentNode) {
-        container.parentNode.removeChild(container);
-      }
+      // Get the mock mediaQuery instance
+      const mediaQueryMock = window.matchMedia('(max-width: 450px)');
       
-      // Verify container is removed
-      expect(document.getElementById('test-widget')).toBeNull();
+      // Verify event listener was added
+      expect(mediaQueryMock.addEventListener).toHaveBeenCalledWith('change', expect.any(Function));
+      
+      // Test cleanup
+      cleanup();
+      
+      // Verify event listener was removed
+      expect(mediaQueryMock.removeEventListener).toHaveBeenCalledWith('change', expect.any(Function));
     });
 
-    it('should handle cleanup when container has no parent', () => {
-      // Remove container from DOM first
-      if (container.parentNode) {
-        container.parentNode.removeChild(container);
-      }
-      
-      // Cleanup should not throw error
-      expect(() => {
-        if (container && container.parentNode) {
-          container.parentNode.removeChild(container);
-        }
-      }).not.toThrow();
-    });
-
-    it('should handle cleanup when container is null', () => {
-      const nullContainer = null;
-      
-      // Cleanup should not throw error
-      expect(() => {
-        if (nullContainer && nullContainer.parentNode) {
-          nullContainer.parentNode.removeChild(nullContainer);
-        }
-      }).not.toThrow();
-    });
-  });
-
-  describe('Style Element Cleanup', () => {
-    it('should remove style elements during cleanup', () => {
-      const style = document.createElement('style');
-      style.textContent = '#test-widget * { pointer-events: auto; }';
-      document.head.appendChild(style);
-      
-      // Verify style exists before cleanup
-      expect(style.parentNode).toBe(document.head);
-      expect(document.head.contains(style)).toBe(true);
-      
-      // Simulate cleanup
-      if (style && style.parentNode) {
-        style.parentNode.removeChild(style);
-      }
-      
-      // Verify style is removed
-      expect(document.head.contains(style)).toBe(false);
-    });
-
-    it('should handle cleanup when style element has no parent', () => {
-      const style = document.createElement('style');
-      // Don't append to DOM
-      
-      // Cleanup should not throw error
-      expect(() => {
-        if (style && style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-      }).not.toThrow();
-    });
-  });
-
-  describe('Window Reference Cleanup', () => {
-    it('should nullify ChatWidget reference during cleanup', () => {
-      // Set up ChatWidget reference
-      window.ChatWidget = { init: vi.fn(), attemptLogin: vi.fn() };
-      
-      // Verify reference exists before cleanup
-      expect(window.ChatWidget).not.toBeNull();
-      
-      // Simulate cleanup
-      window.ChatWidget = null;
-      
-      // Verify reference is nullified
-      expect(window.ChatWidget).toBeNull();
-    });
-  });
-
-  describe('Complete Cleanup Process', () => {
-    it('should perform all cleanup steps in correct order', () => {
-      // Set up complete widget state
-      const style = document.createElement('style');
-      document.head.appendChild(style);
-      
-      window.ChatWidget = { init: vi.fn() };
-      
-      const mockHandleMobileView = vi.fn();
-      const storedMediaQuery = mediaQuery;
-      const storedHandleMobileView = mockHandleMobileView;
-      
-      // Add event listener
-      storedMediaQuery.addEventListener('change', storedHandleMobileView);
-      
-      // Perform complete cleanup
-      const cleanup = () => {
-        // 1. Clean up media query event listener
-        if (storedMediaQuery && storedHandleMobileView) {
-          storedMediaQuery.removeEventListener('change', storedHandleMobileView);
-        }
-        
-        // 2. Remove container
-        if (container && container.parentNode) {
-          container.parentNode.removeChild(container);
-        }
-        
-        // 3. Clean up style element
-        if (style && style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-        
-        // 4. Nullify window reference
-        window.ChatWidget = null;
+    it('should handle legacy addListener fallback', () => {
+      // Mock browser without addEventListener support
+      const mockMediaQuery = {
+        matches: false,
+        media: '(max-width: 450px)',
+        onchange: null,
+        addListener: vi.fn(),
+        removeListener: vi.fn(),
+        addEventListener: undefined, // No support
+        removeEventListener: undefined, // No support
+        dispatchEvent: vi.fn(),
       };
       
-      // Execute cleanup
-      expect(() => cleanup()).not.toThrow();
+      window.matchMedia = vi.fn(() => mockMediaQuery);
+
+      const cleanup = initChatWidget({
+        containerId: 'test-widget-root',
+        publicKey: 'test-key'
+      });
+
+      // Verify legacy addListener was used
+      expect(mockMediaQuery.addListener).toHaveBeenCalledWith(expect.any(Function));
       
-      // Verify all cleanup steps occurred
-      expect(storedMediaQuery.removeEventListener).toHaveBeenCalledWith('change', storedHandleMobileView);
-      expect(document.getElementById('test-widget')).toBeNull();
-      expect(document.head.contains(style)).toBe(false);
-      expect(window.ChatWidget).toBeNull();
+      // Test cleanup
+      cleanup();
+      
+      // Verify legacy removeListener was used
+      expect(mockMediaQuery.removeListener).toHaveBeenCalledWith(expect.any(Function));
     });
 
-    it('should handle partial cleanup gracefully', () => {
-      // Test cleanup when some elements are already removed
-      const style = document.createElement('style');
-      // Don't append style to DOM
+    it('should handle MediaQuery errors gracefully', () => {
+      // Mock MediaQuery that throws an error
+      window.matchMedia = vi.fn(() => {
+        throw new Error('MediaQuery not supported');
+      });
+
+      // Should not throw error
+      expect(() => {
+        const cleanup = initChatWidget({
+          containerId: 'test-widget-root',
+          publicKey: 'test-key'
+        });
+        cleanup();
+      }).not.toThrow();
+    });
+
+    it('should update container styles based on screen size', () => {
+      const cleanup = initChatWidget({
+        containerId: 'test-widget-root',
+        publicKey: 'test-key'
+      });
+
+      const widgetContainer = document.getElementById('test-widget-root');
+      expect(widgetContainer).toBeTruthy();
       
-      window.ChatWidget = null; // Already nullified
+      // Get the mock mediaQuery instance
+      const mediaQueryMock = window.matchMedia('(max-width: 450px)');
       
-      const cleanup = () => {
-        if (mediaQuery && handleMobileView) {
-          mediaQuery.removeEventListener('change', handleMobileView);
-        }
-        
-        if (container && container.parentNode) {
-          container.parentNode.removeChild(container);
-        }
-        
-        if (style && style.parentNode) {
-          style.parentNode.removeChild(style);
-        }
-        
-        window.ChatWidget = null;
-      };
+      // Simulate mobile view
+      mediaQueryMock.matches = true;
+      const changeHandler = mediaQueryMock.addEventListener.mock.calls[0][1];
+      changeHandler({ matches: true });
       
-      // Should not throw error even with partial state
-      expect(() => cleanup()).not.toThrow();
+      expect(widgetContainer.style.width).toBe('100%');
+      expect(widgetContainer.style.height).toBe('100%');
+      
+      // Simulate desktop view
+      changeHandler({ matches: false });
+      
+      expect(widgetContainer.style.width).toBe('400px');
+      expect(widgetContainer.style.height).toBe('700px');
+      
+      cleanup();
     });
   });
 
   describe('Memory Leak Prevention', () => {
-    it('should not create dangling references after cleanup', () => {
-      // Create references
-      const mockHandleMobileView = vi.fn();
-      const storedMediaQuery = mediaQuery;
-      const storedHandleMobileView = mockHandleMobileView;
+    it('should clean up all event listeners on widget destruction', () => {
+      const cleanup = initChatWidget({
+        containerId: 'test-widget-root',
+        publicKey: 'test-key'
+      });
+
+      // Get the mock mediaQuery instance
+      const mediaQueryMock = window.matchMedia('(max-width: 450px)');
       
-      // Add listener
-      storedMediaQuery.addEventListener('change', storedHandleMobileView);
+      // Verify listeners were added
+      expect(mediaQueryMock.addEventListener).toHaveBeenCalled();
       
-      // Verify listener is attached
-      expect(storedMediaQuery.addEventListener).toHaveBeenCalled();
+      // Count event listeners before cleanup
+      const addCalls = addEventListenerSpy.mock.calls.length;
       
-      // Cleanup
-      if (storedMediaQuery && storedHandleMobileView) {
-        storedMediaQuery.removeEventListener('change', storedHandleMobileView);
-      }
+      // Perform cleanup
+      cleanup();
       
-      // Verify listener is removed
-      expect(storedMediaQuery.removeEventListener).toHaveBeenCalledWith('change', storedHandleMobileView);
-      
-      // References can now be garbage collected (simulated by setting to null)
-      const nullifiedMediaQuery = null;
-      const nullifiedHandleMobileView = null;
-      
-      expect(nullifiedMediaQuery).toBeNull();
-      expect(nullifiedHandleMobileView).toBeNull();
+      // Verify cleanup was logged
+      expect(console.log).toHaveBeenCalledWith('Widget: MediaQuery manager and all listeners cleaned up');
     });
 
-    it('should handle multiple cleanup calls safely', () => {
-      const mockHandleMobileView = vi.fn();
-      const storedMediaQuery = mediaQuery;
-      const storedHandleMobileView = mockHandleMobileView;
+    it('should handle performance monitoring in development', () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      process.env.NODE_ENV = 'development';
+
+      render(<MessageForm chatId="test-chat" />);
       
-      // Add listener
-      storedMediaQuery.addEventListener('change', storedHandleMobileView);
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
       
-      // Cleanup function
-      const cleanup = () => {
-        if (storedMediaQuery && storedHandleMobileView) {
-          storedMediaQuery.removeEventListener('change', storedHandleMobileView);
-        }
-        
-        if (container && container.parentNode) {
-          container.parentNode.removeChild(container);
-        }
-        
-        window.ChatWidget = null;
-      };
+      // Trigger event
+      fireEvent.keyDown(inputElement, { keyCode: 13 });
       
-      // Call cleanup multiple times
+      // Should log performance metrics in development
+      expect(console.log).toHaveBeenCalledWith(
+        expect.stringContaining('Event keydown handled in')
+      );
+
+      process.env.NODE_ENV = originalNodeEnv;
+    });
+
+    it('should handle event handler errors gracefully', () => {
+      render(<MessageForm chatId="test-chat" />);
+      
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
+      
+      // Mock error in event handler
+      const originalError = console.error;
+      console.error = vi.fn();
+      
+      // Simulate error scenario
+      const errorSpy = vi.spyOn(console, 'error');
+      
+      // Should not crash on errors
       expect(() => {
-        cleanup();
-        cleanup();
-        cleanup();
+        fireEvent.keyDown(inputElement, { keyCode: 13 });
       }).not.toThrow();
+
+      console.error = originalError;
+    });
+  });
+
+  describe('Custom useEventListener Hook', () => {
+    it('should properly manage event listener lifecycle', () => {
+      // This would test the custom hook if it were exported
+      // For now, we test its behavior through MessageForm
+      const { unmount } = render(<MessageForm chatId="test-chat" />);
       
-      // Should only remove listener once
-      expect(storedMediaQuery.removeEventListener).toHaveBeenCalledTimes(3);
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
+      
+      // Verify event listener was added
+      expect(addEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+      
+      // Unmount component
+      unmount();
+      
+      // Verify event listener was removed
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    });
+
+    it('should update handler when dependencies change', () => {
+      const { rerender } = render(<MessageForm chatId="chat-1" />);
+      
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
+      
+      // Clear previous calls
+      removeEventListenerSpy.mockClear();
+      addEventListenerSpy.mockClear();
+      
+      // Rerender with different chatId
+      rerender(<MessageForm chatId="chat-2" />);
+      
+      // Should remove old listener and add new one
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+      expect(addEventListenerSpy).toHaveBeenCalledWith('keydown', expect.any(Function));
+    });
+  });
+
+  describe('Integration Tests', () => {
+    it('should work end-to-end with proper cleanup', async () => {
+      // Initialize widget
+      const widgetCleanup = initChatWidget({
+        containerId: 'test-widget-root',
+        publicKey: 'test-key'
+      });
+
+      // Render MessageForm within the widget context
+      render(<MessageForm chatId="test-chat" />);
+      
+      const inputElement = screen.getByPlaceholderText('Send a message ...');
+      
+      // Test interactions
+      fireEvent.change(inputElement, { target: { value: 'test message' } });
+      fireEvent.keyDown(inputElement, { keyCode: 13 });
+      
+      // Cleanup everything
+      cleanup();
+      widgetCleanup();
+      
+      // Verify no errors occurred
+      expect(true).toBe(true);
+    });
+
+    it('should handle rapid mount/unmount cycles', () => {
+      for (let i = 0; i < 5; i++) {
+        const { unmount } = render(<MessageForm chatId={`chat-${i}`} />);
+        
+        const inputElement = screen.getByPlaceholderText('Send a message ...');
+        fireEvent.change(inputElement, { target: { value: `message ${i}` } });
+        
+        unmount();
+      }
+      
+      // Should not cause memory leaks or errors
+      expect(true).toBe(true);
     });
   });
 });

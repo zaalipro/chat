@@ -1,4 +1,4 @@
-import {useState} from 'react'
+import {useState, useCallback} from 'react'
 import { Mutation } from '@apollo/client/react/components'
 import store from 'store2'
 import { CREATE_MESSAGE } from './queries'
@@ -12,7 +12,8 @@ const MessageForm = ({chatId}) => {
   return (
     <Mutation mutation={CREATE_MESSAGE}>
       {(createMessage, { data }) => {
-        const handleSubmit = () => {
+        // ✅ STABLE EVENT HANDLER WITH useCallback
+        const handleSubmit = useCallback(() => {
           if (message.length < 1) {
             return
           }
@@ -37,9 +38,10 @@ const MessageForm = ({chatId}) => {
             // Optionally show validation error to user
             return
           }
-        }
+        }, [message, chatId])
 
-        const onKeyDown = (e) => {
+        // ✅ STABLE EVENT HANDLER WITH useCallback
+        const onKeyDown = useCallback((e) => {
           if (e.keyCode === 13) { // ENTER
             if (e.shiftKey) { // allow new lines with ENTER + SHIFT
               return
@@ -47,7 +49,16 @@ const MessageForm = ({chatId}) => {
             handleSubmit();
             e.preventDefault()
           }
-        }
+        }, [handleSubmit])
+
+        // ✅ FOCUS HANDLERS WITH useCallback
+        const handleFocus = useCallback(() => {
+          setInputFocus(true)
+        }, [])
+
+        const handleBlur = useCallback(() => {
+          setInputFocus(false)
+        }, [])
 
         return (
           <ChatInput>
@@ -59,13 +70,9 @@ const MessageForm = ({chatId}) => {
                 value={message}
                 autoFocus={true}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={onKeyDown}
-                onFocus={() => {
-                  setInputFocus(true)
-                }}
-                onBlur={() => {
-                  setInputFocus(false)
-                }}
+                onKeyDown={onKeyDown} // ✅ React handles cleanup automatically for built-in events
+                onFocus={handleFocus}
+                onBlur={handleBlur}
               />
               <SubmitButton onClick={handleSubmit}>Send</SubmitButton>
             </ChatInputShadow>

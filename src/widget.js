@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useRef, useEffect } from 'react';
 import ReactDOM from "react-dom/client";
 import { ApolloClient, createHttpLink, InMemoryCache, ApolloProvider, split, gql } from "@apollo/client";
 import { setContext } from '@apollo/client/link/context';
@@ -12,6 +12,123 @@ import { jwtDecode } from 'jwt-decode'
 import ThemeProvider from './components/styled/design-system/ThemeProvider';
 import GlobalStyles from './components/styled/design-system/GlobalStyles';
 import ApolloCacheMonitor from './utils/apollo-cache-monitor';
+
+// ✅ CUSTOM HOOK FOR ROBUST EVENT LISTENER MANAGEMENT
+const useEventListener = (target, event, handler, options = {}) => {
+  const savedHandler = useRef(handler);
+  const savedTarget = useRef(target);
+  const savedOptions = useRef(options);
+
+  // Update refs if dependencies change
+  useEffect(() => {
+    savedHandler.current = handler;
+    savedTarget.current = target;
+    savedOptions.current = options;
+  }, [handler, target, options]);
+
+  useEffect(() => {
+    if (!savedTarget.current) return;
+
+    const eventListener = (event) => {
+      try {
+        const startTime = performance.now();
+        savedHandler.current(event);
+        const endTime = performance.now();
+        
+        // Log performance metrics in development
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`Event ${event.type} handled in ${(endTime - startTime).toFixed(2)}ms`);
+        }
+      } catch (error) {
+        console.error(`Error in ${event.type} event handler:`, error);
+      }
+    };
+
+    // Add event listener with options
+    savedTarget.current.addEventListener(event, eventListener, savedOptions.current);
+    
+    // Return cleanup function
+    return () => {
+      savedTarget.current.removeEventListener(event, eventListener, savedOptions.current);
+      console.log(`Widget: ${event} event listener cleaned up`);
+    };
+  }, [event]);
+};
+
+// ✅ ENHANCED MEDIA QUERY MANAGER WITH LEGACY FALLBACKS
+class MediaQueryManager {
+  constructor() {
+    this.listeners = new Map(); // Track all listeners for cleanup
+    this.legacyFallbacks = new Map(); // Track legacy fallbacks
+  }
+
+  addListener(query, handler) {
+    const mediaQuery = window.matchMedia(query);
+    const listenerId = `${query}_${Date.now()}`;
+    
+    // Modern approach with addEventListener
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener('change', handler);
+      this.listeners.set(listenerId, {
+        mediaQuery,
+        handler,
+        type: 'modern'
+      });
+    } else {
+      // Legacy fallback for older browsers
+      mediaQuery.addListener(handler);
+      this.legacyFallbacks.set(listenerId, {
+        mediaQuery,
+        handler,
+        type: 'legacy'
+      });
+      console.warn('Widget: Using legacy addListener fallback for MediaQuery');
+    }
+    
+    // Initial call
+    handler(mediaQuery);
+    
+    return listenerId;
+  }
+
+  removeListener(listenerId) {
+    // Try modern cleanup first
+    if (this.listeners.has(listenerId)) {
+      const { mediaQuery, handler } = this.listeners.get(listenerId);
+      mediaQuery.removeEventListener('change', handler);
+      this.listeners.delete(listenerId);
+      return true;
+    }
+    
+    // Try legacy cleanup
+    if (this.legacyFallbacks.has(listenerId)) {
+      const { mediaQuery, handler } = this.legacyFallbacks.get(listenerId);
+      mediaQuery.removeListener(handler);
+      this.legacyFallbacks.delete(listenerId);
+      return true;
+    }
+    
+    return false;
+  }
+
+  cleanup() {
+    // Clean up all modern listeners
+    this.listeners.forEach(({ mediaQuery, handler }, listenerId) => {
+      mediaQuery.removeEventListener('change', handler);
+      console.log(`Widget: Modern MediaQuery listener ${listenerId} cleaned up`);
+    });
+    this.listeners.clear();
+    
+    // Clean up all legacy listeners
+    this.legacyFallbacks.forEach(({ mediaQuery, handler }, listenerId) => {
+      mediaQuery.removeListener(handler);
+      console.log(`Widget: Legacy MediaQuery listener ${listenerId} cleaned up`);
+    });
+    this.legacyFallbacks.clear();
+    
+    console.log('Widget: All MediaQuery listeners cleaned up');
+  }
+}
 
 // Widget initialization function
 export function initChatWidget(config = {}) {
@@ -260,8 +377,8 @@ export function initChatWidget(config = {}) {
 
   // Find or create container
   let container = document.getElementById(containerId);
-  let mediaQuery = null;
-  let handleMobileView = null;
+  let mediaQueryManager = null;
+  let mobileViewListenerId = null;
   
   if (!container) {
     container = document.createElement('div');
@@ -278,21 +395,25 @@ export function initChatWidget(config = {}) {
       pointer-events: none;
     `;
     
-    // Add responsive styles for mobile with proper event listener cleanup
-    mediaQuery = window.matchMedia('(max-width: 450px)');
-    handleMobileView = (e) => {
-      if (e.matches) {
-        container.style.width = '100%';
-        container.style.height = '100%';
-      } else {
-        container.style.width = '400px';
-        container.style.height = '700px';
+    // ✅ ENHANCED RESPONSIVE HANDLING WITH PROPER CLEANUP
+    mediaQueryManager = new MediaQueryManager();
+    
+    const handleMobileView = (e) => {
+      try {
+        if (e.matches) {
+          container.style.width = '100%';
+          container.style.height = '100%';
+        } else {
+          container.style.width = '400px';
+          container.style.height = '700px';
+        }
+      } catch (error) {
+        console.error('Widget: Error in mobile view handler:', error);
       }
     };
     
-    // Use modern addEventListener with cleanup
-    mediaQuery.addEventListener('change', handleMobileView);
-    handleMobileView(mediaQuery);
+    // Add listener with proper cleanup tracking
+    mobileViewListenerId = mediaQueryManager.addListener('(max-width: 450px)', handleMobileView);
     
     document.body.appendChild(container);
   }
@@ -381,15 +502,17 @@ export function initChatWidget(config = {}) {
 
   renderApp(null, null);
 
-  // Return enhanced cleanup function with proper event listener cleanup and cache cleanup
+  // ✅ ENHANCED CLEANUP FUNCTION WITH COMPREHENSIVE EVENT LISTENER CLEANUP
   return () => {
-    // Clean up media query event listener if it exists
-    if (mediaQuery && handleMobileView) {
-      mediaQuery.removeEventListener('change', handleMobileView);
-      console.log('Widget: MediaQuery event listener cleaned up');
+    console.log('Widget: Starting comprehensive cleanup...');
+    
+    // ✅ CLEAN UP MEDIA QUERY MANAGER AND ALL LISTENERS
+    if (mediaQueryManager) {
+      mediaQueryManager.cleanup();
+      console.log('Widget: MediaQuery manager and all listeners cleaned up');
     }
     
-    // Clean up advanced cache monitor
+    // ✅ CLEAN UP ADVANCED CACHE MONITOR
     try {
       if (client.cache._cacheMonitor) {
         // Generate final cache report before cleanup
@@ -420,7 +543,7 @@ export function initChatWidget(config = {}) {
       console.error('Widget: Error during Apollo cache cleanup:', error);
     }
     
-    // Clean up login client cache
+    // ✅ CLEAN UP LOGIN CLIENT CACHE
     try {
       loginClient.cache.reset();
       console.log('Widget: Login client cache reset on cleanup');
@@ -428,17 +551,23 @@ export function initChatWidget(config = {}) {
       console.error('Widget: Error during login client cache cleanup:', error);
     }
     
+    // ✅ CLEAN UP REACT ROOT
     root.unmount();
+    
+    // ✅ CLEAN UP DOM ELEMENTS
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
     
-    // Clean up the style element
+    // ✅ CLEAN UP STYLE ELEMENT
     if (style && style.parentNode) {
       style.parentNode.removeChild(style);
     }
     
+    // ✅ CLEAN UP GLOBAL REFERENCES
     window.ChatWidget = null;
+    window.chatInitialization = null;
+    
     console.log('Widget: All resources cleaned up successfully');
   };
 }
