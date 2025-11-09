@@ -31444,6 +31444,313 @@ const GlobalStyles = ft`
     box-sizing: inherit;
   }
 `;
+class ApolloCacheMonitor {
+  constructor(cache2, options = {}) {
+    this.cache = cache2;
+    this.options = __spreadValues({
+      monitoringInterval: 6e4,
+      // 1 minute
+      maxCacheSize: 10 * 1024 * 1024,
+      // 10MB
+      warningThreshold: 5 * 1024 * 1024,
+      // 5MB
+      criticalThreshold: 8 * 1024 * 1024,
+      // 8MB
+      enablePerformanceMetrics: true,
+      enableMemoryLeakDetection: true
+    }, options);
+    this.metrics = {
+      totalOperations: 0,
+      cacheHits: 0,
+      cacheMisses: 0,
+      memoryWarnings: 0,
+      cleanupsPerformed: 0,
+      lastCleanupTime: null,
+      averageCacheSize: 0,
+      peakCacheSize: 0
+    };
+    this.monitoringInterval = null;
+    this.performanceHistory = [];
+    this.memoryLeakDetector = new MemoryLeakDetector();
+  }
+  startMonitoring() {
+    console.log("🔍 Apollo Cache Monitor: Starting advanced cache monitoring");
+    this.monitoringInterval = setInterval(() => {
+      this.performHealthCheck();
+    }, this.options.monitoringInterval);
+    this.performHealthCheck();
+  }
+  stopMonitoring() {
+    if (this.monitoringInterval) {
+      clearInterval(this.monitoringInterval);
+      this.monitoringInterval = null;
+      console.log("🔍 Apollo Cache Monitor: Stopped cache monitoring");
+    }
+  }
+  performHealthCheck() {
+    const cacheSize = this.getCacheSize();
+    const timestamp = Date.now();
+    this.metrics.totalOperations++;
+    this.metrics.averageCacheSize = (this.metrics.averageCacheSize * (this.metrics.totalOperations - 1) + cacheSize) / this.metrics.totalOperations;
+    if (cacheSize > this.metrics.peakCacheSize) {
+      this.metrics.peakCacheSize = cacheSize;
+    }
+    console.log(`🔍 Cache Health: Size=${(cacheSize / 1024).toFixed(2)}KB, Peak=${(this.metrics.peakCacheSize / 1024).toFixed(2)}KB, Operations=${this.metrics.totalOperations}`);
+    if (cacheSize > this.options.criticalThreshold) {
+      this.handleCriticalSize(cacheSize);
+    } else if (cacheSize > this.options.warningThreshold) {
+      this.handleWarningSize(cacheSize);
+    }
+    if (this.options.enableMemoryLeakDetection) {
+      this.memoryLeakDetector.checkMemoryLeak(cacheSize, timestamp);
+    }
+    if (this.options.enablePerformanceMetrics) {
+      this.recordPerformanceMetrics(cacheSize, timestamp);
+    }
+  }
+  getCacheSize() {
+    try {
+      const cacheData = this.cache.extract();
+      return JSON.stringify(cacheData).length;
+    } catch (error) {
+      console.error("🔍 Cache Monitor: Error measuring cache size:", error);
+      return 0;
+    }
+  }
+  handleWarningSize(cacheSize) {
+    this.metrics.memoryWarnings++;
+    console.warn(`⚠️ Cache size warning: ${(cacheSize / 1024).toFixed(2)}KB (threshold: ${(this.options.warningThreshold / 1024).toFixed(2)}KB)`);
+    this.performGentleCleanup();
+  }
+  handleCriticalSize(cacheSize) {
+    console.error(`🚨 Cache size critical: ${(cacheSize / 1024).toFixed(2)}KB (threshold: ${(this.options.criticalThreshold / 1024).toFixed(2)}KB)`);
+    this.performAggressiveCleanup();
+  }
+  performGentleCleanup() {
+    try {
+      if (this.cache.gc) {
+        this.cache.gc();
+        console.log("🧹 Gentle cleanup: Garbage collection performed");
+      }
+      this.cleanupStaleEntries();
+      this.metrics.cleanupsPerformed++;
+      this.metrics.lastCleanupTime = Date.now();
+    } catch (error) {
+      console.error("🔍 Cache Monitor: Error during gentle cleanup:", error);
+    }
+  }
+  performAggressiveCleanup() {
+    try {
+      console.log("🧹 Aggressive cleanup: Starting comprehensive cache cleanup");
+      if (this.cache.gc) {
+        this.cache.gc();
+      }
+      this.clearLargeCacheEntries();
+      const newSize = this.getCacheSize();
+      if (newSize > this.options.criticalThreshold) {
+        console.warn("🧹 Aggressive cleanup: Cache still too large, performing partial reset");
+        this.performPartialReset();
+      }
+      this.metrics.cleanupsPerformed++;
+      this.metrics.lastCleanupTime = Date.now();
+      console.log("✅ Aggressive cleanup completed");
+    } catch (error) {
+      console.error("🔍 Cache Monitor: Error during aggressive cleanup:", error);
+    }
+  }
+  cleanupStaleEntries() {
+    try {
+      const cacheData = this.cache.extract();
+      let entriesRemoved = 0;
+      const oneHourAgo = Date.now() - 60 * 60 * 1e3;
+      Object.keys(cacheData).forEach((key) => {
+        if (cacheData[key] && typeof cacheData[key] === "object") {
+          Object.keys(cacheData[key]).forEach((subKey) => {
+            const entry = cacheData[key][subKey];
+            if (entry && entry.timestamp && entry.timestamp < oneHourAgo) {
+              delete cacheData[key][subKey];
+              entriesRemoved++;
+            }
+          });
+        }
+      });
+      if (entriesRemoved > 0) {
+        console.log(`🧹 Cleanup: Removed ${entriesRemoved} stale cache entries`);
+      }
+    } catch (error) {
+      console.error("🔍 Cache Monitor: Error cleaning stale entries:", error);
+    }
+  }
+  clearLargeCacheEntries() {
+    try {
+      const cacheData = this.cache.extract();
+      let entriesCleared = 0;
+      Object.keys(cacheData).forEach((key) => {
+        if (cacheData[key] && typeof cacheData[key] === "object") {
+          Object.keys(cacheData[key]).forEach((subKey) => {
+            const entry = cacheData[key][subKey];
+            const entrySize = JSON.stringify(entry).length;
+            if (entrySize > 50 * 1024) {
+              delete cacheData[key][subKey];
+              entriesCleared++;
+            }
+          });
+        }
+      });
+      if (entriesCleared > 0) {
+        console.log(`🧹 Cleanup: Cleared ${entriesCleared} large cache entries`);
+      }
+    } catch (error) {
+      console.error("🔍 Cache Monitor: Error clearing large entries:", error);
+    }
+  }
+  performPartialReset() {
+    try {
+      const cacheData = this.cache.extract();
+      const essentialData = {
+        __META: cacheData.__META || {}
+      };
+      Object.keys(cacheData).forEach((key) => {
+        if (key.startsWith("Query:") || key.startsWith("Mutation:")) {
+          essentialData[key] = cacheData[key];
+        }
+      });
+      this.cache.reset();
+      this.cache.restore(essentialData);
+      console.log("🧹 Partial reset: Preserved essential data, cleared cache");
+    } catch (error) {
+      console.error("🔍 Cache Monitor: Error during partial reset:", error);
+    }
+  }
+  recordPerformanceMetrics(cacheSize, timestamp) {
+    const performanceEntry = {
+      timestamp,
+      cacheSize,
+      operationsCount: this.metrics.totalOperations,
+      memoryUsage: this.getMemoryUsage()
+    };
+    this.performanceHistory.push(performanceEntry);
+    if (this.performanceHistory.length > 100) {
+      this.performanceHistory.shift();
+    }
+  }
+  getMemoryUsage() {
+    if (typeof performance !== "undefined" && performance.memory) {
+      return {
+        used: performance.memory.usedJSHeapSize,
+        total: performance.memory.totalJSHeapSize,
+        limit: performance.memory.jsHeapSizeLimit
+      };
+    }
+    return null;
+  }
+  getMetrics() {
+    return __spreadProps(__spreadValues({}, this.metrics), {
+      currentCacheSize: this.getCacheSize(),
+      monitoringActive: !!this.monitoringInterval,
+      memoryLeakDetection: this.memoryLeakDetector.getMetrics(),
+      performanceHistory: this.performanceHistory.slice(-10)
+      // Last 10 entries
+    });
+  }
+  generateReport() {
+    const metrics = this.getMetrics();
+    const cacheSize = metrics.currentCacheSize;
+    return {
+      summary: {
+        cacheSizeMB: (cacheSize / (1024 * 1024)).toFixed(2),
+        totalOperations: metrics.totalOperations,
+        cleanupsPerformed: metrics.cleanupsPerformed,
+        memoryWarnings: metrics.memoryWarnings,
+        peakCacheSizeMB: (metrics.peakCacheSize / (1024 * 1024)).toFixed(2),
+        averageCacheSizeMB: (metrics.averageCacheSize / (1024 * 1024)).toFixed(2)
+      },
+      health: {
+        status: cacheSize > this.options.criticalThreshold ? "critical" : cacheSize > this.options.warningThreshold ? "warning" : "healthy",
+        utilizationPercent: (cacheSize / this.options.maxCacheSize * 100).toFixed(1)
+      },
+      recommendations: this.generateRecommendations(metrics),
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    };
+  }
+  generateRecommendations(metrics) {
+    const recommendations = [];
+    const cacheSize = metrics.currentCacheSize;
+    if (cacheSize > this.options.criticalThreshold) {
+      recommendations.push("🚨 Cache size is critical. Consider reducing cache retention periods.");
+    } else if (cacheSize > this.options.warningThreshold) {
+      recommendations.push("⚠️ Cache size is elevated. Monitor for memory leaks.");
+    }
+    if (metrics.memoryWarnings > 5) {
+      recommendations.push("📊 Frequent memory warnings detected. Review cache configuration.");
+    }
+    if (metrics.cleanupsPerformed > 10) {
+      recommendations.push("🧹 High cleanup frequency. Consider optimizing cache policies.");
+    }
+    if (this.memoryLeakDetector.hasPotentialLeak()) {
+      recommendations.push("🔍 Potential memory leak detected. Investigate subscription cleanup.");
+    }
+    if (recommendations.length === 0) {
+      recommendations.push("✅ Cache performance is optimal.");
+    }
+    return recommendations;
+  }
+  destroy() {
+    this.stopMonitoring();
+    this.memoryLeakDetector.destroy();
+    console.log("🔍 Apollo Cache Monitor: Destroyed");
+  }
+}
+class MemoryLeakDetector {
+  constructor() {
+    this.sizeHistory = [];
+    this.maxHistoryLength = 60;
+    this.leakThreshold = 1024 * 1024;
+    this.suspiciousGrowthCount = 0;
+  }
+  checkMemoryLeak(currentSize, timestamp) {
+    this.sizeHistory.push({ size: currentSize, timestamp });
+    if (this.sizeHistory.length > this.maxHistoryLength) {
+      this.sizeHistory.shift();
+    }
+    if (this.sizeHistory.length >= 10) {
+      const recentGrowth = this.calculateGrowthRate();
+      if (recentGrowth > this.leakThreshold) {
+        this.suspiciousGrowthCount++;
+        console.warn(`🔍 Memory Leak Detector: Suspicious growth detected: ${(recentGrowth / 1024).toFixed(2)}KB`);
+        if (this.suspiciousGrowthCount >= 3) {
+          console.error("🚨 Memory Leak Detector: Potential memory leak confirmed!");
+          return true;
+        }
+      } else {
+        this.suspiciousGrowthCount = Math.max(0, this.suspiciousGrowthCount - 1);
+      }
+    }
+    return false;
+  }
+  calculateGrowthRate() {
+    if (this.sizeHistory.length < 2) return 0;
+    const recent = this.sizeHistory.slice(-10);
+    const oldest = recent[0];
+    const newest = recent[recent.length - 1];
+    return newest.size - oldest.size;
+  }
+  hasPotentialLeak() {
+    return this.suspiciousGrowthCount >= 3;
+  }
+  getMetrics() {
+    return {
+      suspiciousGrowthCount: this.suspiciousGrowthCount,
+      hasPotentialLeak: this.hasPotentialLeak(),
+      historyLength: this.sizeHistory.length,
+      currentGrowthRate: this.calculateGrowthRate()
+    };
+  }
+  destroy() {
+    this.sizeHistory = [];
+    this.suspiciousGrowthCount = 0;
+  }
+}
 function initChatWidget(config = {}) {
   const {
     containerId = "chat-widget-root",
@@ -31532,9 +31839,23 @@ function initChatWidget(config = {}) {
         errorPolicy: "all"
       }
     },
-    // Add cache cleanup hooks
+    // Add cache cleanup hooks with enhanced monitoring
     onCacheInit: (cache22) => {
-      console.log("Widget: Apollo cache initialized with memory management");
+      console.log("Widget: Apollo cache initialized with enhanced memory management");
+      const cacheMonitor = new ApolloCacheMonitor(cache22, {
+        monitoringInterval: 6e4,
+        // 1 minute
+        maxCacheSize: 1024 * 1024 * 10,
+        // 10MB
+        warningThreshold: 1024 * 1024 * 5,
+        // 5MB
+        criticalThreshold: 1024 * 1024 * 8,
+        // 8MB
+        enablePerformanceMetrics: true,
+        enableMemoryLeakDetection: true
+      });
+      cacheMonitor.startMonitoring();
+      cache22._cacheMonitor = cacheMonitor;
       const cleanupInterval = setInterval(() => {
         try {
           if (cache22.gc) {
@@ -31543,7 +31864,7 @@ function initChatWidget(config = {}) {
           }
           const cacheSize = cache22.extract();
           const estimatedSize = JSON.stringify(cacheSize).length;
-          console.log(`Widget: Current cache size: ${estimatedSize} bytes`);
+          console.log(`Widget: Current cache size: ${(estimatedSize / 1024).toFixed(2)}KB`);
           if (estimatedSize > 1024 * 1024 * 5) {
             console.warn("Widget: Cache size exceeded threshold, performing aggressive cleanup");
             if (cache22.reset) {
@@ -31559,6 +31880,10 @@ function initChatWidget(config = {}) {
         }
       }, 5 * 60 * 1e3);
       cache22._cleanupInterval = cleanupInterval;
+      setTimeout(() => {
+        const report = cacheMonitor.generateReport();
+        console.log("🔍 Initial Cache Report:", report);
+      }, 2e3);
     },
     onCacheReset: () => {
       console.log("Widget: Apollo cache reset");
@@ -31688,7 +32013,20 @@ function initChatWidget(config = {}) {
     window.chatInitialization = { attemptLogin };
     window.ChatWidget = {
       init: initChatWidget,
-      attemptLogin
+      attemptLogin,
+      // Expose cache monitoring utilities for debugging
+      getCacheReport: () => {
+        if (client2.cache._cacheMonitor) {
+          return client2.cache._cacheMonitor.generateReport();
+        }
+        return null;
+      },
+      getCacheMetrics: () => {
+        if (client2.cache._cacheMonitor) {
+          return client2.cache._cacheMonitor.getMetrics();
+        }
+        return null;
+      }
     };
   }
   renderApp(null, null);
@@ -31698,6 +32036,12 @@ function initChatWidget(config = {}) {
       console.log("Widget: MediaQuery event listener cleaned up");
     }
     try {
+      if (client2.cache._cacheMonitor) {
+        const finalReport = client2.cache._cacheMonitor.generateReport();
+        console.log("🔍 Final Cache Report:", finalReport);
+        client2.cache._cacheMonitor.destroy();
+        console.log("Widget: Advanced cache monitor stopped and destroyed");
+      }
       if (client2.cache._cleanupInterval) {
         clearInterval(client2.cache._cleanupInterval);
         console.log("Widget: Apollo cache cleanup interval cleared");

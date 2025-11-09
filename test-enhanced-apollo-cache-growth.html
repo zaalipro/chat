@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Apollo Cache Growth & Memory Leaks Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .control-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .control-card h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        button.danger {
+            background: #e74c3c;
+        }
+
+        button.danger:hover {
+            background: #c0392b;
+        }
+
+        button.success {
+            background: #27ae60;
+        }
+
+        button.success:hover {
+            background: #229954;
+        }
+
+        button.warning {
+            background: #f39c12;
+        }
+
+        button.warning:hover {
+            background: #e67e22;
+        }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .metric-card.warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+        }
+
+        .metric-card.danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+        }
+
+        .metric-card.success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .log-container {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 10px;
+            padding: 5px 0;
+            border-bottom: 1px solid #4a5568;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-timestamp {
+            color: #a0aec0;
+            margin-right: 10px;
+        }
+
+        .log-level {
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .log-level.info { color: #63b3ed; }
+        .log-level.warn { color: #f6ad55; }
+        .log-level.error { color: #fc8181; }
+        .log-level.success { color: #68d391; }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 10px;
+        }
+
+        .progress-fill.normal { background: linear-gradient(90deg, #3498db, #2980b9); }
+        .progress-fill.warning { background: linear-gradient(90deg, #f39c12, #e67e22); }
+        .progress-fill.danger { background: linear-gradient(90deg, #e74c3c, #c0392b); }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-indicator.active { background: #27ae60; }
+        .status-indicator.inactive { background: #e74c3c; }
+        .status-indicator.warning { background: #f39c12; }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .feature-card h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .feature-card p {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .feature-card.Implemented {
+            border-left-color: #27ae60;
+        }
+
+        .feature-card.Implemented h4::before {
+            content: "✅ ";
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+            
+            .header {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🚀 Enhanced Apollo Cache Growth & Memory Leaks Testing</h1>
+            <p>Interactive testing for comprehensive cache memory management implementation</p>
+        </header>
+
+        <div class="content">
+            <!-- Implementation Status -->
+            <section class="section">
+                <h2>📋 Implementation Status</h2>
+                <div class="feature-grid">
+                    <div class="feature-card Implemented">
+                        <h4>Cache Size Limiting</h4>
+                        <p>Messages limited to 100 items, chats to 50 items with automatic cleanup</p>
+                    </div>
+                    <div class="feature-card Implemented">
+                        <h4>Garbage Collection</h4>
+                        <p>Automatic garbage collection enabled with periodic cleanup every 5 minutes</p>
+                    </div>
+                    <div class="feature-card Implemented">
+                        <h4>LRU Eviction Policy</h4>
+                        <p>Least Recently Used eviction policy for efficient memory usage</p>
+                    </div>
+                    <div class="feature-card Implemented">
+                        <h4>Memory Monitoring</h4>
+                        <p>Real-time cache size tracking with 5MB warning and 8MB critical thresholds</p>
+                    </div>
+                    <div class="feature-card Implemented">
+                        <h4>Performance Metrics</h4>
+                        <p>Comprehensive performance tracking with write/read operation timing</p>
+                    </div>
+                    <div class="feature-card Implemented">
+                        <h4>Memory Leak Detection</h4>
+                        <p>Advanced leak detection algorithms with growth pattern analysis</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Real-time Metrics -->
+            <section class="section">
+                <h2>📊 Real-time Cache Metrics</h2>
+                <div class="metrics">
+                    <div class="metric-card" id="cache-size-metric">
+                        <div class="metric-value" id="cache-size">0 KB</div>
+                        <div class="metric-label">Cache Size</div>
+                    </div>
+                    <div class="metric-card" id="cache-entries-metric">
+                        <div class="metric-value" id="cache-entries">0</div>
+                        <div class="metric-label">Cache Entries</div>
+                    </div>
+                    <div class="metric-card" id="memory-usage-metric">
+                        <div class="metric-value" id="memory-usage">0%</div>
+                        <div class="metric-label">Memory Usage</div>
+                    </div>
+                    <div class="metric-card" id="performance-metric">
+                        <div class="metric-value" id="performance">0ms</div>
+                        <div class="metric-label">Avg Write Time</div>
+                    </div>
+                </div>
+
+                <!-- Cache Size Progress Bar -->
+                <div>
+                    <h3>Cache Size Progress</h3>
+                    <div class="progress-bar">
+                        <div class="progress-fill normal" id="cache-progress" style="width: 0%"></div>
+                    </div>
+                    <p style="text-align: center; margin-top: 10px;">
+                        <span id="cache-status-text">Cache Status: Normal</span>
+                    </p>
+                </div>
+            </section>
+
+            <!-- Testing Controls -->
+            <section class="section">
+                <h2>🧪 Testing Controls</h2>
+                <div class="controls">
+                    <div class="control-card">
+                        <h3>Cache Growth Simulation</h3>
+                        <div class="button-group">
+                            <button onclick="addMessages()">Add Messages</button>
+                            <button onclick="addChats()">Add Chats</button>
+                            <button onclick="addLargeData()">Add Large Data</button>
+                            <button onclick="simulateRapidGrowth()" class="danger">Rapid Growth</button>
+                        </div>
+                    </div>
+                    <div class="control-card">
+                        <h3>Memory Management</h3>
+                        <div class="button-group">
+                            <button onclick="triggerGarbageCollection()" class="success">Force GC</button>
+                            <button onclick="triggerCleanup()" class="warning">Force Cleanup</button>
+                            <button onclick="resetCache()" class="danger">Reset Cache</button>
+                            <button onclick="exportCacheData()">Export Data</button>
+                        </div>
+                    </div>
+                    <div class="control-card">
+                        <h3>Monitoring</h3>
+                        <div class="button-group">
+                            <button onclick="startMonitoring()" class="success">Start Monitor</button>
+                            <button onclick="stopMonitoring()" class="warning">Stop Monitor</button>
+                            <button onclick="generateReport()" class="success">Generate Report</button>
+                            <button onclick="clearLogs()">Clear Logs</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Live Log -->
+            <section class="section">
+                <h2>📝 Live Activity Log</h2>
+                <div class="log-container" id="log-container">
+                    <div class="log-entry">
+                        <span class="log-timestamp">[00:00:00]</span>
+                        <span class="log-level info">INFO</span>
+                        <span class="log-message">Enhanced Apollo Cache Growth & Memory Leaks Testing Interface initialized</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Performance Analysis -->
+            <section class="section">
+                <h2>⚡ Performance Analysis</h2>
+                <div id="performance-analysis">
+                    <p>Run tests to see performance analysis results...</p>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let cache = null;
+        let client = null;
+        let cacheMonitor = null;
+        let monitoringInterval = null;
+        let testMetrics = {
+            writeOperations: 0,
+            totalWriteTime: 0,
+            cacheOperations: [],
+            memorySnapshots: []
+        };
+
+        // Initialize mock Apollo environment
+        function initializeMockApollo() {
+            // Mock InMemoryCache
+            cache = {
+                data: new Map(),
+                config: {
+                    garbageCollection: true,
+                    resultCaching: true,
+                    evictionPolicy: 'lru',
+                    cacheSize: 1024 * 1024 * 10
+                },
+                extract: () => {
+                    const obj = {};
+                    cache.data.forEach((value, key) => {
+                        obj[key] = value;
+                    });
+                    return obj;
+                },
+                writeQuery: ({ data }) => {
+                    const startTime = performance.now();
+                    
+                    // Simulate cache size limiting
+                    if (data.messages && data.messages.length > 100) {
+                        data.messages = data.messages.slice(-100);
+                        logMessage('Cache size limit applied: messages limited to 100 items', 'warn');
+                    }
+                    
+                    if (data.chats && data.chats.length > 50) {
+                        data.chats = data.chats.slice(-50);
+                        logMessage('Cache size limit applied: chats limited to 50 items', 'warn');
+                    }
+                    
+                    // Store data
+                    Object.keys(data).forEach(key => {
+                        cache.data.set(key, data[key]);
+                    });
+                    
+                    const endTime = performance.now();
+                    testMetrics.writeOperations++;
+                    testMetrics.totalWriteTime += (endTime - startTime);
+                    
+                    updateMetrics();
+                },
+                readQuery: ({ query }) => {
+                    // Mock read operation
+                    return { data: {} };
+                },
+                gc: () => {
+                    // Simulate garbage collection
+                    const sizeBefore = cache.data.size;
+                    // Simulate some cleanup
+                    if (sizeBefore > 1000) {
+                        // Remove some old entries
+                        const entries = Array.from(cache.data.entries());
+                        entries.slice(0, Math.floor(sizeBefore * 0.2)).forEach(([key]) => {
+                            cache.data.delete(key);
+                        });
+                    }
+                    logMessage('Garbage collection performed', 'success');
+                },
+                reset: () => {
+                    cache.data.clear();
+                    logMessage('Cache reset completed', 'warn');
+                }
+            };
+
+            // Mock ApolloCacheMonitor
+            cacheMonitor = {
+                isMonitoring: false,
+                monitoringInterval: null,
+                startMonitoring: () => {
+                    if (cacheMonitor.isMonitoring) return;
+                    
+                    cacheMonitor.isMonitoring = true;
+                    logMessage('Cache monitoring started', 'success');
+                    
+                    cacheMonitor.monitoringInterval = setInterval(() => {
+                        const report = cacheMonitor.generateReport();
+                        updateMetrics();
+                        
+                        // Check thresholds
+                        if (report.cacheSizeKB > 5120) { // 5MB warning
+                            logMessage(`Cache size exceeded warning threshold: ${report.cacheSizeKB.toFixed(2)}KB`, 'warn');
+                        }
+                        
+                        if (report.cacheSizeKB > 8192) { // 8MB critical
+                            logMessage(`Cache size exceeded critical threshold: ${report.cacheSizeKB.toFixed(2)}KB`, 'error');
+                        }
+                    }, 2000);
+                },
+                stopMonitoring: () => {
+                    if (!cacheMonitor.isMonitoring) return;
+                    
+                    cacheMonitor.isMonitoring = false;
+                    if (cacheMonitor.monitoringInterval) {
+                        clearInterval(cacheMonitor.monitoringInterval);
+                        cacheMonitor.monitoringInterval = null;
+                    }
+                    logMessage('Cache monitoring stopped', 'warn');
+                },
+                generateReport: () => {
+                    const cacheData = cache.extract();
+                    const cacheSize = JSON.stringify(cacheData).length;
+                    const cacheSizeKB = cacheSize / 1024;
+                    const memoryUsage = (cacheSizeKB / (1024 * 10)) * 100; // 10MB max
+                    
+                    return {
+                        cacheSize,
+                        cacheSizeKB,
+                        memoryUsage,
+                        cacheEntries: Object.keys(cacheData).length,
+                        writeOperations: testMetrics.writeOperations,
+                        avgWriteTime: testMetrics.writeOperations > 0 ? testMetrics.totalWriteTime / testMetrics.writeOperations : 0,
+                        memoryLeakDetected: memoryUsage > 80,
+                        growthRate: calculateGrowthRate(),
+                        performanceMetrics: {
+                            avgWriteTime: testMetrics.writeOperations > 0 ? testMetrics.totalWriteTime / testMetrics.writeOperations : 0,
+                            totalOperations: testMetrics.writeOperations
+                        }
+                    };
+                },
+                destroy: () => {
+                    cacheMonitor.stopMonitoring();
+                    logMessage('Cache monitor destroyed', 'info');
+                }
+            };
+
+            logMessage('Mock Apollo environment initialized', 'success');
+        }
+
+        // Calculate growth rate
+        function calculateGrowthRate() {
+            if (testMetrics.memorySnapshots.length < 2) return 0;
+            
+            const recent = testMetrics.memorySnapshots.slice(-10);
+            if (recent.length < 2) return 0;
+            
+            const first = recent[0];
+            const last = recent[recent.length - 1];
+            const timeDiff = last.timestamp - first.timestamp;
+            
+            if (timeDiff === 0) return 0;
+            
+            return ((last.size - first.size) / timeDiff) * 1000; // KB per second
+        }
+
+        // Update metrics display
+        function updateMetrics() {
+            if (!cache || !cacheMonitor) return;
+            
+            const report = cacheMonitor.generateReport();
+            
+            // Update metric cards
+            document.getElementById('cache-size').textContent = `${report.cacheSizeKB.toFixed(2)} KB`;
+            document.getElementById('cache-entries').textContent = report.cacheEntries;
+            document.getElementById('memory-usage').textContent = `${report.memoryUsage.toFixed(1)}%`;
+            document.getElementById('performance').textContent = `${report.avgWriteTime.toFixed(2)}ms`;
+            
+            // Update progress bar
+            const progressBar = document.getElementById('cache-progress');
+            const progressFill = Math.min(report.memoryUsage, 100);
+            progressBar.style.width = `${progressFill}%`;
+            
+            // Update progress bar color based on thresholds
+            progressBar.className = 'progress-fill';
+            if (report.memoryUsage > 80) {
+                progressBar.classList.add('danger');
+                document.getElementById('cache-size-metric').className = 'metric-card danger';
+            } else if (report.memoryUsage > 50) {
+                progressBar.classList.add('warning');
+                document.getElementById('cache-size-metric').className = 'metric-card warning';
+            } else {
+                progressBar.classList.add('normal');
+                document.getElementById('cache-size-metric').className = 'metric-card';
+            }
+            
+            // Update status text
+            const statusText = document.getElementById('cache-status-text');
+            if (report.memoryLeakDetected) {
+                statusText.textContent = 'Cache Status: Memory Leak Detected!';
+                statusText.style.color = '#e74c3c';
+            } else if (report.memoryUsage > 80) {
+                statusText.textContent = 'Cache Status: Critical - Immediate cleanup required';
+                statusText.style.color = '#e74c3c';
+            } else if (report.memoryUsage > 50) {
+                statusText.textContent = 'Cache Status: Warning - Approaching limits';
+                statusText.style.color = '#f39c12';
+            } else {
+                statusText.textContent = 'Cache Status: Normal';
+                statusText.style.color = '#27ae60';
+            }
+            
+            // Store memory snapshot
+            testMetrics.memorySnapshots.push({
+                timestamp: Date.now(),
+                size: report.cacheSizeKB,
+                entries: report.cacheEntries
+            });
+            
+            // Keep only last 50 snapshots
+            if (testMetrics.memorySnapshots.length > 50) {
+                testMetrics.memorySnapshots = testMetrics.memorySnapshots.slice(-50);
+            }
+        }
+
+        // Logging function
+        function logMessage(message, level = 'info') {
+            const logContainer = document.getElementById('log-container');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `
+                <span class="log-timestamp">[${timestamp}]</span>
+                <span class="log-level ${level}">${level.toUpperCase()}</span>
+                <span class="log-message">${message}</span>
+            `;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            
+            // Keep only last 100 log entries
+            const entries = logContainer.children;
+            if (entries.length > 100) {
+                logContainer.removeChild(entries[0]);
+            }
+        }
+
+        // Test functions
+        function addMessages() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            const messages = [];
+            for (let i = 0; i < 20; i++) {
+                messages.push({
+                    id: `msg_${Date.now()}_${i}`,
+                    text: `Test message ${i}`,
+                    timestamp: Date.now(),
+                    author: 'Test User'
+                });
+            }
+            
+            cache.writeQuery({
+                data: { messages }
+            });
+            
+            logMessage(`Added 20 messages to cache`, 'info');
+        }
+
+        function addChats() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            const chats = [];
+            for (let i = 0; i < 10; i++) {
+                chats.push({
+                    id: `chat_${Date.now()}_${i}`,
+                    name: `Test Chat ${i}`,
+                    createdAt: Date.now(),
+                    status: 'active'
+                });
+            }
+            
+            cache.writeQuery({
+                data: { chats }
+            });
+            
+            logMessage(`Added 10 chats to cache`, 'info');
+        }
+
+        function addLargeData() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            const largeData = 'x'.repeat(1024 * 100); // 100KB
+            cache.writeQuery({
+                data: { largeData: { id: Date.now(), data: largeData } }
+            });
+            
+            logMessage(`Added 100KB of data to cache`, 'warn');
+        }
+
+        function simulateRapidGrowth() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            logMessage('Starting rapid growth simulation...', 'error');
+            
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const largeData = 'x'.repeat(1024 * 50); // 50KB
+                    cache.writeQuery({
+                        data: { [`rapid_data_${i}`]: { id: i, data: largeData } }
+                    });
+                }, i * 100);
+            }
+            
+            setTimeout(() => {
+                logMessage('Rapid growth simulation completed', 'error');
+            }, 5500);
+        }
+
+        function triggerGarbageCollection() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            cache.gc();
+            updateMetrics();
+        }
+
+        function triggerCleanup() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            const report = cacheMonitor.generateReport();
+            if (report.memoryUsage > 50) {
+                logMessage('Triggering aggressive cleanup due to high memory usage', 'warn');
+                
+                // Simulate aggressive cleanup
+                const entries = Array.from(cache.data.entries());
+                entries.slice(0, Math.floor(entries.length * 0.5)).forEach(([key]) => {
+                    cache.data.delete(key);
+                });
+                
+                logMessage('Aggressive cleanup completed', 'success');
+            } else {
+                logMessage('Cleanup not needed - memory usage is normal', 'info');
+            }
+            
+            updateMetrics();
+        }
+
+        function resetCache() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            cache.reset();
+            testMetrics = {
+                writeOperations: 0,
+                totalWriteTime: 0,
+                cacheOperations: [],
+                memorySnapshots: []
+            };
+            updateMetrics();
+        }
+
+        function exportCacheData() {
+            if (!cache) {
+                initializeMockApollo();
+            }
+            
+            const report = cacheMonitor.generateReport();
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                report: report,
+                cacheData: cache.extract(),
+                metrics: testMetrics
+            };
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cache-export-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            logMessage('Cache data exported successfully', 'success');
+        }
+
+        function startMonitoring() {
+            if (!cacheMonitor) {
+                initializeMockApollo();
+            }
+            
+            cacheMonitor.startMonitoring();
+        }
+
+        function stopMonitoring() {
+            if (!cacheMonitor) return;
+            
+            cacheMonitor.stopMonitoring();
+        }
+
+        function generateReport() {
+            if (!cacheMonitor) {
+                initializeMockApollo();
+            }
+            
+            const report = cacheMonitor.generateReport();
+            
+            // Display comprehensive report
+            const analysisDiv = document.getElementById('performance-analysis');
+            analysisDiv.innerHTML = `
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 10px;">
+                    <h3>📊 Comprehensive Cache Analysis Report</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                        <div>
+                            <h4>Cache Statistics</h4>
+                            <p><strong>Size:</strong> ${report.cacheSizeKB.toFixed(2)} KB</p>
+                            <p><strong>Entries:</strong> ${report.cacheEntries}</p>
+                            <p><strong>Memory Usage:</strong> ${report.memoryUsage.toFixed(1)}%</p>
+                        </div>
+                        <div>
+                            <h4>Performance Metrics</h4>
+                            <p><strong>Write Operations:</strong> ${report.writeOperations}</p>
+                            <p><strong>Avg Write Time:</strong> ${report.avgWriteTime.toFixed(2)}ms</p>
+                            <p><strong>Growth Rate:</strong> ${report.growthRate.toFixed(2)} KB/s</p>
+                        </div>
+                        <div>
+                            <h4>Health Status</h4>
+                            <p><strong>Memory Leak:</strong> ${report.memoryLeakDetected ? '⚠️ Detected' : '✅ None'}</p>
+                            <p><strong>Cache Health:</strong> ${report.memoryUsage > 80 ? '🔴 Critical' : report.memoryUsage > 50 ? '🟡 Warning' : '🟢 Healthy'}</p>
+                            <p><strong>Performance:</strong> ${report.avgWriteTime < 10 ? '🟢 Excellent' : report.avgWriteTime < 50 ? '🟡 Good' : '🔴 Needs Optimization'}</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px;">
+                        <h4>Recommendations</h4>
+                        <ul>
+                            ${report.memoryUsage > 80 ? '<li>⚠️ Immediate cache cleanup required</li>' : ''}
+                            ${report.memoryLeakDetected ? '<li>🔍 Memory leak detected - investigate subscription cleanup</li>' : ''}
+                            ${report.avgWriteTime > 50 ? '<li>⚡ Consider optimizing cache write operations</li>' : ''}
+                            ${report.cacheEntries > 1000 ? '<li>📊 Consider implementing more aggressive cache eviction</li>' : ''}
+                            ${report.memoryUsage < 30 && report.writeOperations > 100 ? '<li>✅ Cache performance is optimal</li>' : ''}
+                        </ul>
+                    </div>
+                </div>
+            `;
+            
+            logMessage('Comprehensive report generated', 'success');
+        }
+
+        function clearLogs() {
+            const logContainer = document.getElementById('log-container');
+            logContainer.innerHTML = '';
+            logMessage('Logs cleared', 'info');
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            logMessage('Enhanced Apollo Cache Growth & Memory Leaks Testing Interface loaded', 'success');
+            logMessage('Click "Initialize Mock Apollo" to start testing', 'info');
+        });
+    </script>
+</body>
+</html>

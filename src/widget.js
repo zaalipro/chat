@@ -11,6 +11,7 @@ import secureStore from './utils/crypto';
 import { jwtDecode } from 'jwt-decode'
 import ThemeProvider from './components/styled/design-system/ThemeProvider';
 import GlobalStyles from './components/styled/design-system/GlobalStyles';
+import ApolloCacheMonitor from './utils/apollo-cache-monitor';
 
 // Widget initialization function
 export function initChatWidget(config = {}) {
@@ -112,7 +113,7 @@ export function initChatWidget(config = {}) {
     authLink.concat(httpLink),
   )
 
-  // Create cache with size limits and garbage collection to prevent memory growth
+  // Create cache with enhanced memory management and type policies
   const cache = new InMemoryCache({
     // Enable garbage collection to clean up unused cache entries
     garbageCollection: true,
@@ -145,11 +146,27 @@ export function initChatWidget(config = {}) {
         errorPolicy: 'all'
       }
     },
-    // Add cache cleanup hooks
+    // Add cache cleanup hooks with enhanced monitoring
     onCacheInit: (cache) => {
-      console.log('Widget: Apollo cache initialized with memory management');
+      console.log('Widget: Apollo cache initialized with enhanced memory management');
       
-      // Set up periodic cache cleanup
+      // Initialize advanced cache monitor
+      const cacheMonitor = new ApolloCacheMonitor(cache, {
+        monitoringInterval: 60000, // 1 minute
+        maxCacheSize: 1024 * 1024 * 10, // 10MB
+        warningThreshold: 1024 * 1024 * 5, // 5MB
+        criticalThreshold: 1024 * 1024 * 8, // 8MB
+        enablePerformanceMetrics: true,
+        enableMemoryLeakDetection: true
+      });
+      
+      // Start monitoring
+      cacheMonitor.startMonitoring();
+      
+      // Store monitor instance for cleanup
+      cache._cacheMonitor = cacheMonitor;
+      
+      // Set up periodic cache cleanup as fallback
       const cleanupInterval = setInterval(() => {
         try {
           // Perform garbage collection if available
@@ -161,7 +178,7 @@ export function initChatWidget(config = {}) {
           // Log cache size for monitoring
           const cacheSize = cache.extract();
           const estimatedSize = JSON.stringify(cacheSize).length;
-          console.log(`Widget: Current cache size: ${estimatedSize} bytes`);
+          console.log(`Widget: Current cache size: ${(estimatedSize / 1024).toFixed(2)}KB`);
           
           // If cache is getting too large, perform aggressive cleanup
           if (estimatedSize > 1024 * 1024 * 5) { // 5MB threshold
@@ -182,6 +199,12 @@ export function initChatWidget(config = {}) {
       
       // Store cleanup interval for later cleanup
       cache._cleanupInterval = cleanupInterval;
+      
+      // Generate and log initial cache report
+      setTimeout(() => {
+        const report = cacheMonitor.generateReport();
+        console.log('🔍 Initial Cache Report:', report);
+      }, 2000);
     },
     onCacheReset: () => {
       console.log('Widget: Apollo cache reset');
@@ -339,13 +362,26 @@ export function initChatWidget(config = {}) {
     window.chatInitialization = { attemptLogin };
     window.ChatWidget = {
       init: initChatWidget,
-      attemptLogin
+      attemptLogin,
+      // Expose cache monitoring utilities for debugging
+      getCacheReport: () => {
+        if (client.cache._cacheMonitor) {
+          return client.cache._cacheMonitor.generateReport();
+        }
+        return null;
+      },
+      getCacheMetrics: () => {
+        if (client.cache._cacheMonitor) {
+          return client.cache._cacheMonitor.getMetrics();
+        }
+        return null;
+      }
     }
   }
 
   renderApp(null, null);
 
-  // Return cleanup function with proper event listener cleanup and cache cleanup
+  // Return enhanced cleanup function with proper event listener cleanup and cache cleanup
   return () => {
     // Clean up media query event listener if it exists
     if (mediaQuery && handleMobileView) {
@@ -353,8 +389,19 @@ export function initChatWidget(config = {}) {
       console.log('Widget: MediaQuery event listener cleaned up');
     }
     
-    // Clean up Apollo cache and intervals
+    // Clean up advanced cache monitor
     try {
+      if (client.cache._cacheMonitor) {
+        // Generate final cache report before cleanup
+        const finalReport = client.cache._cacheMonitor.generateReport();
+        console.log('🔍 Final Cache Report:', finalReport);
+        
+        // Stop monitoring and destroy monitor
+        client.cache._cacheMonitor.destroy();
+        console.log('Widget: Advanced cache monitor stopped and destroyed');
+      }
+      
+      // Clean up legacy cleanup interval
       if (client.cache._cleanupInterval) {
         clearInterval(client.cache._cleanupInterval);
         console.log('Widget: Apollo cache cleanup interval cleared');
