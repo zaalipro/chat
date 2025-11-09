@@ -3,11 +3,50 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import prefixwrap from 'postcss-prefixwrap'
 
+// Custom CSP plugin for Vite
+const cspPlugin = {
+  name: 'vite-plugin-csp',
+  transformIndexHtml(html) {
+    // Get environment variables for dynamic CSP configuration
+    const graphqlHttpUrl = process.env.VITE_GRAPHQL_HTTP_URL || process.env.REACT_APP_GRAPHQL_HTTP_URL || 'https://api.example.com';
+    const graphqlWsUrl = process.env.VITE_GRAPHQL_WS_URL || process.env.REACT_APP_GRAPHQL_WS_URL || 'wss://api.example.com';
+    
+    // Extract domain from URLs for CSP connect-src
+    const httpDomain = new URL(graphqlHttpUrl).origin;
+    const wsDomain = new URL(graphqlWsUrl).origin;
+    
+    // Build CSP policy
+    const cspContent = [
+      "default-src 'self';",
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval';", // Allow inline scripts and eval for React development
+      "style-src 'self' 'unsafe-inline';", // Allow inline styles for styled-components
+      `connect-src 'self' ${httpDomain} ${wsDomain} wss://*.example.com https://*.example.com;`, // GraphQL endpoints
+      "img-src 'self' data: blob: https:;", // Allow images, data URLs, and blob URLs
+      "font-src 'self' data:;", // Allow fonts and data URLs
+      "media-src 'self' blob:;", // Allow media and blob URLs
+      "object-src 'none';", // Disallow object/embed tags
+      "base-uri 'self';", // Restrict base URI
+      "form-action 'self';", // Restrict form submissions
+      "frame-ancestors 'none';", // Prevent clickjacking
+      "upgrade-insecure-requests;" // Upgrade HTTP to HTTPS
+    ].join(' ');
+
+    return html.replace(
+      '</head>',
+      `  <meta http-equiv="Content-Security-Policy" content="${cspContent}">
+    </head>`
+    );
+  }
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react({
-    include: "**/*.{jsx,tsx,js,ts}",
-  })],
+  plugins: [
+    react({
+      include: "**/*.{jsx,tsx,js,ts}",
+    }),
+    cspPlugin // Add CSP plugin
+  ],
   css: {
     modules: {
       // Enable CSS modules for .module.css files
@@ -30,7 +69,24 @@ export default defineConfig({
   },
   server: {
     port: 3006,
-    host: 'localhost'
+    host: 'localhost',
+    // Add CSP headers to development server
+    headers: {
+      'Content-Security-Policy': [
+        "default-src 'self';",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval';",
+        "style-src 'self' 'unsafe-inline';",
+        "connect-src 'self' ws://localhost:3006 wss://localhost:3006;",
+        "img-src 'self' data: blob: https:;",
+        "font-src 'self' data:;",
+        "media-src 'self' blob:;",
+        "object-src 'none';",
+        "base-uri 'self';",
+        "form-action 'self';",
+        "frame-ancestors 'none';",
+        "upgrade-insecure-requests;"
+      ].join(' ')
+    }
   },
   publicDir: 'public',
   assetsInclude: ['**/*.png', '**/*.jpg', '**/*.jpeg', '**/*.gif', '**/*.svg', '**/*.ico', '**/*.woff', '**/*.woff2', '**/*.ttf', '**/*.eot'],
