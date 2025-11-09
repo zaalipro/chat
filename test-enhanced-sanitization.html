@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Input Validation System Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .test-section {
+            margin-bottom: 40px;
+            padding: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+
+        .test-section h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .input-section, .output-section {
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .input-section h3, .output-section h3 {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .output-display {
+            min-height: 120px;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1976D2;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #d32f2f;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: 600;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .test-cases {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .test-case {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .test-case:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .test-case h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .test-case p {
+            color: #666;
+            font-size: 0.85rem;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+
+        .security-log {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .rate-limit-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2196F3;
+            margin-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .test-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .test-cases {
+                grid-template-columns: 1fr;
+            }
+            
+            .button-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🛡️ Enhanced Input Validation System</h1>
+            <p>Comprehensive Security Testing & Demonstration</p>
+        </header>
+
+        <div class="content">
+            <!-- Main Test Section -->
+            <div class="test-section">
+                <h2>🧪 Interactive Validation Test</h2>
+                
+                <div class="test-grid">
+                    <div class="input-section">
+                        <h3>📝 Input Message</h3>
+                        <textarea id="messageInput" placeholder="Enter a message to test validation...">Hello, this is a normal message!</textarea>
+                        <div class="button-group">
+                            <button class="btn-primary" onclick="validateMessage()">Validate Message</button>
+                            <button class="btn-secondary" onclick="testWithUserId()">Test with Rate Limiting</button>
+                            <button class="btn-danger" onclick="clearInput()">Clear</button>
+                        </div>
+                    </div>
+                    
+                    <div class="output-section">
+                        <h3>✅ Validated Output</h3>
+                        <div id="outputDisplay" class="output-display">Validation result will appear here...</div>
+                        <div id="statusMessage"></div>
+                    </div>
+                </div>
+
+                <div class="rate-limit-info">
+                    <h4>📊 Rate Limiting Status</h4>
+                    <div id="rateLimitInfo">No rate limiting data available</div>
+                </div>
+            </div>
+
+            <!-- Test Cases Section -->
+            <div class="test-section">
+                <h2>🎯 Security Test Cases</h2>
+                <p style="margin-bottom: 15px; color: #666;">Click on any test case to see how the validator handles it:</p>
+                
+                <div class="test-cases">
+                    <div class="test-case" onclick="loadTestCase('normal')">
+                        <h4>✅ Normal Message</h4>
+                        <p>Hello, how are you today?</p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('xss')">
+                        <h4>🚨 XSS Attack</h4>
+                        <p><script>alert('xss')</script></p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('sql')">
+                        <h4>🚨 SQL Injection</h4>
+                        <p>SELECT * FROM users WHERE id = 1</p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('javascript')">
+                        <h4>🚨 JavaScript Protocol</h4>
+                        <p>javascript:alert('hack')</p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('repetition')">
+                        <h4>🚨 Excessive Repetition</h4>
+                        <p>aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('suspicious')">
+                        <h4>🚨 Suspicious Links</h4>
+                        <p>Check this: bit.ly/abc123</p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('ssn')">
+                        <h4>🚨 SSN Pattern</h4>
+                        <p>My SSN is 123-45-6789</p>
+                    </div>
+                    
+                    <div class="test-case" onclick="loadTestCase('long')">
+                        <h4>🚨 Too Long</h4>
+                        <p>This message is way too long and should be rejected...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="test-section">
+                <h2>📈 Security Statistics</h2>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalEvents">0</div>
+                        <div class="stat-label">Total Security Events</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-number" id="recentEvents">0</div>
+                        <div class="stat-label">Recent Events (1hr)</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-number" id="blockedThreats">0</div>
+                        <div class="stat-label">Different Threat Types</div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-number" id="rateLimitedUsers">0</div>
+                        <div class="stat-label">Rate Limited Users</div>
+                    </div>
+                </div>
+
+                <div class="security-log" id="securityLog">
+                    Security events will appear here...
+                </div>
+            </div>
+
+            <!-- Author & File Name Tests -->
+            <div class="test-section">
+                <h2>👤 Author & File Validation</h2>
+                
+                <div class="test-grid">
+                    <div class="input-section">
+                        <h3>📝 Author Name Input</h3>
+                        <textarea id="authorInput" placeholder="Enter author name...">John Doe</textarea>
+                        <button class="btn-primary" onclick="validateAuthor()">Validate Author</button>
+                        <div id="authorOutput" class="output-display" style="margin-top: 15px;">Result will appear here...</div>
+                    </div>
+                    
+                    <div class="input-section">
+                        <h3>📁 File Name Input</h3>
+                        <textarea id="fileInput" placeholder="Enter file name...">document.pdf</textarea>
+                        <button class="btn-primary" onclick="validateFileName()">Validate File Name</button>
+                        <div id="fileOutput" class="output-display" style="margin-top: 15px;">Result will appear here...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- URL Validation Test -->
+            <div class="test-section">
+                <h2>🔗 URL Validation</h2>
+                
+                <div class="input-section">
+                    <h3>🌐 URL Input</h3>
+                    <textarea id="urlInput" placeholder="Enter URL to validate...">https://example.com</textarea>
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="validateUrl()">Validate URL</button>
+                        <button class="btn-secondary" onclick="testUrlCases()">Test URL Cases</button>
+                    </div>
+                    <div id="urlOutput" class="output-display" style="margin-top: 15px;">URL validation result will appear here...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Mock MessageValidator class for demonstration
+        class MockMessageValidator {
+            static patterns = {
+                xss: /script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+                sqlInjection: /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|WHERE)\b)/gi,
+                javascript: /javascript:/gi,
+                dataUri: /data:(?:(?!image\/png|image\/jpeg|image\/gif|image\/webp)[\w\/-]+)/gi,
+                excessiveRepetition: /(.)\1{50,}/gi,
+                suspiciousLinks: /\b(bit\.ly|tinyurl|t\.co|goo\.gl|short\.link|cutt\.ly|bit\.do)\b/gi,
+                phpTags: /<\?php|<\?=/gi,
+                aspTags: /<%|<%=/gi,
+                base64Suspicious: /[A-Za-z0-9+\/]{100,}={0,2}/gi
+            };
+            
+            static limits = {
+                maxLength: 2000,
+                maxLines: 50,
+                maxWords: 300
+            };
+            
+            static rateLimits = new Map();
+            
+            static validate(message, userId = null) {
+                if (!message || typeof message !== 'string') {
+                    throw new Error('Invalid message format');
+                }
+                
+                const trimmed = message.trim();
+                
+                if (trimmed.length === 0) {
+                    throw new Error('Message cannot be empty');
+                }
+                
+                // Rate limiting
+                if (userId) {
+                    this.checkRateLimit(userId);
+                }
+                
+                // Length validation
+                if (trimmed.length > this.limits.maxLength) {
+                    throw new Error(`Message too long (max ${this.limits.maxLength} characters)`);
+                }
+                
+                if (trimmed.split('\n').length > this.limits.maxLines) {
+                    throw new Error(`Too many lines (max ${this.limits.maxLines})`);
+                }
+                
+                if (trimmed.split(/\s+/).length > this.limits.maxWords) {
+                    throw new Error(`Too many words (max ${this.limits.maxWords})`);
+                }
+                
+                // Pattern validation
+                for (const [name, pattern] of Object.entries(this.patterns)) {
+                    if (pattern.test(trimmed)) {
+                        this.logSecurityEvent(name, trimmed, userId);
+                        throw new Error(`Message contains prohibited content: ${name.replace(/([A-Z])/g, ' $1').trim()}`);
+                    }
+                }
+                
+                // Content validation
+                if (/\b\d{3}-\d{2}-\d{4}\b/g.test(trimmed) || /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g.test(trimmed)) {
+                    throw new Error('Message contains potentially sensitive personal information');
+                }
+                
+                return trimmed;
+            }
+            
+            static checkRateLimit(userId) {
+                const now = Date.now();
+                const windowMs = 60000;
+                const maxMessages = 10;
+                
+                if (!this.rateLimits.has(userId)) {
+                    this.rateLimits.set(userId, []);
+                }
+                
+                const userMessages = this.rateLimits.get(userId);
+                const recentMessages = userMessages.filter(timestamp => now - timestamp < windowMs);
+                
+                if (recentMessages.length >= maxMessages) {
+                    throw new Error('Rate limit exceeded. Please wait before sending another message.');
+                }
+                
+                recentMessages.push(now);
+                this.rateLimits.set(userId, recentMessages);
+            }
+            
+            static logSecurityEvent(threatType, content, userId) {
+                const event = {
+                    timestamp: new Date().toISOString(),
+                    threatType,
+                    userId,
+                    contentLength: content.length,
+                    contentPreview: content.substring(0, 100) + (content.length > 100 ? '...' : '')
+                };
+                
+                console.warn('Security Event Detected:', event);
+                
+                if (window.chatSecurityEvents) {
+                    window.chatSecurityEvents.push(event);
+                    if (window.chatSecurityEvents.length > 100) {
+                        window.chatSecurityEvents.shift();
+                    }
+                }
+            }
+            
+            static getRateLimitStatus(userId) {
+                const userMessages = this.rateLimits.get(userId) || [];
+                const now = Date.now();
+                const windowMs = 60000;
+                const recentMessages = userMessages.filter(timestamp => now - timestamp < windowMs);
+                
+                return {
+                    currentCount: recentMessages.length,
+                    maxCount: 10,
+                    windowMs,
+                    resetTime: Math.max(...recentMessages, now) + windowMs
+                };
+            }
+            
+            static clearRateLimit(userId = null) {
+                if (userId) {
+                    this.rateLimits.delete(userId);
+                } else {
+                    this.rateLimits.clear();
+                }
+            }
+        }
+        
+        // Mock utility functions
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') {
+                return '';
+            }
+            return input.trim();
+        }
+        
+        function sanitizeMessage(message, userId = null) {
+            return MockMessageValidator.validate(message, userId);
+        }
+        
+        function sanitizeAuthor(author) {
+            if (!author || typeof author !== 'string') {
+                return 'Anonymous';
+            }
+            
+            const sanitized = sanitizeInput(author);
+            const cleaned = sanitized
+                .replace(/[<>]/g, '')
+                .replace(/</g, '')
+                .replace(/>/g, '')
+                .replace(/javascript:/gi, '')
+                .replace(/data:/gi, '')
+                .trim();
+            
+            if (cleaned.length === 0) {
+                return 'Anonymous';
+            }
+            
+            if (cleaned.length > 50) {
+                return cleaned.substring(0, 50).trim();
+            }
+            
+            if (!/^[a-zA-Z0-9\s\.\-\_]+$/.test(cleaned)) {
+                return cleaned.replace(/[^a-zA-Z0-9\s\.\-\_]/g, '').trim() || 'Anonymous';
+            }
+            
+            return cleaned;
+        }
+        
+        function sanitizeFileName(fileName) {
+            if (!fileName || typeof fileName !== 'string') {
+                return 'unknown-file';
+            }
+            
+            const sanitized = fileName
+                .replace(/[<>:"/\\|?*]/g, '')
+                .replace(/\.\./g, '')
+                .replace(/^\./, '')
+                .toLowerCase()
+                .trim();
+            
+            if (sanitized.length === 0) {
+                return 'unknown-file';
+            }
+            
+            if (sanitized.length > 255) {
+                return sanitized.substring(0, 255).trim();
+            }
+            
+            return sanitized;
+        }
+        
+        function validateUrl(url) {
+            if (!url || typeof url !== 'string') {
+                return false;
+            }
+            
+            try {
+                const parsedUrl = new URL(url);
+                
+                if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
+                    return false;
+                }
+                
+                const suspiciousDomains = ['bit.ly', 'tinyurl.com', 't.co', 'goo.gl'];
+                if (suspiciousDomains.some(domain => parsedUrl.hostname.includes(domain))) {
+                    return false;
+                }
+                
+                return true;
+            } catch (error) {
+                return false;
+            }
+        }
+        
+        function getSecurityStats() {
+            if (window.chatSecurityEvents) {
+                const events = window.chatSecurityEvents;
+                const lastHour = Date.now() - (60 * 60 * 1000);
+                const recentEvents = events.filter(event => new Date(event.timestamp).getTime() > lastHour);
+                
+                const threatCounts = recentEvents.reduce((acc, event) => {
+                    acc[event.threatType] = (acc[event.threatType] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                return {
+                    totalEvents: events.length,
+                    recentEvents: recentEvents.length,
+                    threatCounts,
+                    rateLimitedUsers: MockMessageValidator.rateLimits.size
+                };
+            }
+            
+            return {
+                totalEvents: 0,
+                recentEvents: 0,
+                threatCounts: {},
+                rateLimitedUsers: 0
+            };
+        }
+        
+        // Initialize security monitoring
+        window.chatSecurityEvents = [];
+        
+        // Make functions available globally
+        window.validateMessage = function() {
+            const input = document.getElementById('messageInput').value;
+            const output = document.getElementById('outputDisplay');
+            const status = document.getElementById('statusMessage');
+            
+            try {
+                const result = sanitizeMessage(input);
+                output.textContent = result;
+                status.innerHTML = '<div class="status success">✅ Message validated successfully!</div>';
+            } catch (error) {
+                output.textContent = 'VALIDATION FAILED';
+                status.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+            
+            updateStats();
+            updateSecurityLog();
+        };
+        
+        window.testWithUserId = function() {
+            const input = document.getElementById('messageInput').value;
+            const userId = 'test-user-' + Math.random().toString(36).substr(2, 9);
+            const output = document.getElementById('outputDisplay');
+            const status = document.getElementById('statusMessage');
+            
+            try {
+                const result = sanitizeMessage(input, userId);
+                output.textContent = result;
+                status.innerHTML = `<div class="status success">✅ Message validated for user: ${userId}</div>`;
+                updateRateLimitInfo(userId);
+            } catch (error) {
+                output.textContent = 'VALIDATION FAILED';
+                status.innerHTML = `<div class="status error">❌ ${error.message}</div>`;
+            }
+            
+            updateStats();
+            updateSecurityLog();
+        };
+        
+        window.clearInput = function() {
+            document.getElementById('messageInput').value = '';
+            document.getElementById('outputDisplay').textContent = 'Validation result will appear here...';
+            document.getElementById('statusMessage').innerHTML = '';
+        };
+        
+        window.loadTestCase = function(type) {
+            const input = document.getElementById('messageInput');
+            const testCases = {
+                normal: 'Hello, how are you today?',
+                xss: '<script>alert("xss")</script>',
+                sql: 'SELECT * FROM users WHERE id = 1',
+                javascript: 'javascript:alert("hack")',
+                repetition: 'a'.repeat(51),
+                suspicious: 'Check this: bit.ly/abc123',
+                ssn: 'My SSN is 123-45-6789',
+                long: 'This message is way too long and should be rejected because it exceeds the maximum allowed length of 2000 characters. '.repeat(10)
+            };
+            
+            input.value = testCases[type] || '';
+            validateMessage();
+        };
+        
+        window.validateAuthor = function() {
+            const input = document.getElementById('authorInput').value;
+            const output = document.getElementById('authorOutput');
+            
+            const result = sanitizeAuthor(input);
+            output.textContent = result;
+        };
+        
+        window.validateFileName = function() {
+            const input = document.getElementById('fileInput').value;
+            const output = document.getElementById('fileOutput');
+            
+            const result = sanitizeFileName(input);
+            output.textContent = result;
+        };
+        
+        window.validateUrl = function() {
+            const input = document.getElementById('urlInput').value;
+            const output = document.getElementById('urlOutput');
+            const status = document.getElementById('statusMessage');
+            
+            const isValid = validateUrl(input);
+            output.textContent = isValid ? '✅ URL is valid and safe' : '❌ URL is invalid or suspicious';
+            
+            if (isValid) {
+                output.style.color = '#4CAF50';
+            } else {
+                output.style.color = '#f44336';
+            }
+        };
+        
+        window.testUrlCases = function() {
+            const urlInput = document.getElementById('urlInput');
+            const testUrls = [
+                'https://example.com',
+                'javascript:alert(1)',
+                'https://bit.ly/abc',
+                'ftp://example.com',
+                'not-a-url'
+            ];
+            
+            let currentIndex = 0;
+            const interval = setInterval(() => {
+                urlInput.value = testUrls[currentIndex];
+                validateUrl();
+                currentIndex++;
+                
+                if (currentIndex >= testUrls.length) {
+                    clearInterval(interval);
+                }
+            }, 1000);
+        };
+        
+        function updateStats() {
+            const stats = getSecurityStats();
+            document.getElementById('totalEvents').textContent = stats.totalEvents;
+            document.getElementById('recentEvents').textContent = stats.recentEvents;
+            document.getElementById('blockedThreats').textContent = Object.keys(stats.threatCounts).length;
+            document.getElementById('rateLimitedUsers').textContent = stats.rateLimitedUsers;
+        }
+        
+        function updateSecurityLog() {
+            const log = document.getElementById('securityLog');
+            const events = window.chatSecurityEvents.slice(-5).reverse();
+            
+            if (events.length === 0) {
+                log.textContent = 'Security events will appear here...';
+                return;
+            }
+            
+            const logText = events.map(event => {
+                const time = new Date(event.timestamp).toLocaleTimeString();
+                return `[${time}] ${event.threatType.toUpperCase()}: ${event.contentPreview}`;
+            }).join('\n');
+            
+            log.textContent = logText;
+        }
+        
+        function updateRateLimitInfo(userId) {
+            const info = document.getElementById('rateLimitInfo');
+            const status = MockMessageValidator.getRateLimitStatus(userId);
+            
+            const resetTime = new Date(status.resetTime).toLocaleTimeString();
+            info.innerHTML = `
+                <strong>User ID:</strong> ${userId}<br>
+                <strong>Messages:</strong> ${status.currentCount}/${status.maxCount}<br>
+                <strong>Window:</strong> ${status.windowMs / 1000}s<br>
+                <strong>Reset Time:</strong> ${resetTime}
+            `;
+        }
+        
+        // Initialize stats on load
+        updateStats();
+        
+        // Auto-update stats every 5 seconds
+        setInterval(updateStats, 5000);
+    </script>
+</body>
+</html>

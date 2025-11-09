@@ -30316,39 +30316,212 @@ function createDOMPurify() {
   return DOMPurify;
 }
 var purify = createDOMPurify();
+class MessageValidator {
+  /**
+   * Validates and sanitizes a message with comprehensive security checks
+   * @param {string} message - The message to validate
+   * @param {string} userId - Optional user ID for rate limiting
+   * @returns {string} - The sanitized message
+   * @throws {Error} - If validation fails
+   */
+  static validate(message, userId = null) {
+    if (!message || typeof message !== "string") {
+      throw new Error("Invalid message format");
+    }
+    const trimmed = message.trim();
+    if (trimmed.length === 0) {
+      throw new Error("Message cannot be empty");
+    }
+    if (userId) {
+      this.checkRateLimit(userId);
+    }
+    if (trimmed.length > this.limits.maxLength) {
+      throw new Error(`Message too long (max ${this.limits.maxLength} characters)`);
+    }
+    if (trimmed.split("\n").length > this.limits.maxLines) {
+      throw new Error(`Too many lines (max ${this.limits.maxLines})`);
+    }
+    if (trimmed.split(/\s+/).length > this.limits.maxWords) {
+      throw new Error(`Too many words (max ${this.limits.maxWords})`);
+    }
+    for (const [name, pattern] of Object.entries(this.patterns)) {
+      if (pattern.test(trimmed)) {
+        this.logSecurityEvent(name, trimmed, userId);
+        throw new Error(`Message contains prohibited content: ${name.replace(/([A-Z])/g, " $1").trim()}`);
+      }
+    }
+    if (!this.limits.allowedChars.test(trimmed)) {
+      throw new Error("Message contains invalid characters");
+    }
+    this.validateContentPatterns(trimmed);
+    return this.sanitize(trimmed);
+  }
+  /**
+   * Checks rate limiting for a specific user
+   * @param {string} userId - User identifier
+   */
+  static checkRateLimit(userId) {
+    const now = Date.now();
+    const windowMs = 6e4;
+    const maxMessages = 10;
+    if (!this.rateLimits.has(userId)) {
+      this.rateLimits.set(userId, []);
+    }
+    const userMessages = this.rateLimits.get(userId);
+    const recentMessages = userMessages.filter((timestamp) => now - timestamp < windowMs);
+    if (recentMessages.length >= maxMessages) {
+      throw new Error("Rate limit exceeded. Please wait before sending another message.");
+    }
+    recentMessages.push(now);
+    this.rateLimits.set(userId, recentMessages);
+  }
+  /**
+   * Validates content patterns for additional security
+   * @param {string} content - Content to validate
+   */
+  static validateContentPatterns(content) {
+    const phonePattern = /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/g;
+    if (phonePattern.test(content)) {
+      console.warn("Potential phone number detected in message");
+    }
+    const emailPattern = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    if (emailPattern.test(content)) {
+      console.warn("Email address detected in message");
+    }
+    const ssnPattern = /\b\d{3}-\d{2}-\d{4}\b/g;
+    const ccPattern = /\b\d{4}[-\s]?\d{4}[-\s]?\d{4}[-\s]?\d{4}\b/g;
+    if (ssnPattern.test(content) || ccPattern.test(content)) {
+      throw new Error("Message contains potentially sensitive personal information");
+    }
+  }
+  /**
+   * Sanitizes content using DOMPurify with enhanced security
+   * @param {string} input - Input to sanitize
+   * @returns {string} - Sanitized content
+   */
+  static sanitize(input) {
+    return purify.sanitize(input, {
+      ALLOWED_TAGS: ["b", "i", "em", "strong", "br"],
+      ALLOWED_ATTR: [],
+      KEEP_CONTENT: true,
+      RETURN_TRUSTED_TYPE: false,
+      SANITIZE_DOM: true,
+      SANITIZE_NAMED_PROPS: true,
+      WHOLE_DOCUMENT: false,
+      CUSTOM_ELEMENT_HANDLING: {
+        tagNameCheck: null,
+        attributeNameCheck: null,
+        allowCustomizedBuiltInElements: false
+      }
+    });
+  }
+  /**
+   * Logs security events for monitoring
+   * @param {string} threatType - Type of threat detected
+   * @param {string} content - The content that triggered the alert
+   * @param {string} userId - User identifier if available
+   */
+  static logSecurityEvent(threatType, content, userId = null) {
+    const securityEvent = {
+      timestamp: (/* @__PURE__ */ new Date()).toISOString(),
+      threatType,
+      userId,
+      contentLength: content.length,
+      contentPreview: content.substring(0, 100) + (content.length > 100 ? "..." : "")
+    };
+    console.warn("Security Event Detected:", securityEvent);
+    if (typeof window !== "undefined" && window.chatSecurityEvents) {
+      window.chatSecurityEvents.push(securityEvent);
+      if (window.chatSecurityEvents.length > 100) {
+        window.chatSecurityEvents.shift();
+      }
+    }
+  }
+  /**
+   * Clears rate limiting data for a user or all users
+   * @param {string} userId - User ID to clear, or null to clear all
+   */
+  static clearRateLimit(userId = null) {
+    if (userId) {
+      this.rateLimits.delete(userId);
+    } else {
+      this.rateLimits.clear();
+    }
+  }
+  /**
+   * Gets rate limit status for a user
+   * @param {string} userId - User identifier
+   * @returns {Object} - Rate limit status
+   */
+  static getRateLimitStatus(userId) {
+    const userMessages = this.rateLimits.get(userId) || [];
+    const now = Date.now();
+    const windowMs = 6e4;
+    const recentMessages = userMessages.filter((timestamp) => now - timestamp < windowMs);
+    return {
+      currentCount: recentMessages.length,
+      maxCount: 10,
+      windowMs,
+      resetTime: Math.max(...recentMessages, now) + windowMs
+    };
+  }
+}
+__publicField(MessageValidator, "patterns", {
+  // Block common attack patterns
+  xss: /script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
+  sqlInjection: /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|WHERE)\b)/gi,
+  javascript: /javascript:/gi,
+  dataUri: /data:(?:(?!image\/png|image\/jpeg|image\/gif|image\/webp)[\w\/-]+)/gi,
+  // Block suspicious patterns
+  excessiveRepetition: /(.)\1{50,}/gi,
+  suspiciousLinks: /\b(bit\.ly|tinyurl|t\.co|goo\.gl|short\.link|cutt\.ly|bit\.do)\b/gi,
+  // Block potential code injection
+  phpTags: /<\?php|<\?=/gi,
+  aspTags: /<%|<%=/gi,
+  // Block markdown that could be dangerous
+  markdownImage: /!\[.*?\]\(.*?\)/gi,
+  // Block base64 encoded content that might be malicious
+  base64Suspicious: /[A-Za-z0-9+\/]{100,}={0,2}/gi
+});
+__publicField(MessageValidator, "limits", {
+  maxLength: 2e3,
+  maxLines: 50,
+  maxWords: 300,
+  allowedChars: /^[a-zA-Z0-9\s\.\,\!\?\-\_\@\#\$\%\^\&\*\(\)\[\]\{\}\|\\\/\+\=\:\;\"\'\<\>\,\.\?\!\-\_\~\`\n\r]+$/
+});
+__publicField(MessageValidator, "rateLimits", /* @__PURE__ */ new Map());
 const sanitizeInput = (input) => {
   if (typeof input !== "string") {
     return "";
   }
-  return purify.sanitize(input.trim(), {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: []
-  });
+  return MessageValidator.sanitize(input.trim());
 };
-const sanitizeMessage = (message) => {
-  if (!message || typeof message !== "string") {
-    return "";
-  }
-  const sanitized = sanitizeInput(message);
-  if (sanitized.length > 5e3) {
-    throw new Error("Message too long");
-  }
-  return sanitized;
+const sanitizeMessage = (message, userId = null) => {
+  return MessageValidator.validate(message, userId);
 };
 const sanitizeAuthor = (author) => {
   if (!author || typeof author !== "string") {
     return "Anonymous";
   }
   const sanitized = sanitizeInput(author);
-  const cleaned = sanitized.replace(/[<>]/g, "").replace(/</g, "").replace(/>/g, "").trim();
+  const cleaned = sanitized.replace(/[<>]/g, "").replace(/</g, "").replace(/>/g, "").replace(/javascript:/gi, "").replace(/data:/gi, "").trim();
   if (cleaned.length === 0) {
     return "Anonymous";
   }
   if (cleaned.length > 50) {
     return cleaned.substring(0, 50).trim();
   }
+  if (!/^[a-zA-Z0-9\s\.\-\_]+$/.test(cleaned)) {
+    return cleaned.replace(/[^a-zA-Z0-9\s\.\-\_]/g, "").trim() || "Anonymous";
+  }
   return cleaned;
 };
+const initializeSecurityMonitoring = () => {
+  if (typeof window !== "undefined") {
+    window.chatSecurityEvents = window.chatSecurityEvents || [];
+  }
+};
+initializeSecurityMonitoring();
 const MessageForm = ({ chatId }) => {
   const [inputHasFocus, setInputFocus] = reactExports.useState(true);
   const [message, setMessage] = reactExports.useState("");
