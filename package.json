@@ -6,7 +6,7 @@
   "dependencies": {
     "@apollo/client": "^3.7.2",
     "axios": "^1.2.1",
-
+    "dompurify": "^3.3.0",
     "formik": "^2.2.9",
     "graphql": "^15.8.0",
     "graphql-tag": "^2.12.6",
