@@ -31101,6 +31101,8 @@ function initChatWidget(config = {}) {
     cache: new InMemoryCache()
   });
   let container = document.getElementById(containerId);
+  let mediaQuery = null;
+  let handleMobileView = null;
   if (!container) {
     container = document.createElement("div");
     container.id = containerId;
@@ -31113,8 +31115,8 @@ function initChatWidget(config = {}) {
       z-index: 9999;
       pointer-events: none;
     `;
-    const mediaQuery = window.matchMedia("(max-width: 450px)");
-    const handleMobileView = (e) => {
+    mediaQuery = window.matchMedia("(max-width: 450px)");
+    handleMobileView = (e) => {
       if (e.matches) {
         container.style.width = "100%";
         container.style.height = "100%";
@@ -31123,7 +31125,7 @@ function initChatWidget(config = {}) {
         container.style.height = "700px";
       }
     };
-    mediaQuery.addListener(handleMobileView);
+    mediaQuery.addEventListener("change", handleMobileView);
     handleMobileView(mediaQuery);
     document.body.appendChild(container);
   }
@@ -31185,11 +31187,19 @@ function initChatWidget(config = {}) {
   }
   renderApp(null, null);
   return () => {
+    if (mediaQuery && handleMobileView) {
+      mediaQuery.removeEventListener("change", handleMobileView);
+      console.log("Widget: MediaQuery event listener cleaned up");
+    }
     root2.unmount();
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
+    if (style && style.parentNode) {
+      style.parentNode.removeChild(style);
+    }
     window.ChatWidget = null;
+    console.log("Widget: All resources cleaned up successfully");
   };
 }
 if (typeof window !== "undefined" && window.ChatWidgetConfig) {

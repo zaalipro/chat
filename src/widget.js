@@ -143,6 +143,9 @@ export function initChatWidget(config = {}) {
 
   // Find or create container
   let container = document.getElementById(containerId);
+  let mediaQuery = null;
+  let handleMobileView = null;
+  
   if (!container) {
     container = document.createElement('div');
     container.id = containerId;
@@ -158,9 +161,9 @@ export function initChatWidget(config = {}) {
       pointer-events: none;
     `;
     
-    // Add responsive styles for mobile
-    const mediaQuery = window.matchMedia('(max-width: 450px)');
-    const handleMobileView = (e) => {
+    // Add responsive styles for mobile with proper event listener cleanup
+    mediaQuery = window.matchMedia('(max-width: 450px)');
+    handleMobileView = (e) => {
       if (e.matches) {
         container.style.width = '100%';
         container.style.height = '100%';
@@ -170,7 +173,8 @@ export function initChatWidget(config = {}) {
       }
     };
     
-    mediaQuery.addListener(handleMobileView);
+    // Use modern addEventListener with cleanup
+    mediaQuery.addEventListener('change', handleMobileView);
     handleMobileView(mediaQuery);
     
     document.body.appendChild(container);
@@ -247,13 +251,26 @@ export function initChatWidget(config = {}) {
 
   renderApp(null, null);
 
-  // Return cleanup function
+  // Return cleanup function with proper event listener cleanup
   return () => {
+    // Clean up media query event listener if it exists
+    if (mediaQuery && handleMobileView) {
+      mediaQuery.removeEventListener('change', handleMobileView);
+      console.log('Widget: MediaQuery event listener cleaned up');
+    }
+    
     root.unmount();
     if (container && container.parentNode) {
       container.parentNode.removeChild(container);
     }
+    
+    // Clean up the style element
+    if (style && style.parentNode) {
+      style.parentNode.removeChild(style);
+    }
+    
     window.ChatWidget = null;
+    console.log('Widget: All resources cleaned up successfully');
   };
 }
 
