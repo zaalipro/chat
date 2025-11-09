@@ -23,9 +23,16 @@
   "scripts": {
     "start": "vite --port 3006",
     "build": "vite build && node scripts/generate-embed-files.js",
+    "build:analyze": "ANALYZE_BUNDLE=true vite build && node scripts/generate-embed-files.js",
+    "build:production": "NODE_ENV=production vite build && node scripts/generate-embed-files.js",
     "test": "vitest",
     "test:run": "vitest run",
-    "preview": "vite preview"
+    "test:coverage": "vitest run --coverage",
+    "preview": "vite preview",
+    "bundle:analyze": "ANALYZE_BUNDLE=true vite build",
+    "bundle:size": "node scripts/bundle-size-check.js",
+    "bundle:optimize": "node scripts/bundle-optimizer.js",
+    "perf:test": "node scripts/performance-test.js"
   },
   "browserslist": [
     ">0.2%",
@@ -42,6 +49,9 @@
     "postcss-prefixwrap": "^1.56.2",
     "terser": "^5.43.1",
     "vite": "^7.1.2",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "rollup-plugin-visualizer": "^5.9.2",
+    "vite-bundle-analyzer": "^0.7.0",
+    "compression": "^1.7.4"
   }
 }

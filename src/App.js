@@ -1,6 +1,72 @@
 import React, {useState, useEffect, useCallback} from 'react';
-import CreateChat from './CreateChat'
-import Offline from './Offline'
+import { Suspense } from 'react';
+
+// ✅ LAZY LOADED COMPONENTS
+import {
+  LazyCreateChat,
+  LazyOffline,
+  LazyChatContainer,
+  LazyRate,
+  LoadingFallback,
+  createLazyComponent,
+  prefetchOnIdle,
+  monitorChunkLoading,
+  trackBundleSize,
+  getLoadingMetrics
+} from './utils/lazy-components';
+
+// ✅ LAZY LOADED ToggleButton and Query
+const LazyToggleButton = React.lazy(() => import('./ToggleButton'));
+const LazyQuery = React.lazy(() => import('./Components/Query'));
+
+// ✅ SUSPENSE WRAPPER COMPONENT
+const SuspenseWrapper = ({ children, fallback = null }) => (
+  <Suspense fallback={fallback || <LoadingFallback />}>
+    {children}
+  </Suspense>
+);
+
+// ✅ PREFETCH CRITICAL COMPONENTS
+const prefetchCriticalComponents = () => {
+  // Prefetch components that are likely to be needed soon
+  prefetchOnIdle(() => import('./ChatContainer'));
+  prefetchOnIdle(() => import('./MessageForm'));
+  prefetchOnIdle(() => import('./ChatHeader'));
+  prefetchOnIdle(() => import('./ToggleButton'));
+  prefetchOnIdle(() => import('./Components/Query'));
+};
+
+// ✅ MONITOR BUNDLE SIZE
+const monitorBundleSize = () => {
+  let intervalId;
+  
+  if (process.env.NODE_ENV === 'development') {
+    intervalId = setInterval(() => {
+      trackBundleSize();
+    }, 10000); // Track every 10 seconds in development
+  }
+  
+  return () => {
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+  };
+};
+
+// ✅ TRACK CHUNK LOADING
+const trackChunkLoading = (componentName, loadTime, success = true) => {
+  if (process.env.NODE_ENV === 'development') {
+    const status = success ? '✅' : '❌';
+    console.log(`${status} ${componentName} loaded in ${loadTime}ms`);
+    
+    // Track performance metrics
+    const metrics = getLoadingMetrics();
+    if (metrics) {
+      console.log('📊 Loading Metrics:', metrics);
+    }
+  }
+};
+
 import ErrorState from './components/ErrorState';
 import { gql, useApolloClient } from '@apollo/client';
 import { jwtDecode } from 'jwt-decode';
@@ -9,11 +75,7 @@ import { WebsiteProvider, useWebsite } from './context/WebsiteContext';
 
 import store from 'store2'
 import secureStore from './utils/crypto';
-import Query from './Components/Query'
-import ChatContainer from './ChatContainer'
 import { GET_CHAT } from './queries'
-import ToggleButton from './ToggleButton'
-import Rate from './Rate'
 import { processContractsForCurrentSession, selectContract } from './utils';
 
 import { Container, Panel } from './components/styled/App';
@@ -29,10 +91,12 @@ const CONSUMER_LOGIN = gql`
   }
 `;
 
+// ✅ LAZY LOADED CreateChatFlow WITH PERFORMANCE TRACKING
 const CreateChatFlow = ({ show, setCreate }) => {
   const { website } = useWebsite();
   const [selectedContract, setSelectedContract] = useState(null);
   const [showOffline, setOffline] = useState(false);
+  const startTime = React.useRef(Date.now());
 
   const processContracts = async (allContracts) => {
     const sessionContracts = await processContractsForCurrentSession(allContracts);
@@ -51,17 +115,44 @@ const CreateChatFlow = ({ show, setCreate }) => {
     }
   }, [website]);
 
+  // Track component loading performance
+  useEffect(() => {
+    const loadTime = Date.now() - startTime.current;
+    trackChunkLoading('CreateChatFlow', loadTime, true);
+  }, []);
+
   if (!selectedContract || showOffline) {
-    return <Offline />;
+    return (
+      <SuspenseWrapper fallback={<LoadingFallback message="Loading offline mode..." />}>
+        <LazyOffline />
+      </SuspenseWrapper>
+    );
   }
 
-  return <CreateChat show={show} setCreate={setCreate} />;
+  return (
+    <SuspenseWrapper fallback={<LoadingFallback message="Loading chat creation..." />}>
+      <LazyCreateChat show={show} setCreate={setCreate} />
+    </SuspenseWrapper>
+  );
 };
 
+// ✅ OPTIMIZED AppContent WITH LAZY LOADING
 const AppContent = () => {
   const activeChat = store('activeChat');
   const [showCreate, setCreate] = useState(!activeChat);
   const [isOpen, setOpen] = useState(false);
+  const startTime = React.useRef(Date.now());
+
+  // Prefetch critical components when app loads
+  useEffect(() => {
+    prefetchCriticalComponents();
+  }, []);
+
+  // Track component loading performance
+  useEffect(() => {
+    const loadTime = Date.now() - startTime.current;
+    trackChunkLoading('AppContent', loadTime, true);
+  }, []);
 
   if (showCreate) {
     return (
@@ -70,10 +161,12 @@ const AppContent = () => {
           <Panel $isOpen={isOpen}>
             <CreateChatFlow show={showCreate} setCreate={setCreate} />
           </Panel>
-          <ToggleButton
-            isOpen={isOpen}
-            togglePanel={() => setOpen(!isOpen)}
-          />
+          <SuspenseWrapper fallback={<LoadingFallback message="Loading toggle..." />}>
+            <LazyToggleButton
+              isOpen={isOpen}
+              togglePanel={() => setOpen(!isOpen)}
+            />
+          </SuspenseWrapper>
         </Container>
       </div>
     );
@@ -83,26 +176,38 @@ const AppContent = () => {
     <div>
       <Container>
         <Panel $isOpen={isOpen}>
-          <Query query={GET_CHAT} variables={{ chatId: activeChat.id }}>
-            {({ data }) => {
-              if (!data || !data.chat) return null;
-              if (data.chat.status === CHAT_STATUS.FINISHED) {
-                return <Rate chat={data.chat} setCreate={setCreate} />;
-              }
-              return <ChatContainer chat={data.chat} />;
-            }}
-          </Query>
+          <SuspenseWrapper fallback={<LoadingFallback message="Loading chat..." />}>
+            <LazyQuery query={GET_CHAT} variables={{ chatId: activeChat.id }}>
+              {({ data }) => {
+                if (!data || !data.chat) return null;
+                if (data.chat.status === CHAT_STATUS.FINISHED) {
+                  return (
+                    <SuspenseWrapper fallback={<LoadingFallback message="Loading rating..." />}>
+                      <LazyRate chat={data.chat} setCreate={setCreate} />
+                    </SuspenseWrapper>
+                  );
+                }
+                return (
+                  <SuspenseWrapper fallback={<LoadingFallback message="Loading chat container..." />}>
+                    <LazyChatContainer chat={data.chat} />
+                  </SuspenseWrapper>
+                );
+              }}
+            </LazyQuery>
+          </SuspenseWrapper>
         </Panel>
-        <ToggleButton
-          isOpen={isOpen}
-          togglePanel={() => setOpen(!isOpen)}
-        />
+        <SuspenseWrapper fallback={<LoadingFallback message="Loading toggle..." />}>
+          <LazyToggleButton
+            isOpen={isOpen}
+            togglePanel={() => setOpen(!isOpen)}
+          />
+        </SuspenseWrapper>
       </Container>
     </div>
   );
 };
 
-
+// ✅ OPTIMIZED App COMPONENT WITH PERFORMANCE MONITORING
 const App = ({ error }) => {
   // websiteId from local storage, managed by React state for re-rendering.
   const [websiteId, setWebsiteId] = useState(store('websiteId'));
@@ -112,8 +217,9 @@ const App = ({ error }) => {
   const [loginError, setLoginError] = useState(null);
   // Gets the Apollo Client instance from the context provided by ApolloProvider.
   const client = useApolloClient();
+  const startTime = React.useRef(Date.now());
 
-  // Initialize CSP integration on app startup
+  // Initialize CSP integration and performance monitoring on app startup
   useEffect(() => {
     // Configure styled-components to work with CSP
     try {
@@ -134,6 +240,19 @@ const App = ({ error }) => {
     } catch (cspError) {
       console.error('Failed to initialize CSP integration:', cspError);
     }
+
+    // Start bundle size monitoring
+    const stopMonitoring = monitorBundleSize();
+
+    // Track app initialization performance
+    const loadTime = Date.now() - startTime.current;
+    trackChunkLoading('App', loadTime, true);
+
+    return () => {
+      if (stopMonitoring) {
+        stopMonitoring();
+      }
+    };
   }, []);
 
   // Asynchronous function to handle the consumer login process.

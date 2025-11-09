@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-11-09T16:14:47.584Z",
+  "summary": {
+    "totalSize": 19442,
+    "totalSizeFormatted": "18.99 KB",
+    "fileCount": 2,
+    "warnings": 0,
+    "errors": 0
+  },
+  "details": {
+    "total": 19442,
+    "chunks": [
+      {
+        "name": "embed.js",
+        "size": 6276,
+        "sizeFormatted": "6.13 KB",
+        "type": "chunks"
+      },
+      {
+        "name": "sw.js",
+        "size": 13166,
+        "sizeFormatted": "12.86 KB",
+        "type": "chunks"
+      }
+    ],
+    "vendor": [],
+    "styles": [],
+    "largest": {
+      "name": "sw.js",
+      "size": 13166,
+      "sizeFormatted": "12.86 KB",
+      "type": "chunks"
+    }
+  },
+  "warnings": [],
+  "recommendations": []
+}
