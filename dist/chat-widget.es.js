@@ -27234,32 +27234,101 @@ const processContractsForCurrentSession = (allContracts) => __async(null, null, 
 });
 const createChatTimeouts = (chats, onChatMissed) => {
   const timeouts = {};
+  if (!Array.isArray(chats)) {
+    console.warn("createChatTimeouts: chats parameter is not an array, returning empty timeout manager");
+    return {
+      timeouts,
+      clearAll: () => {
+      },
+      clear: () => false,
+      getActiveCount: () => 0,
+      getTimeoutInfo: () => null,
+      getAllTimeouts: () => ({})
+    };
+  }
   chats.forEach((chat) => {
     if (chat.contract && chat.contract.chatMissTime > 0) {
       const timeoutId = setTimeout(() => {
         console.log(`Chat ${chat.id} missed after ${chat.contract.chatMissTime} seconds`);
-        onChatMissed(chat.id, chat.contract.id);
+        try {
+          onChatMissed(chat.id, chat.contract.id);
+        } catch (error) {
+          console.error(`Error executing onChatMissed for chat ${chat.id}:`, error);
+        }
+        delete timeouts[chat.id];
+        console.log(`Timeout for chat ${chat.id} cleaned up after execution`);
       }, chat.contract.chatMissTime * 1e3);
       timeouts[chat.id] = {
         timeoutId,
         contractId: chat.contract.id,
-        missTime: chat.contract.chatMissTime
+        missTime: chat.contract.chatMissTime,
+        clear: () => {
+          if (timeouts[chat.id] && timeouts[chat.id].timeoutId) {
+            clearTimeout(timeouts[chat.id].timeoutId);
+            delete timeouts[chat.id];
+            console.log(`Timeout for chat ${chat.id} manually cleared`);
+          }
+        },
+        isActive: () => {
+          return timeouts[chat.id] && timeouts[chat.id].timeoutId !== null;
+        }
       };
     }
   });
-  return timeouts;
+  return {
+    timeouts,
+    clearAll: () => {
+      Object.keys(timeouts).forEach((chatId) => {
+        if (timeouts[chatId] && timeouts[chatId].timeoutId) {
+          clearTimeout(timeouts[chatId].timeoutId);
+          console.log(`Cleared timeout for chat ${chatId}`);
+        }
+      });
+      Object.keys(timeouts).forEach((chatId) => delete timeouts[chatId]);
+      console.log("All chat timeouts cleared");
+    },
+    clear: (chatId) => {
+      if (timeouts[chatId] && timeouts[chatId].timeoutId) {
+        clearTimeout(timeouts[chatId].timeoutId);
+        delete timeouts[chatId];
+        console.log(`Timeout for chat ${chatId} cleared`);
+        return true;
+      }
+      return false;
+    },
+    getActiveCount: () => {
+      return Object.keys(timeouts).filter((chatId) => timeouts[chatId] && timeouts[chatId].timeoutId !== null).length;
+    },
+    getTimeoutInfo: (chatId) => {
+      return timeouts[chatId] || null;
+    },
+    getAllTimeouts: () => {
+      return __spreadValues({}, timeouts);
+    }
+  };
 };
 const clearChatTimeouts = (timeouts) => {
+  if (!timeouts || typeof timeouts !== "object") {
+    console.warn("Invalid timeouts object provided to clearChatTimeouts");
+    return;
+  }
   Object.values(timeouts).forEach((timeout) => {
-    if (timeout.timeoutId) {
+    if (timeout && timeout.timeoutId) {
       clearTimeout(timeout.timeoutId);
     }
   });
+  Object.keys(timeouts).forEach((key) => delete timeouts[key]);
+  console.log("Legacy clearChatTimeouts: All timeouts cleared");
 };
 const clearChatTimeout = (timeouts, chatId) => {
+  if (!timeouts || typeof timeouts !== "object" || !chatId) {
+    console.warn("Invalid parameters provided to clearChatTimeout");
+    return;
+  }
   if (timeouts[chatId] && timeouts[chatId].timeoutId) {
     clearTimeout(timeouts[chatId].timeoutId);
     delete timeouts[chatId];
+    console.log(`Legacy clearChatTimeout: Timeout for chat ${chatId} cleared`);
   }
 };
 const detectIPAddress = (timeout = 3e3) => __async(null, null, function* () {
