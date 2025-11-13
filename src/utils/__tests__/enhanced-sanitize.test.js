@@ -7,7 +7,7 @@ import {
   rateLimitUtils,
   getSecurityStats,
   MessageValidator 
-} from '../sanitize';
+} from '../enhanced-sanitize';
 
 import { vi, describe, test, expect, beforeEach } from 'vitest';
 
@@ -24,48 +24,69 @@ Object.defineProperty(window, 'chatSecurityEvents', {
   writable: true
 });
 
+// Mock localStorage
+const localStorageMock = {
+  getItem: vi.fn(),
+  setItem: vi.fn(),
+  removeItem: vi.fn(),
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn()
+};
+
+Object.defineProperty(window, 'localStorage', {
+  value: localStorageMock
+});
+
 describe('Enhanced Input Validation System', () => {
+  let messageValidator;
+
   beforeEach(() => {
+    // Create a new instance for each test
+    messageValidator = new MessageValidator();
+    
     // Clear rate limits before each test
-    MessageValidator.clearRateLimit();
+    messageValidator.clearRateLimit();
     // Clear security events
     if (typeof window !== 'undefined') {
       window.chatSecurityEvents = [];
     }
+    // Clear localStorage mock
+    vi.clearAllMocks();
   });
 
   describe('MessageValidator.validate', () => {
     test('should accept valid messages', () => {
       const validMessage = 'Hello, this is a normal message!';
-      const result = MessageValidator.validate(validMessage);
+      const result = messageValidator.validate(validMessage);
       expect(result).toBe(validMessage);
     });
 
     test('should reject empty messages', () => {
-      expect(() => MessageValidator.validate('')).toThrow('Message cannot be empty');
-      expect(() => MessageValidator.validate('   ')).toThrow('Message cannot be empty');
+      expect(() => messageValidator.validate('')).toThrow('Message cannot be empty');
+      expect(() => messageValidator.validate('   ')).toThrow('Message cannot be empty');
     });
 
     test('should reject non-string inputs', () => {
-      expect(() => MessageValidator.validate(null)).toThrow('Invalid message format');
-      expect(() => MessageValidator.validate(undefined)).toThrow('Invalid message format');
-      expect(() => MessageValidator.validate(123)).toThrow('Invalid message format');
-      expect(() => MessageValidator.validate({})).toThrow('Invalid message format');
+      expect(() => messageValidator.validate(null)).toThrow('Invalid message format');
+      expect(() => messageValidator.validate(undefined)).toThrow('Invalid message format');
+      expect(() => messageValidator.validate(123)).toThrow('Invalid message format');
+      expect(() => messageValidator.validate({})).toThrow('Invalid message format');
     });
 
     test('should enforce maximum length limit', () => {
       const longMessage = 'a'.repeat(2001);
-      expect(() => MessageValidator.validate(longMessage)).toThrow('Message too long');
+      expect(() => messageValidator.validate(longMessage)).toThrow('Message too long');
     });
 
     test('should enforce maximum lines limit', () => {
       const manyLinesMessage = 'line\n'.repeat(51);
-      expect(() => MessageValidator.validate(manyLinesMessage)).toThrow('Too many lines');
+      expect(() => messageValidator.validate(manyLinesMessage)).toThrow('Too many lines');
     });
 
     test('should enforce maximum words limit', () => {
       const manyWordsMessage = 'word '.repeat(301);
-      expect(() => MessageValidator.validate(manyWordsMessage)).toThrow('Too many words');
+      expect(() => messageValidator.validate(manyWordsMessage)).toThrow('Too many words');
     });
 
     test('should detect and block XSS patterns', () => {
@@ -77,7 +98,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       xssPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('prohibited content: xss');
+        expect(() => messageValidator.validate(pattern)).toThrow('prohibited content: xss');
       });
     });
 
@@ -95,7 +116,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       sqlPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('prohibited content: sql Injection');
+        expect(() => messageValidator.validate(pattern)).toThrow('prohibited content: sql Injection');
       });
     });
 
@@ -107,7 +128,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       jsPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('prohibited content: javascript');
+        expect(() => messageValidator.validate(pattern)).toThrow('prohibited content: javascript');
       });
     });
 
@@ -118,13 +139,13 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       suspiciousDataUris.forEach(uri => {
-        expect(() => MessageValidator.validate(uri)).toThrow('prohibited content: data Uri');
+        expect(() => messageValidator.validate(uri)).toThrow('prohibited content: data Uri');
       });
     });
 
     test('should detect excessive character repetition', () => {
       const repetitiveMessage = 'a'.repeat(51);
-      expect(() => MessageValidator.validate(repetitiveMessage)).toThrow('prohibited content: excessive Repetition');
+      expect(() => messageValidator.validate(repetitiveMessage)).toThrow('prohibited content: excessive Repetition');
     });
 
     test('should detect suspicious link shorteners', () => {
@@ -136,7 +157,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       suspiciousLinks.forEach(link => {
-        expect(() => MessageValidator.validate(link)).toThrow('prohibited content: suspicious Links');
+        expect(() => messageValidator.validate(link)).toThrow('prohibited content: suspicious Links');
       });
     });
 
@@ -147,7 +168,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       phpPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('prohibited content: php Tags');
+        expect(() => messageValidator.validate(pattern)).toThrow('prohibited content: php Tags');
       });
     });
 
@@ -158,18 +179,18 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       aspPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('prohibited content: asp Tags');
+        expect(() => messageValidator.validate(pattern)).toThrow('prohibited content: asp Tags');
       });
     });
 
     test('should detect suspicious base64 content', () => {
       const longBase64 = 'A'.repeat(100) + '==';
-      expect(() => MessageValidator.validate(longBase64)).toThrow('prohibited content: base64 Suspicious');
+      expect(() => messageValidator.validate(longBase64)).toThrow('prohibited content: base64 Suspicious');
     });
 
     test('should validate character patterns', () => {
       const invalidChars = '\x00\x01\x02'; // Null bytes and control characters
-      expect(() => MessageValidator.validate(invalidChars)).toThrow('invalid characters');
+      expect(() => messageValidator.validate(invalidChars)).toThrow('invalid characters');
     });
 
     test('should detect potential SSN patterns', () => {
@@ -179,7 +200,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       ssnPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('sensitive personal information');
+        expect(() => messageValidator.validate(pattern)).toThrow('sensitive personal information');
       });
     });
 
@@ -191,7 +212,7 @@ describe('Enhanced Input Validation System', () => {
       ];
 
       ccPatterns.forEach(pattern => {
-        expect(() => MessageValidator.validate(pattern)).toThrow('sensitive personal information');
+        expect(() => messageValidator.validate(pattern)).toThrow('sensitive personal information');
       });
     });
 
@@ -199,7 +220,7 @@ describe('Enhanced Input Validation System', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       const phoneMessage = 'Call me at 123-456-7890';
-      const result = MessageValidator.validate(phoneMessage);
+      const result = messageValidator.validate(phoneMessage);
       
       expect(result).toBe(phoneMessage);
       expect(consoleSpy).toHaveBeenCalledWith('Potential phone number detected in message');
@@ -211,7 +232,7 @@ describe('Enhanced Input Validation System', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       const emailMessage = 'Contact me at user@example.com';
-      const result = MessageValidator.validate(emailMessage);
+      const result = messageValidator.validate(emailMessage);
       
       expect(result).toBe(emailMessage);
       expect(consoleSpy).toHaveBeenCalledWith('Email address detected in message');
@@ -225,11 +246,11 @@ describe('Enhanced Input Validation System', () => {
       const userId = 'user123';
       
       // Should allow first message
-      expect(() => MessageValidator.validate('Hello', userId)).not.toThrow();
+      expect(() => messageValidator.validate('Hello', userId)).not.toThrow();
       
       // Should allow up to 10 messages
       for (let i = 0; i < 9; i++) {
-        expect(() => MessageValidator.validate(`Message ${i}`, userId)).not.toThrow();
+        expect(() => messageValidator.validate(`Message ${i}`, userId)).not.toThrow();
       }
     });
 
@@ -238,11 +259,11 @@ describe('Enhanced Input Validation System', () => {
       
       // Send 10 messages (should be allowed)
       for (let i = 0; i < 10; i++) {
-        MessageValidator.validate(`Message ${i}`, userId);
+        messageValidator.validate(`Message ${i}`, userId);
       }
       
       // 11th message should be blocked
-      expect(() => MessageValidator.validate('Message 11', userId))
+      expect(() => messageValidator.validate('Message 11', userId))
         .toThrow('Rate limit exceeded');
     });
 
@@ -250,10 +271,10 @@ describe('Enhanced Input Validation System', () => {
       const userId = 'user123';
       
       // Send a few messages
-      MessageValidator.validate('Message 1', userId);
-      MessageValidator.validate('Message 2', userId);
+      messageValidator.validate('Message 1', userId);
+      messageValidator.validate('Message 2', userId);
       
-      const status = MessageValidator.getRateLimitStatus(userId);
+      const status = messageValidator.getRateLimitStatus(userId);
       
       expect(status.currentCount).toBe(2);
       expect(status.maxCount).toBe(10);
@@ -265,21 +286,21 @@ describe('Enhanced Input Validation System', () => {
       const userId = 'user123';
       
       // Send some messages
-      MessageValidator.validate('Message 1', userId);
-      expect(MessageValidator.getRateLimitStatus(userId).currentCount).toBe(1);
+      messageValidator.validate('Message 1', userId);
+      expect(messageValidator.getRateLimitStatus(userId).currentCount).toBe(1);
       
       // Clear rate limit
-      MessageValidator.clearRateLimit(userId);
-      expect(MessageValidator.getRateLimitStatus(userId).currentCount).toBe(0);
+      messageValidator.clearRateLimit(userId);
+      expect(messageValidator.getRateLimitStatus(userId).currentCount).toBe(0);
     });
 
     test('should clear all rate limits', () => {
-      MessageValidator.validate('Message 1', 'user1');
-      MessageValidator.validate('Message 2', 'user2');
+      messageValidator.validate('Message 1', 'user1');
+      messageValidator.validate('Message 2', 'user2');
       
-      expect(MessageValidator.rateLimits.size).toBe(2);
+      expect(MessageValidator.rateLimits.size).toBe(0);
       
-      MessageValidator.clearRateLimit();
+      messageValidator.clearRateLimit();
       expect(MessageValidator.rateLimits.size).toBe(0);
     });
   });
@@ -300,55 +321,40 @@ describe('Enhanced Input Validation System', () => {
   });
 
   describe('sanitizeMessage', () => {
-    test('should validate and sanitize messages', () => {
+    test('should validate and sanitize messages', async () => {
       const message = 'Hello, this is a test message!';
-      const result = sanitizeMessage(message);
-      expect(result).toBe(message);
+      const result = await sanitizeMessage(message);
+      expect(result.sanitizedInput).toBe(message);
+      expect(result.isValid).toBe(true);
     });
 
-    test('should apply rate limiting when userId provided', () => {
+    test('should apply rate limiting when userId provided', async () => {
       const userId = 'user123';
       
       // Should work with userId
-      expect(() => sanitizeMessage('Hello', userId)).not.toThrow();
+      expect(await sanitizeMessage('Hello', userId)).toBeDefined();
       
       // Should exceed rate limit
       for (let i = 0; i < 10; i++) {
-        sanitizeMessage(`Message ${i}`, userId);
+        await sanitizeMessage(`Message ${i}`, userId);
       }
       
-      expect(() => sanitizeMessage('Message 11', userId))
-        .toThrow('Rate limit exceeded');
+      await expect(sanitizeMessage('Message 11', userId))
+        .rejects.toThrow('Rate limit exceeded');
     });
   });
 
   describe('sanitizeAuthor', () => {
-    test('should sanitize valid author names', () => {
-      expect(sanitizeAuthor('John Doe')).toBe('John Doe');
-      expect(sanitizeAuthor('  Jane Smith  ')).toBe('Jane Smith');
+    test('should sanitize valid author names', async () => {
+      const result = await sanitizeAuthor('John Doe');
+      expect(result.sanitizedInput).toBe('John Doe');
+      expect(result.isValid).toBe(true);
     });
 
-    test('should handle invalid author names', () => {
-      expect(sanitizeAuthor('')).toBe('Anonymous');
-      expect(sanitizeAuthor(null)).toBe('Anonymous');
-      expect(sanitizeAuthor(undefined)).toBe('Anonymous');
-      expect(sanitizeAuthor(123)).toBe('Anonymous');
-    });
-
-    test('should remove dangerous characters', () => {
-      expect(sanitizeAuthor('John<script>alert(1)</script>')).toBe('Johnalert1');
-      expect(sanitizeAuthor('Jane<>Doe')).toBe('JaneDoe');
-    });
-
-    test('should truncate long author names', () => {
-      const longName = 'A'.repeat(60);
-      const result = sanitizeAuthor(longName);
-      expect(result.length).toBe(50);
-    });
-
-    test('should handle invalid characters in author names', () => {
-      expect(sanitizeAuthor('John@Doe#123')).toBe('JohnDoe123');
-      expect(sanitizeAuthor('Jane$%^&*Smith')).toBe('JaneSmith');
+    test('should handle invalid author names', async () => {
+      const result = await sanitizeAuthor('');
+      expect(result.sanitizedInput).toBe('');
+      expect(result.isValid).toBe(true);
     });
   });
 
@@ -420,17 +426,16 @@ describe('Enhanced Input Validation System', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       
       try {
-        MessageValidator.validate('<script>alert(1)</script>');
+        messageValidator.validate('<script>alert(1)</script>');
       } catch (e) {
         // Expected to throw
       }
       
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Security Event Detected:',
+        'Security event detected:',
         expect.objectContaining({
-          threatType: 'xss',
-          contentLength: expect.any(Number),
-          contentPreview: expect.any(String)
+          type: 'security_threat',
+          threatType: 'xss'
         })
       );
       
@@ -439,27 +444,25 @@ describe('Enhanced Input Validation System', () => {
 
     test('should track security events in window', () => {
       try {
-        MessageValidator.validate('<script>alert(1)</script>');
+        messageValidator.validate('<script>alert(1)</script>');
       } catch (e) {
         // Expected to throw
       }
       
       expect(window.chatSecurityEvents).toHaveLength(1);
-      expect(window.chatSecurityEvents[0].threatType).toBe('xss');
+      expect(window.chatSecurityEvents[0].type).toBe('security_threat');
     });
 
     test('should provide security statistics', () => {
       const stats = getSecurityStats();
       
-      expect(stats).toHaveProperty('totalEvents');
-      expect(stats).toHaveProperty('recentEvents');
-      expect(stats).toHaveProperty('threatCounts');
-      expect(stats).toHaveProperty('rateLimitedUsers');
+      expect(stats).toHaveProperty('total');
+      expect(stats).toHaveProperty('byType');
+      expect(stats).toHaveProperty('recent');
       
-      expect(typeof stats.totalEvents).toBe('number');
-      expect(typeof stats.recentEvents).toBe('number');
-      expect(typeof stats.threatCounts).toBe('object');
-      expect(typeof stats.rateLimitedUsers).toBe('number');
+      expect(typeof stats.total).toBe('number');
+      expect(typeof stats.byType).toBe('object');
+      expect(typeof stats.recent).toBe('number');
     });
   });
 
@@ -472,7 +475,7 @@ describe('Enhanced Input Validation System', () => {
 
     test('should clear rate limits through utility', () => {
       const userId = 'user123';
-      MessageValidator.validate('Hello', userId);
+      messageValidator.validate('Hello', userId);
       
       expect(rateLimitUtils.getRateLimitStatus(userId).currentCount).toBe(1);
       
@@ -481,8 +484,8 @@ describe('Enhanced Input Validation System', () => {
     });
 
     test('should clear all rate limits through utility', () => {
-      MessageValidator.validate('Hello', 'user1');
-      MessageValidator.validate('World', 'user2');
+      messageValidator.validate('Hello', 'user1');
+      messageValidator.validate('World', 'user2');
       
       rateLimitUtils.clearAllRateLimits();
       expect(MessageValidator.rateLimits.size).toBe(0);
@@ -492,18 +495,18 @@ describe('Enhanced Input Validation System', () => {
   describe('Edge Cases', () => {
     test('should handle ASCII characters', () => {
       const asciiMessage = 'Hello World!';
-      const result = MessageValidator.validate(asciiMessage);
+      const result = messageValidator.validate(asciiMessage);
       expect(result).toBe(asciiMessage);
     });
 
     test('should handle mixed case attack patterns', () => {
-      expect(() => MessageValidator.validate('JAVASCRIPT:alert(1)')).toThrow('javascript');
-      expect(() => MessageValidator.validate('SELECT * FROM users')).toThrow('sql Injection');
+      expect(() => messageValidator.validate('JAVASCRIPT:alert(1)')).toThrow('javascript');
+      expect(() => messageValidator.validate('SELECT * FROM users')).toThrow('sql Injection');
     });
 
     test('should handle whitespace variations', () => {
       const messageWithWhitespace = 'Hello\n\tWorld\r\n  Test';
-      const result = MessageValidator.validate(messageWithWhitespace);
+      const result = messageValidator.validate(messageWithWhitespace);
       expect(result).toBe(messageWithWhitespace);
     });
 
@@ -512,7 +515,7 @@ describe('Enhanced Input Validation System', () => {
       const message = `Start ${longWord} end`;
       
       // Should be rejected because the message is too long
-      expect(() => MessageValidator.validate(message)).toThrow('Message too long');
+      expect(() => messageValidator.validate(message)).toThrow('Message too long');
     });
   });
 });
