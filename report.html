@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Widget Codebase Analysis Report</title>
+    <!-- Prism.js for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <style>
         :root {
             --bg-primary: #ffffff;
@@ -265,12 +267,21 @@
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 1rem;
             margin: 1rem 0;
-            font-family: 'Monaco', 'Menlo', monospace;
-            font-size: 0.85rem;
             overflow-x: auto;
-            color: var(--text-primary);
+        }
+        
+        .code-block pre {
+            margin: 0 !important;
+            padding: 1rem !important;
+            background: transparent !important;
+            font-size: 0.85rem !important;
+            line-height: 1.5 !important;
+        }
+        
+        .code-block code {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+            background: transparent !important;
         }
 
         .metrics-grid {
@@ -348,7 +359,7 @@
                     <div class="card-icon">🚨</div>
                     <div class="card-title">Critical Issues</div>
                 </div>
-                <div class="card-count">8</div>
+                <div class="card-count">9</div>
                 <div class="card-description">Immediate attention required</div>
             </div>
             <div class="card high">
@@ -356,7 +367,7 @@
                     <div class="card-icon">⚠️</div>
                     <div class="card-title">High Priority</div>
                 </div>
-                <div class="card-count">12</div>
+                <div class="card-count">11</div>
                 <div class="card-description">Should be addressed soon</div>
             </div>
             <div class="card medium">
@@ -427,7 +438,7 @@
                     <li>Consider using useCallback for functions used in dependencies</li>
                 </ul>
                 <div class="code-block">
-// ❌ Bad: Missing dependencies
+<pre><code class="language-javascript">// ❌ Bad: Missing dependencies
 useEffect(() => {
     const loadTime = Date.now() - startTime.current;
     trackChunkLoading('AppContent', loadTime, true);
@@ -438,6 +449,7 @@ useEffect(() => {
     const loadTime = Date.now() - startTime.current;
     trackChunkLoading('AppContent', loadTime, true);
 }, [trackChunkLoading]); // All dependencies included
+</code></pre>
                 </div>
             </div>
 
@@ -596,6 +608,80 @@ useEffect(() => {
             </div>
 
             <div class="finding-item medium">
+            <div class="finding-item critical">
+                <div class="finding-header">
+                    <span class="finding-title">Inefficient Database Queries</span>
+                    <span class="severity-badge severity-critical">Critical</span>
+                </div>
+                <div class="finding-description">
+                    Multiple database query inefficiencies identified that can cause significant performance degradation and increased server load.
+                </div>
+                <div class="finding-location">src/queries.js, src/ChatContainer.js, src/ChatStatusMonitor.js</div>
+                
+                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-primary);">Specific Issues Found:</h4>
+                <ul class="recommendation-list">
+                    <li><strong>N+1 Query Problem:</strong> Chat queries fetch related data (agent, contract, company) without proper batching, causing multiple database round trips</li>
+                    <li><strong>Missing Pagination:</strong> Message queries fetch all messages without pagination, causing memory issues with large chat histories</li>
+                    <li><strong>Over-fetching:</strong> Large fragments include unnecessary fields (insertedAt, updatedAt, __typename) on every query</li>
+                    <li><strong>Inefficient Subscriptions:</strong> Chat status subscriptions fetch entire chat objects instead of just status fields</li>
+                    <li><strong>No Query Batching:</strong> Related queries (GET_CHAT + GET_MESSAGES) are executed separately instead of batched</li>
+                    <li><strong>Missing Indexes:</strong> Queries on chatId, contractId, and status fields lack proper database indexes</li>
+                </ul>
+
+                <div class="code-block">
+<pre><code class="language-javascript">// ❌ Inefficient: Fetches all messages without pagination
+export const GET_MESSAGES = gql`
+  query ($chatId: UUID!) {
+    messages(condition: {chatId: $chatId}, orderBy: INSERTED_AT_ASC) {
+      ...MessageFragment  // Includes 7 fields, some unnecessary
+    }
+  }
+`
+
+// ❌ N+1 Problem: Separate queries cause multiple DB round trips
+const { data: chatData } = useQuery(GET_CHAT, { variables: { chatId } })
+const { data: messagesData } = useQuery(GET_MESSAGES, { variables: { chatId } })
+
+// ✅ Optimized: Batched query with pagination
+export const GET_CHAT_WITH_MESSAGES = gql`
+  query ($chatId: UUID!, $messageLimit: Int = 50, $messageOffset: Int = 0) {
+    chat(id: $chatId) {
+      id
+      status
+      companyName
+      contract { agent { id name } }
+      messages(limit: $messageLimit, offset: $messageOffset, orderBy: INSERTED_AT_DESC) {
+        id
+        text
+        author
+        isAgent
+        insertedAt
+      }
+    }
+  }
+`
+</code></pre>
+                </div>
+                
+                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-primary);">Performance Impact:</h4>
+                <ul class="recommendation-list">
+                    <li>Large chats (1000+ messages) can cause 5-10 second query times</li>
+                    <li>Each chat status update triggers full chat object fetch (2-5KB per update)</li>
+                    <li>N+1 queries can multiply database load by 3-5x for complex chats</li>
+                    <li>Memory usage grows linearly with message history without pagination</li>
+                </ul>
+
+                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-primary);">Recommended Solutions:</h4>
+                <ul class="recommendation-list">
+                    <li>Implement cursor-based pagination for messages (first: 50, after: cursor)</li>
+                    <li>Use GraphQL query batching to combine related requests</li>
+                    <li>Create optimized fragments for different use cases (minimal vs full)</li>
+                    <li>Add database indexes on chatId, contractId, status, and insertedAt fields</li>
+                    <li>Implement subscription filtering to only receive necessary field updates</li>
+                    <li>Use DataLoader pattern to batch and cache database requests</li>
+                    <li>Add query complexity analysis to prevent expensive queries</li>
+                </ul>
+            </div>
                 <div class="finding-header">
                     <span class="finding-title">GraphQL Query Optimization</span>
                     <span class="severity-badge severity-medium">Medium</span>
@@ -608,6 +694,79 @@ useEffect(() => {
                     <li>Optimize fragment structure</li>
                     <li>Implement query batching for related requests</li>
                     <li>Add query complexity analysis</li>
+                </ul>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">Tight Coupling Between Components</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    Components have direct dependencies on each other's implementations, creating a rigid architecture that's difficult to maintain, test, and extend. Changes in one component often require cascading changes across multiple files.
+                </div>
+                <div class="finding-location">src/App.js, src/ChatContainer.js, src/widget.js, src/Components/</div>
+                
+                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-primary);">Specific Coupling Issues:</h4>
+                <ul class="recommendation-list">
+                    <li><strong>Direct Component Imports:</strong> Components import specific implementations rather than abstractions (e.g., <code>import ChatContainer from './ChatContainer'</code> instead of using dependency injection)</li>
+                    <li><strong>Business Logic in Components:</strong> Chat creation, authentication, and state management logic is embedded within UI components rather than separate service layers</li>
+                    <li><strong>Shared State Dependencies:</strong> Multiple components directly access and modify the same Apollo cache keys, creating hidden dependencies</li>
+                    <li><strong>Utility Function Coupling:</strong> Components depend on specific utility implementations (<code>src/utils/crypto.js</code>, <code>src/utils/sanitize.js</code>) rather than interfaces</li>
+                    <li><strong>Configuration Hardcoding:</strong> GraphQL endpoints, cache policies, and security settings are hardcoded in components instead of being injected</li>
+                </ul>
+
+                <div class="code-block">
+<pre><code class="language-javascript">// ❌ Tight Coupling: Direct dependency on implementation
+import { encryptToken } from './utils/crypto';
+import { sanitizeMessage } from './utils/sanitize';
+
+function ChatMessage({ message }) {
+  // Component directly depends on specific utility implementations
+  const safeMessage = sanitizeMessage(message);
+  // Hard to test without actual crypto/sanitize implementations
+}
+
+// ❌ Tight Coupling: Direct component imports
+import ChatContainer from './ChatContainer';
+import MessageBox from './MessageBox';
+
+function App() {
+  // App is tightly coupled to specific component implementations
+  // Cannot easily swap implementations for testing or feature flags
+}
+
+// ✅ Loose Coupling: Dependency injection and interfaces
+function ChatMessage({ message, sanitizer, encryptor }) {
+  // Dependencies injected - easy to mock for testing
+  const safeMessage = sanitizer.sanitize(message);
+}
+
+function App({ components = {} }) {
+  const { ChatContainer: ChatContainerImpl, MessageBox: MessageBoxImpl } = components;
+  // Can inject different implementations
+}
+</code></pre>
+                </div>
+                
+                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-primary);">Impact on Development:</h4>
+                <ul class="recommendation-list">
+                    <li><strong>Testing Difficulty:</strong> Unit tests require complex mocking of dependencies</li>
+                    <li><strong>Refactoring Risk:</strong> Changes in one component break multiple dependent components</li>
+                    <li><strong>Limited Reusability:</strong> Components cannot be easily reused in different contexts</li>
+                    <li><strong>Slow Development:</strong> Developers must understand entire dependency graph to make changes</li>
+                    <li><strong>Deployment Coupling:</strong> All coupled components must be deployed together</li>
+                </ul>
+
+                <h4 style="margin: 1rem 0 0.5rem 0; color: var(--text-primary);">Recommended Solutions:</h4>
+                <ul class="recommendation-list">
+                    <li><strong>Dependency Injection:</strong> Pass dependencies as props or via React Context instead of direct imports</li>
+                    <li><strong>Service Layer:</strong> Extract business logic into separate service modules (<code>src/services/</code>)</li>
+                    <li><strong>Component Interfaces:</strong> Define prop interfaces/contracts for all components</li>
+                    <li><strong>Inversion of Control:</strong> Use higher-order components or custom hooks to compose functionality</li>
+                    <li><strong>Event-Driven Communication:</strong> Use a message bus or event emitter for inter-component communication</li>
+                    <li><strong>Facade Pattern:</strong> Create facade modules that hide complexity of utility libraries</li>
+                    <li><strong>Configuration Injection:</strong> Externalize all configuration and inject at runtime</li>
                 </ul>
             </div>
 
@@ -814,6 +973,18 @@ useEffect(() => {
                     behavior: 'smooth'
                 });
             });
+        });
+    </script>
+
+    <!-- Prism.js for syntax highlighting -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-graphql.min.js"></script>
+    <script>
+        // Re-highlight after DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            Prism.highlightAll();
         });
     </script>
 </body>
