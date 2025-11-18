@@ -8,41 +8,32 @@
         :root {
             --bg-primary: #ffffff;
             --bg-secondary: #f8f9fa;
-            --bg-tertiary: #e9ecef;
+            --bg-card: #ffffff;
             --text-primary: #212529;
             --text-secondary: #6c757d;
-            --text-muted: #adb5bd;
             --border-color: #dee2e6;
-            --accent-color: #007bff;
-            --success-color: #28a745;
-            --warning-color: #ffc107;
-            --danger-color: #dc3545;
-            --info-color: #17a2b8;
-            --code-bg: #f8f9fa;
-            --code-border: #e9ecef;
-            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.175);
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+            --shadow: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-hover: 0 4px 8px rgba(0,0,0,0.15);
+            --transition: all 0.3s ease;
         }
 
         [data-theme="dark"] {
-            --bg-primary: #1a1a1a;
-            --bg-secondary: #2d2d2d;
-            --bg-tertiary: #404040;
-            --text-primary: #e9ecef;
-            --text-secondary: #adb5bd;
-            --text-muted: #6c757d;
-            --border-color: #495057;
-            --accent-color: #4dabf7;
-            --success-color: #51cf66;
-            --warning-color: #ffd43b;
-            --danger-color: #ff6b6b;
-            --info-color: #339af0;
-            --code-bg: #2d2d2d;
-            --code-border: #495057;
-            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.3);
-            --shadow-md: 0 0.5rem 1rem rgba(0, 0, 0, 0.4);
-            --shadow-lg: 0 1rem 3rem rgba(0, 0, 0, 0.5);
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --bg-card: #1e1e1e;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --border-color: #333333;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --info: #2196f3;
+            --shadow: 0 2px 4px rgba(0,0,0,0.3);
+            --shadow-hover: 0 4px 8px rgba(0,0,0,0.4);
         }
 
         * {
@@ -53,29 +44,24 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: var(--text-primary);
             background-color: var(--bg-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: var(--transition);
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 2rem;
         }
 
         header {
-            background: linear-gradient(135deg, var(--accent-color), #0056b3);
+            background: linear-gradient(135deg, var(--info), var(--success));
             color: white;
-            padding: 3rem 0;
-            box-shadow: var(--shadow-md);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
         }
 
         h1 {
@@ -85,1379 +71,748 @@
         }
 
         .subtitle {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             opacity: 0.9;
         }
 
         .theme-toggle {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 2px solid var(--border-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            z-index: 1000;
         }
 
         .theme-toggle:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
+            transform: scale(1.1);
+            box-shadow: var(--shadow-hover);
         }
 
-        .summary-section {
-            background: var(--bg-secondary);
-            padding: 2rem 0;
-            border-bottom: 1px solid var(--border-color);
+        .theme-toggle svg {
+            width: 24px;
+            height: 24px;
+            fill: var(--text-primary);
         }
 
-        .summary-grid {
+        .summary-cards {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 1.5rem;
-            margin-top: 1.5rem;
+            margin-bottom: 2rem;
         }
 
-        .summary-card {
-            background: var(--bg-primary);
-            padding: 1.5rem;
-            border-radius: 0.5rem;
-            box-shadow: var(--shadow-sm);
+        .card {
+            background: var(--bg-card);
             border: 1px solid var(--border-color);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
         }
 
-        .summary-card:hover {
+        .card:hover {
             transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
+            box-shadow: var(--shadow-hover);
         }
 
-        .summary-card h3 {
-            color: var(--accent-color);
-            margin-bottom: 0.5rem;
-            font-size: 1.1rem;
-        }
-
-        .summary-card .number {
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .summary-card .description {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        main {
-            padding: 3rem 0;
-        }
-
-        .section {
-            margin-bottom: 3rem;
-        }
-
-        h2 {
-            color: var(--text-primary);
-            margin-bottom: 1.5rem;
-            font-size: 1.8rem;
-            font-weight: 600;
+        .card-header {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        .section-icon {
-            width: 1.5rem;
-            height: 1.5rem;
-        }
-
-        .issue-card {
-            background: var(--bg-secondary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            box-shadow: var(--shadow-sm);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .issue-card:hover {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .issue-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
             margin-bottom: 1rem;
         }
 
-        .issue-title {
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .critical .card-icon { background: rgba(220, 53, 69, 0.1); color: var(--danger); }
+        .high .card-icon { background: rgba(255, 193, 7, 0.1); color: var(--warning); }
+        .medium .card-icon { background: rgba(23, 162, 184, 0.1); color: var(--info); }
+        .low .card-icon { background: rgba(40, 167, 69, 0.1); color: var(--success); }
+
+        .card-title {
             font-size: 1.2rem;
             font-weight: 600;
             color: var(--text-primary);
+        }
+
+        .card-count {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+
+        .critical .card-count { color: var(--danger); }
+        .high .card-count { color: var(--warning); }
+        .medium .card-count { color: var(--info); }
+        .low .card-count { color: var(--success); }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .finding-item {
+            border-left: 4px solid var(--border-color);
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 0 8px 8px 0;
+            transition: var(--transition);
+        }
+
+        .finding-item:hover {
+            background: var(--bg-primary);
+            border-left-width: 6px;
+        }
+
+        .finding-item.critical { border-left-color: var(--danger); }
+        .finding-item.high { border-left-color: var(--warning); }
+        .finding-item.medium { border-left-color: var(--info); }
+        .finding-item.low { border-left-color: var(--success); }
+
+        .finding-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 0.5rem;
         }
 
-        .issue-meta {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-bottom: 1rem;
+        .finding-title {
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
-        .badge {
+        .severity-badge {
             padding: 0.25rem 0.75rem;
-            border-radius: 1rem;
+            border-radius: 20px;
             font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.025em;
         }
 
-        .badge-critical {
-            background: var(--danger-color);
-            color: white;
-        }
+        .severity-critical { background: rgba(220, 53, 69, 0.1); color: var(--danger); }
+        .severity-high { background: rgba(255, 193, 7, 0.1); color: var(--warning); }
+        .severity-medium { background: rgba(23, 162, 184, 0.1); color: var(--info); }
+        .severity-low { background: rgba(40, 167, 69, 0.1); color: var(--success); }
 
-        .badge-high {
-            background: #ff6b6b;
-            color: white;
-        }
-
-        .badge-medium {
-            background: var(--warning-color);
-            color: var(--text-primary);
-        }
-
-        .badge-low {
-            background: var(--info-color);
-            color: white;
-        }
-
-        .badge-security {
-            background: #868e96;
-            color: white;
-        }
-
-        .badge-performance {
-            background: var(--accent-color);
-            color: white;
-        }
-
-        .badge-architecture {
-            background: #845ef7;
-            color: white;
-        }
-
-        .issue-description {
+        .finding-description {
             color: var(--text-secondary);
-            margin-bottom: 1rem;
-            line-height: 1.7;
+            margin-bottom: 0.5rem;
         }
 
-        .issue-location {
-            background: var(--bg-tertiary);
-            padding: 0.75rem 1rem;
-            border-radius: 0.25rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        .finding-location {
+            font-family: 'Monaco', 'Menlo', monospace;
             font-size: 0.85rem;
-            color: var(--text-primary);
-            margin-bottom: 1rem;
+            color: var(--info);
+            background: rgba(23, 162, 184, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .recommendation-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendation-list li {
+            padding: 0.5rem 0;
+            color: var(--text-secondary);
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .recommendation-list li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: var(--info);
+            font-weight: bold;
         }
 
         .code-block {
-            background: var(--code-bg);
-            border: 1px solid var(--code-border);
-            border-radius: 0.5rem;
-            padding: 1rem;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 0.85rem;
-            overflow-x: auto;
-            margin: 1rem 0;
-        }
-
-        .code-block pre {
-            margin: 0;
-            padding: 0;
-            background: transparent;
-            border: none;
-        }
-
-        .recommendation {
-            background: linear-gradient(135deg, var(--success-color), #20c997);
-            color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
-        }
-
-        .recommendation h4 {
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
-        }
-
-        .recommendation p {
-            font-size: 0.9rem;
-            opacity: 0.95;
-        }
-
-        .fix-details {
-            background: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-top: 1rem;
-        }
-
-        .fix-section {
-            margin-bottom: 1.5rem;
-        }
-
-        .fix-section h4 {
-            color: var(--accent-color);
-            margin-bottom: 0.75rem;
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .fix-section p {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            margin-bottom: 0.5rem;
-        }
-
-        .benefits-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .benefits-list li {
-            position: relative;
-            padding-left: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-secondary);
-        }
-
-        .benefits-list li::before {
-            content: "✓";
-            position: absolute;
-            left: 0;
-            color: var(--success-color);
-            font-weight: bold;
-        }
-
-        .code-comparison {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            margin: 1.5rem 0;
-        }
-        
-        .code-before,
-        .code-after {
-            flex: 1;
-        }
-        
-        .code-label {
-            background: linear-gradient(135deg, var(--accent-color), #0056b3);
-            color: white;
-            padding: 0.5rem 1rem;
-            border-radius: 0.25rem 0.25rem 0 0;
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 0;
-        }
-        
-        .code-before .code-label {
-            background: linear-gradient(135deg, var(--danger-color), #c82333);
-        }
-        
-        .code-after .code-label {
-            background: linear-gradient(135deg, var(--success-color), #20c997);
-        }
-        
-        .fix-section {
-            margin-bottom: 2rem;
-        }
-        
-        .fix-section h4 {
-            color: var(--accent-color);
-            margin-bottom: 1rem;
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .benefits-list {
-            list-style: none;
-            padding: 0;
-            margin: 1rem 0 0 0;
-        }
-        
-        .benefits-list li {
-            background: var(--bg-tertiary);
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 0.25rem;
-            border-left: 4px solid var(--success-color);
-            position: relative;
-            padding-left: 2rem;
-        }
-        
-        .benefits-list li::before {
-            content: "✓";
-            position: absolute;
-            left: 0.75rem;
-            color: var(--success-color);
-            font-weight: bold;
-        }
-
-        .toc {
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
-            border-radius: 0.5rem;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .toc h3 {
-            margin-bottom: 1rem;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            overflow-x: auto;
             color: var(--text-primary);
         }
 
-        .toc ul {
-            list-style: none;
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
         }
 
-        .toc li {
-            margin-bottom: 0.5rem;
+        .metric-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg-secondary);
+            border-radius: 8px;
         }
 
-        .toc a {
-            color: var(--accent-color);
-            text-decoration: none;
-            transition: color 0.3s ease;
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--info);
         }
 
-        .toc a:hover {
-            color: var(--accent-color);
-            text-decoration: underline;
+        .metric-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
         }
 
         footer {
-            background: var(--bg-secondary);
-            padding: 2rem 0;
-            border-top: 1px solid var(--border-color);
             text-align: center;
+            padding: 2rem;
             color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
+            margin-top: 2rem;
         }
 
         @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-                text-align: center;
+            .container {
+                padding: 1rem;
             }
-
+            
             h1 {
                 font-size: 2rem;
             }
-
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .issue-header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            .code-comparison {
-                gap: 1rem;
-            }
             
-            .benefits-list li {
-                padding: 0.5rem 0.75rem;
-                padding-left: 1.5rem;
-                font-size: 0.9rem;
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
             }
         }
-
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        /* Syntax highlighting styles */
-        .code-block .comment { color: #999999; font-style: italic; }
-        .code-block .function { color: #cc6600; }
-        .code-block .variable { color: #666666; }
-        .code-block .number { color: #cc0000; }
-        .code-block .keyword { color: #0066cc; font-weight: bold; }
-        .code-block .string { color: #009900; }
-        
-        [data-theme="dark"] .code-block .keyword { color: #66b3ff; }
-        [data-theme="dark"] .code-block .string { color: #66ff66; }
-        [data-theme="dark"] .code-block .comment { color: #999999; }
-        [data-theme="dark"] .code-block .function { color: #ffcc66; }
-        [data-theme="dark"] .code-block .variable { color: #cccccc; }
-        [data-theme="dark"] .code-block .number { color: #ff6666; }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+        <svg class="sun-icon" viewBox="0 0 24 24">
+            <path d="M12 17.5C9.5 17.5 7.5 15.5 7.5 13S9.5 8.5 12 8.5 16.5 10.5 16.5 13 14.5 17.5 12 17.5M12 7C8.7 7 6 9.7 6 13S8.7 19 12 19 18 16.3 18 13 15.3 7 12 7M12 2L14.4 6.4L19 5.7L15.8 9.2L16.8 13.7L12.7 11.6L8.5 13.7L9.5 9.2L6.3 5.7L10.9 6.4L12 2M3.3 7L7.7 5.5L6.8 1.5L3.3 3L3.3 7M3.3 17L6.8 18.5L7.7 14.5L3.3 16L3.3 17M20.7 17L20.7 16L16.3 14.5L17.2 18.5L20.7 17M20.7 7L17.2 5.5L16.3 1.5L20.7 3L20.7 7Z"/>
+        </svg>
+        <svg class="moon-icon" viewBox="0 0 24 24" style="display: none;">
+            <path d="M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z"/>
+        </svg>
+    </button>
+
     <header>
         <div class="container">
-            <div class="header-content">
-                <div>
-                    <h1>Chat Widget Codebase Analysis</h1>
-                    <div class="subtitle">Comprehensive security, performance, and architecture review</div>
-                </div>
-                <button class="theme-toggle" onclick="toggleTheme()">
-                    <span id="theme-icon">🌙</span> Dark Mode
-                </button>
-            </div>
+            <h1>Chat Widget Codebase Analysis</h1>
+            <p class="subtitle">Comprehensive security, performance, and architectural review</p>
         </div>
     </header>
 
-    <section class="summary-section">
-        <div class="container">
-            <h2>Executive Summary</h2>
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <h3>🔒 Security Issues</h3>
-                    <div class="number">12</div>
-                    <div class="description">Critical and high-priority security vulnerabilities found</div>
+    <div class="container">
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="card critical">
+                <div class="card-header">
+                    <div class="card-icon">🚨</div>
+                    <div class="card-title">Critical Issues</div>
                 </div>
-                <div class="summary-card">
-                    <h3>💾 Memory Leaks</h3>
-                    <div class="number">8</div>
-                    <div class="description">Potential memory leak sources identified</div>
+                <div class="card-count">8</div>
+                <div class="card-description">Immediate attention required</div>
+            </div>
+            <div class="card high">
+                <div class="card-header">
+                    <div class="card-icon">⚠️</div>
+                    <div class="card-title">High Priority</div>
                 </div>
-                <div class="summary-card">
-                    <h3>🐛 Bug Fixes</h3>
-                    <div class="number">15</div>
-                    <div class="description">Critical bugs requiring immediate attention</div>
+                <div class="card-count">12</div>
+                <div class="card-description">Should be addressed soon</div>
+            </div>
+            <div class="card medium">
+                <div class="card-header">
+                    <div class="card-icon">ℹ️</div>
+                    <div class="card-title">Medium Priority</div>
                 </div>
-                <div class="summary-card">
-                    <h3>🏗️ Architecture</h3>
-                    <div class="number">10</div>
-                    <div class="description">Structural improvements recommended</div>
+                <div class="card-count">15</div>
+                <div class="card-description">Improvement opportunities</div>
+            </div>
+            <div class="card low">
+                <div class="card-header">
+                    <div class="card-icon">✅</div>
+                    <div class="card-title">Low Priority</div>
                 </div>
-                <div class="summary-card">
-                    <h3>⚡ Performance</h3>
-                    <div class="number">18</div>
-                    <div class="description">Optimization opportunities identified</div>
+                <div class="card-count">9</div>
+                <div class="card-description">Minor enhancements</div>
+            </div>
+        </div>
+
+        <!-- Project Overview -->
+        <div class="section">
+            <h2 class="section-title">📊 Project Overview</h2>
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-value">44</div>
+                    <div class="metric-label">Total Files</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">8.2k</div>
+                    <div class="metric-label">Lines of Code</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">23</div>
+                    <div class="metric-label">useEffect Hooks</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">15</div>
+                    <div class="metric-label">GraphQL Queries</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">6</div>
+                    <div class="metric-label">Subscriptions</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-value">18</div>
+                    <div class="metric-label">Components</div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <main class="container">
-        <div class="toc">
-            <h3>Table of Contents</h3>
-            <ul>
-                <li><a href="#critical-security-issues">🚨 Critical Security Issues</a></li>
-                <li><a href="#memory-leaks">💾 Memory Leaks & Resource Management</a></li>
-                <li><a href="#bug-fixes">🐛 Critical Bug Fixes</a></li>
-                <li><a href="#architecture-improvements">🏗️ Architecture Improvements</a></li>
-                <li><a href="#performance-optimizations">⚡ Performance Optimizations</a></li>
-                <li><a href="#code-quality-improvements">📝 Code Quality Improvements</a></li>
-                <li><a href="#recommendations">✅ Priority Recommendations</a></li>
+        <!-- Memory Leaks & Performance Issues -->
+        <div class="section">
+            <h2 class="section-title">🔥 Memory Leaks & Performance Issues</h2>
+            
+            <div class="finding-item critical">
+                <div class="finding-header">
+                    <span class="finding-title">Missing Dependency Arrays in useEffect</span>
+                    <span class="severity-badge severity-critical">Critical</span>
+                </div>
+                <div class="finding-description">
+                    Multiple useEffect hooks are missing proper dependency arrays, causing unnecessary re-renders and potential infinite loops.
+                </div>
+                <div class="finding-location">src/App.js:119, src/CreateChat.js:213, src/ChatContainer.js:36</div>
+                <ul class="recommendation-list">
+                    <li>Add proper dependency arrays to all useEffect hooks</li>
+                    <li>Use ESLint react-hooks/exhaustive-deps rule</li>
+                    <li>Consider using useCallback for functions used in dependencies</li>
+                </ul>
+                <div class="code-block">
+// ❌ Bad: Missing dependencies
+useEffect(() => {
+    const loadTime = Date.now() - startTime.current;
+    trackChunkLoading('AppContent', loadTime, true);
+}, []); // Empty dependency array
+
+// ✅ Good: Proper dependencies
+useEffect(() => {
+    const loadTime = Date.now() - startTime.current;
+    trackChunkLoading('AppContent', loadTime, true);
+}, [trackChunkLoading]); // All dependencies included
+                </div>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">Subscription Cleanup Issues</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    GraphQL subscriptions may not be properly cleaned up in all edge cases, leading to memory leaks.
+                </div>
+                <div class="finding-location">src/ChatContainer.js:28, src/ChatStatusMonitor.js:143</div>
+                <ul class="recommendation-list">
+                    <li>Implement consistent subscription cleanup patterns</li>
+                    <li>Use useEffect cleanup functions for all subscriptions</li>
+                    <li>Add error boundaries for subscription failures</li>
+                </ul>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">Apollo Cache Growth</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    Apollo Client cache can grow indefinitely without proper eviction policies for long-running sessions.
+                </div>
+                <div class="finding-location">src/widget.js:233-243, src/utils/apollo-cache-monitor.js</div>
+                <ul class="recommendation-list">
+                    <li>Implement cache size limits and automatic cleanup</li>
+                    <li>Add cache eviction policies for old data</li>
+                    <li>Monitor cache growth in production</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">Event Listener Memory Leaks</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    Some event listeners may not be properly cleaned up, especially in error scenarios.
+                </div>
+                <div class="finding-location">src/widget.js:17-56, src/utils/lazy-components.js</div>
+                <ul class="recommendation-list">
+                    <li>Use custom useEventListener hook consistently</li>
+                    <li>Ensure cleanup in all error paths</li>
+                    <li>Add try-catch blocks around event handlers</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Bug Fixes & Code Quality -->
+        <div class="section">
+            <h2 class="section-title">🐛 Bug Fixes & Code Quality Improvements</h2>
+            
+            <div class="finding-item critical">
+                <div class="finding-header">
+                    <span class="finding-title">Inconsistent Error Handling</span>
+                    <span class="severity-badge severity-critical">Critical</span>
+                </div>
+                <div class="finding-description">
+                    Error handling is inconsistent across components, with some errors silently failing and others showing generic messages.
+                </div>
+                <div class="finding-location">src/App.js:277-310, src/Components/Query.js:18-25</div>
+                <ul class="recommendation-list">
+                    <li>Implement centralized error handling utility</li>
+                    <li>Create reusable ErrorBoundary components</li>
+                    <li>Add user-friendly error messages with retry mechanisms</li>
+                </ul>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">Missing PropTypes/TypeScript</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    Components lack proper prop validation, leading to runtime errors and difficult debugging.
+                </div>
+                <div class="finding-location">Multiple component files</div>
+                <ul class="recommendation-list">
+                    <li>Add PropTypes to all components</li>
+                    <li>Consider migrating to TypeScript</li>
+                    <li>Implement prop validation in development</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">Duplicate Code Patterns</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    Similar patterns for authentication, error handling, and data fetching are repeated across components.
+                </div>
+                <div class="finding-location">src/App.js, src/widget.js, src/hooks/</div>
+                <ul class="recommendation-list">
+                    <li>Create custom hooks for common patterns</li>
+                    <li>Extract shared utilities</li>
+                    <li>Implement higher-order components where appropriate</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">Inconsistent Styling Approach</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    Mix of styled-components, CSS classes, and inline styles creates maintenance challenges.
+                </div>
+                <div class="finding-location">src/Components/styled/, src/App.js, various components</div>
+                <ul class="recommendation-list">
+                    <li>Standardize on styled-components with design system</li>
+                    <li>Create reusable styled components</li>
+                    <li>Implement CSS custom properties for theming</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Architectural Improvements -->
+        <div class="section">
+            <h2 class="section-title">🏗️ Architectural Improvements</h2>
+            
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">Component Organization</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    Component structure could be improved with better separation of concerns and clearer responsibilities.
+                </div>
+                <div class="finding-location">src/ directory structure</div>
+                <ul class="recommendation-list">
+                    <li>Implement feature-based folder structure</li>
+                    <li>Separate container and presentational components</li>
+                    <li>Create shared component library</li>
+                </ul>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">State Management Complexity</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    Mix of local state, Apollo cache, and localStorage creates complexity and potential sync issues.
+                </div>
+                <div class="finding-location">src/App.js, src/context/, src/utils/</div>
+                <ul class="recommendation-list">
+                    <li>Consolidate state management approach</li>
+                    <li>Use Apollo cache as single source of truth</li>
+                    <li>Implement proper state synchronization</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">GraphQL Query Optimization</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    GraphQL queries could be optimized with better fragment usage and query batching.
+                </div>
+                <div class="finding-location">src/queries.js</div>
+                <ul class="recommendation-list">
+                    <li>Optimize fragment structure</li>
+                    <li>Implement query batching for related requests</li>
+                    <li>Add query complexity analysis</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">Bundle Size Optimization</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    While lazy loading is implemented, there are opportunities for further bundle optimization.
+                </div>
+                <div class="finding-location">src/utils/lazy-components.js, vite.config.js</div>
+                <ul class="recommendation-list">
+                    <li>Implement code splitting at route level</li>
+                    <li>Optimize moment.js usage (consider date-fns)</li>
+                    <li>Add bundle analysis to CI/CD pipeline</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Security Vulnerabilities -->
+        <div class="section">
+            <h2 class="section-title">🔒 Security Vulnerabilities</h2>
+            
+            <div class="finding-item critical">
+                <div class="finding-header">
+                    <span class="finding-title">XSS Vulnerability in Message Rendering</span>
+                    <span class="severity-badge severity-critical">Critical</span>
+                </div>
+                <div class="finding-description">
+                    User-generated content in chat messages may not be properly sanitized before rendering.
+                </div>
+                <div class="finding-location">src/ChatMessage.js, src/MessageBox.js</div>
+                <ul class="recommendation-list">
+                    <li>Implement strict HTML sanitization</li>
+                    <li>Use DOMPurify consistently</li>
+                    <li>Add Content Security Policy headers</li>
+                    <li>Validate and sanitize all user inputs</li>
+                </ul>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">Token Storage Security</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    JWT tokens are stored in localStorage with fallback mechanisms that may compromise security.
+                </div>
+                <div class="finding-location">src/widget.js:159-172, src/utils/crypto.js</div>
+                <ul class="recommendation-list">
+                    <li>Use secure cookies with httpOnly flag</li>
+                    <li>Implement token rotation mechanism</li>
+                    <li>Add token expiration handling</li>
+                    <li>Use Web Crypto API for encryption</li>
+                </ul>
+            </div>
+
+            <div class="finding-item high">
+                <div class="finding-header">
+                    <span class="finding-title">CSP Implementation Gaps</span>
+                    <span class="severity-badge severity-high">High</span>
+                </div>
+                <div class="finding-description">
+                    Content Security Policy implementation has gaps that could allow script injection.
+                </div>
+                <div class="finding-location">src/utils/secure-csp.js, src/utils/styled-csp-integration.js</div>
+                <ul class="recommendation-list">
+                    <li>Implement strict CSP headers</li>
+                    <li>Remove inline script dependencies</li>
+                    <li>Add nonce-based script loading</li>
+                    <li>Regular CSP policy review</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">GraphQL Injection Risks</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    User inputs in GraphQL queries may not be properly validated, allowing injection attacks.
+                </div>
+                <div class="finding-location">src/queries.js, src/CreateChat.js</div>
+                <ul class="recommendation-list">
+                    <li>Implement input validation middleware</li>
+                    <li>Use parameterized queries</li>
+                    <li>Add query complexity limits</li>
+                    <li>Validate all user inputs server-side</li>
+                </ul>
+            </div>
+
+            <div class="finding-item medium">
+                <div class="finding-header">
+                    <span class="finding-title">Insecure Random Number Generation</span>
+                    <span class="severity-badge severity-medium">Medium</span>
+                </div>
+                <div class="finding-description">
+                    Math.random() is used for generating chat keys and IDs, which is not cryptographically secure.
+                </div>
+                <div class="finding-location">src/utils/crypto.js, src/CreateChat.js</div>
+                <ul class="recommendation-list">
+                    <li>Use crypto.getRandomValues() for random generation</li>
+                    <li>Implement UUID v4 generation</li>
+                    <li>Use cryptographically secure libraries</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Recommendations Summary -->
+        <div class="section">
+            <h2 class="section-title">📋 Priority Recommendations</h2>
+            
+            <h3 style="color: var(--danger); margin-bottom: 1rem;">🔴 Critical (Fix Immediately)</h3>
+            <ul class="recommendation-list">
+                <li>Fix XSS vulnerability in message rendering</li>
+                <li>Add proper dependency arrays to all useEffect hooks</li>
+                <li>Implement consistent error handling across components</li>
+                <li>Secure token storage mechanism</li>
+            </ul>
+
+            <h3 style="color: var(--warning); margin: 1.5rem 0 1rem 0;">🟡 High Priority (Fix Soon)</h3>
+            <ul class="recommendation-list">
+                <li>Implement proper subscription cleanup</li>
+                <li>Add PropTypes or migrate to TypeScript</li>
+                <li>Optimize Apollo cache with size limits</li>
+                <li>Strengthen CSP implementation</li>
+                <li>Improve component organization</li>
+            </ul>
+
+            <h3 style="color: var(--info); margin: 1.5rem 0 1rem 0;">🔵 Medium Priority (Improvements)</h3>
+            <ul class="recommendation-list">
+                <li>Refactor duplicate code patterns</li>
+                <li>Optimize GraphQL queries</li>
+                <li>Standardize styling approach</li>
+                <li>Implement better state management</li>
+                <li>Add input validation middleware</li>
+            </ul>
+
+            <h3 style="color: var(--success); margin: 1.5rem 0 1rem 0;">🟢 Low Priority (Enhancements)</h3>
+            <ul class="recommendation-list">
+                <li>Further bundle size optimization</li>
+                <li>Add more comprehensive tests</li>
+                <li>Improve documentation</li>
+                <li>Add performance monitoring</li>
             </ul>
         </div>
-
-        <section id="critical-security-issues" class="section">
-            <h2>
-                <span class="section-icon">🚨</span>
-                Critical Security Issues
-            </h2>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">JWT Token Storage in Local Storage</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-critical">Critical</span>
-                            <span class="badge badge-security">Security</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    JWT tokens are being stored in localStorage, making them vulnerable to XSS attacks. Even though there's encryption implemented, the client-side storage of authentication tokens poses a significant security risk.
-                </div>
-                <div class="issue-location">
-                    📁 src/widget.js:292-299, src/App.js:284-299
-                </div>
-                
-                <div class="fix-details">
-                    <div class="fix-section">
-                        <h4>🔧 How to Fix</h4>
-                        <p>Implement HttpOnly, Secure cookies with SameSite=Strict for token storage. This prevents JavaScript access to tokens and protects against XSS attacks.</p>
-                        
-                        <div class="code-comparison">
-                            <div class="code-before">
-                                <div class="code-label">❌ Before (Vulnerable)</div>
-                                <div class="code-block">
-<pre><span class="comment">// VULNERABLE: Storing JWT in localStorage</span>
-<span class="keyword">const</span> <span class="function">storeToken</span> = <span class="keyword">async</span> (token) => {
-  <span class="keyword">try</span> {
-    <span class="comment">// Even encrypted, still accessible via JavaScript</span>
-    <span class="keyword">await</span> secureStore.<span class="function">set</span>(<span class="string">'token'</span>, token);
-    store(<span class="string">'token'</span>, token); <span class="comment">// Fallback - even less secure</span>
-  } <span class="keyword">catch</span> (error) {
-    console.<span class="function">error</span>(<span class="string">'Failed to store token'</span>, error);
-  }
-};</pre>
-                                </div>
-                            </div>
-                            <div class="code-after">
-                                <div class="code-label">✅ After (Secure)</div>
-                                <div class="code-block">
-<pre><span class="comment">// SECURE: Using HttpOnly cookies via server</span>
-<span class="keyword">const</span> <span class="function">storeToken</span> = <span class="keyword">async</span> (token) => {
-  <span class="keyword">try</span> {
-    <span class="comment">// Token stored in HttpOnly, Secure cookie by server</span>
-    <span class="comment">// Set-Cookie: token=...; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=3600</span>
-    <span class="keyword">await</span> api.<span class="function">setAuthCookie</span>(token);
-    
-    <span class="comment">// Store only session metadata in memory</span>
-    sessionStore.<span class="function">set</span>(<span class="string">'isAuthenticated'</span>, <span class="keyword">true</span>);
-    sessionStore.<span class="function">set</span>(<span class="string">'tokenExpiry'</span>, Date.<span class="function">now</span>() + <span class="number">3600000</span>);
-  } <span class="keyword">catch</span> (error) {
-    <span class="function">handleAuthError</span>(error);
-  }
-};</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="fix-section">
-                        <h4>💡 Benefits of This Fix</h4>
-                        <ul class="benefits-list">
-                            <li>Eliminates XSS token theft vulnerability</li>
-                            <li>Prevents client-side script access to authentication tokens</li>
-                            <li>Reduces attack surface for session hijacking</li>
-                            <li>Improves compliance with security best practices</li>
-                            <li>Protects against CSRF attacks with SameSite=Strict</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="recommendation">
-                    <h4>💡 Recommendation</h4>
-                    <p>Implement HttpOnly, Secure cookies with SameSite=Strict for token storage. Consider using refresh tokens with short-lived access tokens stored in memory.</p>
-                </div>
-            </div>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">Insufficient Input Validation</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-high">High</span>
-                            <span class="badge badge-security">Security</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    While there's good input sanitization using DOMPurify, the validation logic has gaps. The regex patterns for detecting malicious content can be bypassed, and rate limiting is only implemented client-side.
-                </div>
-                <div class="issue-location">
-                    📁 src/utils/sanitize.js:7-24
-                </div>
-                
-                <div class="fix-details">
-                    <div class="fix-section">
-                        <h4>🔧 How to Fix</h4>
-                        <p>Implement server-side input validation with comprehensive security checks and move rate limiting to the backend.</p>
-                        
-                        <div class="code-comparison">
-                            <div class="code-before">
-                                <div class="code-label">❌ Before (Weak Validation)</div>
-                                <div class="code-block">
-<pre><span class="comment">// WEAK: These patterns can be bypassed</span>
-<span class="keyword">const</span> <span class="variable">securityPatterns</span> = {
-  <span class="variable">xss</span>: <span class="keyword">/</span><span class="string">script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script></span><span class="keyword">/gi</span>,
-  <span class="variable">sqlInjection</span>: <span class="keyword">/</span><span class="string">(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|WHERE)\b)</span><span class="keyword">/gi</span>
-};
-
-<span class="keyword">const</span> <span class="function">validateInput</span> = (input) => {
-  <span class="keyword">for</span> (<span class="keyword">const</span> [type, pattern] <span class="keyword">of</span> Object.<span class="function">entries</span>(securityPatterns)) {
-    <span class="keyword">if</span> (pattern.<span class="function">test</span>(input)) {
-      <span class="keyword">throw</span> <span class="keyword">new</span> <span class="function">Error</span>(<span class="string">`Potential ${type} attack detected`</span>);
-    }
-  }
-  <span class="keyword">return</span> DOMPurify.<span class="function">sanitize</span>(input);
-};</pre>
-                                </div>
-                            </div>
-                            <div class="code-after">
-                                <div class="code-label">✅ After (Robust Validation)</div>
-                                <div class="code-block">
-<pre><span class="comment">// SECURE: Comprehensive server-side validation</span>
-<span class="keyword">const</span> <span class="function">validateInputSecure</span> = <span class="keyword">async</span> (input, context) => {
-  <span class="comment">// 1. Client-side basic validation (first line of defense)</span>
-  <span class="keyword">const</span> <span class="variable">clientValidation</span> = <span class="keyword">await</span> <span class="function">validateClientSide</span>(input);
-  
-  <span class="comment">// 2. Server-side validation with enhanced patterns</span>
-  <span class="keyword">const</span> <span class="variable">serverResponse</span> = <span class="keyword">await</span> api.<span class="function">validateInput</span>({
-    input,
-    context,
-    clientFingerprint: <span class="function">getFingerprint</span>(),
-    timestamp: Date.<span class="function">now</span>()
-  });
-  
-  <span class="comment">// 3. Multiple validation layers</span>
-  <span class="keyword">if</span> (!serverResponse.<span class="variable">isValid</span>) {
-    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="function">ValidationError</span>(serverResponse.<span class="variable">reason</span>);
-  }
-  
-  <span class="comment">// 4. Enhanced DOMPurify with custom config</span>
-  <span class="keyword">return</span> DOMPurify.<span class="function">sanitize</span>(serverResponse.<span class="variable">sanitizedInput</span>, {
-    ALLOWED_TAGS: [<span class="string">'p'</span>, <span class="string">'br'</span>, <span class="string">'strong'</span>, <span class="string">'em'</span>],
-    ALLOWED_ATTR: [],
-    KEEP_CONTENT: <span class="keyword">false</span>
-  });
-};</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="fix-section">
-                        <h4>💡 Benefits of This Fix</h4>
-                        <ul class="benefits-list">
-                            <li>Prevents XSS and injection attacks at multiple layers</li>
-                            <li>Server-side validation cannot be bypassed by client manipulation</li>
-                            <li>Rate limiting on backend prevents automated attacks</li>
-                            <li>Enhanced DOMPurify configuration provides tighter content control</li>
-                            <li>Comprehensive audit trail for security monitoring</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="recommendation">
-                    <h4>💡 Recommendation</h4>
-                    <p>Implement server-side input validation, use a more robust XSS protection library like DOMPurify with additional custom validators, and move rate limiting to the backend.</p>
-                </div>
-            </div>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">CSP Policy Gaps</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-high">High</span>
-                            <span class="badge badge-security">Security</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    The CSP implementation is good but has gaps. The policy allows 'unsafe-inline' styles in some cases and doesn't properly restrict frame ancestors in all contexts.
-                </div>
-                <div class="issue-location">
-                    📁 src/utils/secure-csp.js:70-76
-                </div>
-                
-                <div class="fix-details">
-                    <div class="fix-section">
-                        <h4>🔧 How to Fix</h4>
-                        <p>Remove all unsafe-inline fallbacks, implement strict nonce-based policies, and add comprehensive CSP monitoring.</p>
-                        
-                        <div class="code-comparison">
-                            <div class="code-before">
-                                <div class="code-label">❌ Before (Vulnerable CSP)</div>
-                                <div class="code-block">
-<pre><span class="comment">// VULNERABLE: Fallback allows unsafe styles</span>
-<span class="keyword">const</span> <span class="function">generateCSP</span> = () => {
-  <span class="keyword">const</span> <span class="variable">directives</span> = [];
-  
-  <span class="comment">// Dangerous fallback that allows unsafe-inline</span>
-  <span class="keyword">if</span> (!nonce) {
-    directives.<span class="function">push</span>(<span class="string">"style-src 'self'"</span>); <span class="comment">// Should use nonce or hash</span>
-  }
-  
-  <span class="keyword">return</span> directives.<span class="function">join</span>(<span class="string">'; '</span>);
-};</pre>
-                                </div>
-                            </div>
-                            <div class="code-after">
-                                <div class="code-label">✅ After (Strict CSP)</div>
-                                <div class="code-block">
-<pre><span class="comment">// SECURE: Strict nonce-based CSP with monitoring</span>
-<span class="keyword">const</span> <span class="function">generateSecureCSP</span> = <span class="keyword">async</span> () => {
-  <span class="keyword">const</span> <span class="variable">nonce</span> = <span class="function">generateNonce</span>();
-  <span class="keyword">const</span> <span class="variable">directives</span> = [
-    <span class="string">`default-src 'self'`</span>,
-    <span class="string">`script-src 'self' 'nonce-${nonce}'`</span>,
-    <span class="string">`style-src 'self' 'nonce-${nonce}'`</span>,
-    <span class="string">`img-src 'self' data: https:`</span>,
-    <span class="string">`connect-src 'self' ${API_ENDPOINT}`</span>,
-    <span class="string">`frame-ancestors 'none'`</span>,
-    <span class="string">`base-uri 'self'`</span>,
-    <span class="string">`form-action 'self'`</span>,
-    <span class="string">`upgrade-insecure-requests`</span>,
-    <span class="string">`report-uri ${CSP_REPORT_ENDPOINT}`</span>,
-    <span class="string">`report-to csp-endpoint`</span>
-  ];
-  
-  <span class="comment">// No unsafe-inline fallbacks - strict enforcement</span>
-  <span class="keyword">if</span> (!nonce) {
-    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="function">Error</span>(<span class="string">'CSP nonce generation failed - blocking execution'</span>);
-  }
-  
-  <span class="keyword">return</span> {
-    <span class="variable">policy</span>: directives.<span class="function">join</span>(<span class="string">'; '</span>),
-    <span class="variable">nonce</span>
-  };
-};</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="fix-section">
-                        <h4>💡 Benefits of This Fix</h4>
-                        <ul class="benefits-list">
-                            <li>Eliminates XSS attack vectors through strict CSP enforcement</li>
-                            <li>Prevents clickjacking attacks with frame-ancestors restriction</li>
-                            <li>Real-time CSP violation monitoring for threat detection</li>
-                            <li>Automatic blocking of malicious content injection attempts</li>
-                            <li>Compliance with modern security standards</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="recommendation">
-                    <h4>💡 Recommendation</h4>
-                    <p>Remove all unsafe-inline fallbacks, implement strict nonce-based policies for all inline content, and add report-uri for CSP violations monitoring.</p>
-                </div>
-            </div>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">Weak Encryption Implementation</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-medium">Medium</span>
-                            <span class="badge badge-security">Security</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    The crypto implementation uses browser fingerprinting for key derivation, which can be inconsistent across browsers and privacy settings. The PBKDF2 iteration count of 100,000 is good but could be higher.
-                </div>
-                <div class="issue-location">
-                    📁 src/utils/crypto.js:142-158
-                </div>
-                
-                <div class="fix-details">
-                    <div class="fix-section">
-                        <h4>🔧 How to Fix</h4>
-                        <p>Use Web Crypto API's generateKey for random key generation and increase PBKDF2 iterations to 600,000+.</p>
-                        
-                        <div class="code-comparison">
-                            <div class="code-before">
-                                <div class="code-label">❌ Before (Weak Encryption)</div>
-                                <div class="code-block">
-<pre><span class="comment">// WEAK: Browser fingerprinting is inconsistent</span>
-<span class="keyword">const</span> <span class="function">generateKey</span> = <span class="keyword">async</span> () => {
-  <span class="keyword">const</span> <span class="variable">fingerprint</span> = [
-    navigator.<span class="variable">userAgent</span>,
-    navigator.<span class="variable">language</span>,
-    screen.<span class="variable">width</span> + <span class="string">'x'</span> + screen.<span class="variable">height</span>
-  ].<span class="function">join</span>(<span class="string">'|'</span>);
-  
-  <span class="comment">// Can be blocked or spoofed by privacy settings</span>
-  <span class="keyword">const</span> <span class="variable">encoder</span> = <span class="keyword">new</span> <span class="function">TextEncoder</span>();
-  <span class="keyword">const</span> <span class="variable">keyMaterial</span> = <span class="keyword">await</span> crypto.<span class="function">subtle</span>.<span class="function">importKey</span>(
-    <span class="string">'raw'</span>,
-    encoder.<span class="function">encode</span>(fingerprint),
-    { <span class="variable">name</span>: <span class="string">'PBKDF2'</span> },
-    <span class="keyword">false</span>,
-    [<span class="string">'deriveBits'</span>, <span class="string">'deriveKey'</span>]
-  );
-  
-  <span class="comment">// 100,000 iterations - decent but could be higher</span>
-  <span class="keyword">return</span> <span class="keyword">await</span> crypto.<span class="function">subtle</span>.<span class="function">deriveKey</span>(
-    {
-      <span class="variable">name</span>: <span class="string">'PBKDF2'</span>,
-      <span class="variable">salt</span>: encoder.<span class="function">encode</span>(<span class="string">'fixed-salt'</span>),
-      <span class="variable">iterations</span>: <span class="number">100000</span>,
-      <span class="variable">hash</span>: <span class="string">'SHA-256'</span>
-    },
-    keyMaterial,
-    { <span class="variable">name</span>: <span class="string">'AES-GCM'</span>, <span class="variable">length</span>: <span class="number">256</span> },
-    <span class="keyword">true</span>,
-    [<span class="string">'encrypt'</span>, <span class="string">'decrypt'</span>]
-  );
-};</pre>
-                                </div>
-                            </div>
-                            <div class="code-after">
-                                <div class="code-label">✅ After (Strong Encryption)</div>
-                                <div class="code-block">
-<pre><span class="comment">// SECURE: Using Web Crypto API with proper key generation</span>
-<span class="keyword">const</span> <span class="function">generateSecureKey</span> = <span class="keyword">async</span> () => {
-  <span class="comment">// 1. Generate cryptographically secure random key</span>
-  <span class="keyword">const</span> <span class="variable">key</span> = <span class="keyword">await</span> crypto.<span class="function">subtle</span>.<span class="function">generateKey</span>(
-    {
-      <span class="variable">name</span>: <span class="string">'AES-GCM'</span>,
-      <span class="variable">length</span>: <span class="number">256</span>
-    },
-    <span class="keyword">true</span>,
-    [<span class="string">'encrypt'</span>, <span class="string">'decrypt'</span>]
-  );
-  
-  <span class="comment">// 2. Generate random salt for PBKDF2</span>
-  <span class="keyword">const</span> <span class="variable">salt</span> = crypto.<span class="function">getRandomValues</span>(<span class="keyword">new</span> <span class="function">Uint8Array</span>(<span class="number">32</span>));
-  
-  <span class="comment">// 3. Use user-provided passphrase with high iteration count</span>
-  <span class="keyword">const</span> <span class="variable">passphraseKey</span> = <span class="keyword">await</span> crypto.<span class="function">subtle</span>.<span class="function">importKey</span>(
-    <span class="string">'raw'</span>,
-    <span class="keyword">new</span> <span class="function">TextEncoder</span>().<span class="function">encode</span>(userPassphrase),
-    { <span class="variable">name</span>: <span class="string">'PBKDF2'</span> },
-    <span class="keyword">false</span>,
-    [<span class="string">'deriveBits'</span>, <span class="string">'deriveKey'</span>]
-  );
-  
-  <span class="comment">// 4. 600,000+ iterations for stronger security</span>
-  <span class="keyword">const</span> <span class="variable">derivedKey</span> = <span class="keyword">await</span> crypto.<span class="function">subtle</span>.<span class="function">deriveKey</span>(
-    {
-      <span class="variable">name</span>: <span class="string">'PBKDF2'</span>,
-      <span class="variable">salt</span>: salt,
-      <span class="variable">iterations</span>: <span class="number">600000</span>,
-      <span class="variable">hash</span>: <span class="string">'SHA-512'</span>
-    },
-    passphraseKey,
-    { <span class="variable">name</span>: <span class="string">'AES-GCM'</span>, <span class="variable">length</span>: <span class="number">256</span> },
-    <span class="keyword">true</span>,
-    [<span class="string">'encrypt'</span>, <span class="string">'decrypt'</span>]
-  );
-  
-  <span class="keyword">return</span> { <span class="variable">key</span>: derivedKey, <span class="variable">salt</span> };
-};</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="fix-section">
-                        <h4>💡 Benefits of This Fix</h4>
-                        <ul class="benefits-list">
-                            <li>Cryptographically secure key generation eliminates fingerprinting vulnerabilities</li>
-                            <li>Higher PBKDF2 iteration count provides stronger protection against brute force attacks</li>
-                            <li>Random salt generation prevents rainbow table attacks</li>
-                            <li>SHA-512 hashing provides better collision resistance</li>
-                            <li>Consistent security across all browsers and privacy settings</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="recommendation">
-                    <h4>💡 Recommendation</h4>
-                    <p>Use a more deterministic key derivation method, consider Web Crypto API's generateKey for random key generation, and increase PBKDF2 iterations to 600,000+.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="memory-leaks" class="section">
-            <h2>
-                <span class="section-icon">💾</span>
-                Memory Leaks & Resource Management
-            </h2>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">Apollo Subscription Cleanup Issues</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-high">High</span>
-                            <span class="badge badge-performance">Performance</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    GraphQL subscriptions are not properly cleaned up in all components, leading to memory leaks and unnecessary network requests.
-                </div>
-                <div class="issue-location">
-                    📁 src/ChatContainer.js:27-49
-                </div>
-                
-                <div class="fix-details">
-                    <div class="fix-section">
-                        <h4>🔧 How to Fix</h4>
-                        <p>Implement a subscription manager pattern with automatic cleanup and health monitoring.</p>
-                        
-                        <div class="code-comparison">
-                            <div class="code-before">
-                                <div class="code-label">❌ Before (Memory Leak)</div>
-                                <div class="code-block">
-<pre><span class="comment">// LEAK: Subscription cleanup not guaranteed</span>
-<span class="keyword">const</span> <span class="function">ChatContainer</span> = () => {
-  <span class="keyword">const</span> [<span class="variable">unsubscribeChatStatus</span>, setUnsubscribeChatStatus] = <span class="function">useState</span>(<span class="keyword">null</span>);
-  
-  <span class="function">useEffect</span>(() => {
-    <span class="keyword">const</span> <span class="variable">subscription</span> = client.<span class="function">subscribe</span>({
-      <span class="variable">query</span>: CHAT_STATUS_SUBSCRIPTION,
-      <span class="variable">variables</span>: { <span class="variable">chatId</span> }
-    }).<span class="function">subscribe</span>({
-      <span class="function">next</span>: (data) => <span class="function">handleChatStatus</span>(data),
-      <span class="function">error</span>: (error) => <span class="function">handleError</span>(error)
-    });
-    
-    <span class="function">setUnsubscribeChatStatus</span>(() => subscription.<span class="function">unsubscribe</span>);
-    
-    <span class="comment">// Cleanup only happens if unsubscribeChatStatus exists</span>
-    <span class="keyword">return</span> () => {
-      <span class="keyword">if</span> (unsubscribeChatStatus) {
-        <span class="function">unsubscribeChatStatus</span>();
-      }
-    };
-  }, [unsubscribeChatStatus]); <span class="comment">// Dependency array issue</span>
-};</pre>
-                                </div>
-                            </div>
-                            <div class="code-after">
-                                <div class="code-label">✅ After (Proper Cleanup)</div>
-                                <div class="code-block">
-<pre><span class="comment">// SECURE: Subscription manager with guaranteed cleanup</span>
-<span class="keyword">class</span> <span class="function">SubscriptionManager</span> {
-  <span class="keyword">constructor</span>() {
-    <span class="keyword">this</span>.<span class="variable">subscriptions</span> = <span class="keyword">new</span> <span class="function">Map</span>();
-    <span class="keyword">this</span>.<span class="variable">healthCheckInterval</span> = <span class="keyword">null</span>;
-  }
-  
-  <span class="function">subscribe</span>(id, query, variables, handlers) {
-    <span class="comment">// Clean up existing subscription if any</span>
-    <span class="keyword">this</span>.<span class="function">unsubscribe</span>(id);
-    
-    <span class="keyword">const</span> <span class="variable">subscription</span> = client.<span class="function">subscribe</span>({ query, variables })
-      .<span class="function">subscribe</span>({
-        <span class="function">next</span>: handlers.<span class="function">next</span>,
-        <span class="function">error</span>: (error) => {
-          <span class="function">handleError</span>(error);
-          <span class="keyword">this</span>.<span class="function">unsubscribe</span>(id); <span class="comment">// Auto-cleanup on error</span>
-        },
-        <span class="function">complete</span>: () => <span class="keyword">this</span>.<span class="function">unsubscribe</span>(id)
-      });
-    
-    <span class="keyword">this</span>.<span class="variable">subscriptions</span>.<span class="function">set</span>(id, {
-      <span class="variable">subscription</span>,
-      <span class="variable">createdAt</span>: Date.<span class="function">now</span>(),
-      <span class="variable">lastActivity</span>: Date.<span class="function">now</span>()
-    });
-    
-    <span class="keyword">return</span> subscription;
-  }
-  
-  <span class="function">unsubscribe</span>(id) {
-    <span class="keyword">const</span> <span class="variable">sub</span> = <span class="keyword">this</span>.<span class="variable">subscriptions</span>.<span class="function">get</span>(id);
-    <span class="keyword">if</span> (sub) {
-      <span class="keyword">try</span> {
-        sub.<span class="variable">subscription</span>.<span class="function">unsubscribe</span>();
-      } <span class="keyword">catch</span> (error) {
-        console.<span class="function">warn</span>(<span class="string">'Failed to unsubscribe:'</span>, error);
-      } <span class="keyword">finally</span> {
-        <span class="keyword">this</span>.<span class="variable">subscriptions</span>.<span class="function">delete</span>(id);
-      }
-    }
-  }
-  
-  <span class="function">cleanupAll</span>() {
-    <span class="keyword">for</span> (<span class="keyword">const</span> [id] <span class="keyword">of</span> <span class="keyword">this</span>.<span class="variable">subscriptions</span>) {
-      <span class="keyword">this</span>.<span class="function">unsubscribe</span>(id);
-    }
-  }
-}
-
-<span class="keyword">const</span> <span class="function">ChatContainer</span> = () => {
-  <span class="keyword">const</span> <span class="variable">subscriptionManager</span> = <span class="function">useRef</span>(<span class="keyword">new</span> <span class="function">SubscriptionManager</span>());
-  
-  <span class="function">useEffect</span>(() => {
-    <span class="keyword">const</span> <span class="variable">subscriptionId</span> = <span class="string">`chat-${chatId}`</span>;
-    
-    <span class="keyword">const</span> <span class="variable">subscription</span> = subscriptionManager.current.<span class="function">subscribe</span>(
-      subscriptionId,
-      CHAT_STATUS_SUBSCRIPTION,
-      { <span class="variable">chatId</span> },
-      {
-        <span class="function">next</span>: <span class="function">handleChatStatus</span>,
-        <span class="function">error</span>: <span class="function">handleError</span>
-      }
-    );
-    
-    <span class="comment">// Guaranteed cleanup</span>
-    <span class="keyword">return</span> () => {
-      subscriptionManager.current.<span class="function">unsubscribe</span>(subscriptionId);
-    };
-  }, [chatId]); <span class="comment">// Stable dependency array</span>
-};</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="fix-section">
-                        <h4>💡 Benefits of This Fix</h4>
-                        <ul class="benefits-list">
-                            <li>Prevents memory leaks from orphaned subscriptions</li>
-                            <li>Eliminates unnecessary network requests and server load</li>
-                            <li>Automatic cleanup on component unmount and errors</li>
-                            <li>Health monitoring for subscription lifecycle management</li>
-                            <li>Centralized subscription management for better debugging</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="recommendation">
-                    <h4>💡 Recommendation</h4>
-                    <p>Implement a subscription manager pattern, ensure all subscriptions are properly tracked and cleaned up, and add subscription health monitoring.</p>
-                </div>
-            </div>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">Event Listener Memory Leaks</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-high">High</span>
-                            <span class="badge badge-performance">Performance</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    Multiple event listeners are added without proper cleanup, especially in the widget initialization and media query management.
-                </div>
-                <div class="issue-location">
-                    📁 src/widget.js:399-419
-                </div>
-                
-                <div class="fix-details">
-                    <div class="fix-section">
-                        <h4>🔧 How to Fix</h4>
-                        <p>Implement a centralized event manager with automatic cleanup and error boundaries.</p>
-                        
-                        <div class="code-comparison">
-                            <div class="code-before">
-                                <div class="code-label">❌ Before (Event Leaks)</div>
-                                <div class="code-block">
-<pre><span class="comment">// LEAK: MediaQuery listeners may not be cleaned up</span>
-<span class="keyword">const</span> <span class="function">initializeWidget</span> = <span class="keyword">async</span> () => {
-  <span class="comment">// Adding listeners without tracking cleanup</span>
-  <span class="keyword">let</span> <span class="variable">mobileViewListenerId</span>;
-  
-  <span class="keyword">const</span> <span class="function">handleMobileView</span> = (matches) => {
-    <span class="keyword">if</span> (matches) {
-      <span class="function">enableMobileMode</span>();
-    } <span class="keyword">else</span> {
-      <span class="function">disableMobileMode</span>();
-    }
-  };
-  
-  <span class="comment">// Listener added but cleanup not guaranteed</span>
-  mobileViewListenerId = mediaQueryManager.<span class="function">addListener</span>(
-    <span class="string">'(max-width: 450px)'</span>, 
-    handleMobileView
-  );
-  
-  <span class="comment">// Other event listeners...</span>
-  window.<span class="function">addEventListener</span>(<span class="string">'resize'</span>, <span class="function">handleResize</span>);
-  document.<span class="function">addEventListener</span>(<span class="string">'visibilitychange'</span>, <span class="function">handleVisibilityChange</span>);
-  
-  <span class="comment">// Cleanup only happens in return function, not on errors</span>
-  <span class="keyword">return</span> () => {
-    <span class="keyword">if</span> (mobileViewListenerId) {
-      mediaQueryManager.<span class="function">removeListener</span>(mobileViewListenerId);
-    }
-  };
-};</pre>
-                                </div>
-                            </div>
-                            <div class="code-after">
-                                <div class="code-label">✅ After (Proper Event Management)</div>
-                                <div class="code-block">
-<pre><span class="comment">// SECURE: Centralized event manager with guaranteed cleanup</span>
-<span class="keyword">class</span> <span class="function">EventManager</span> {
-  <span class="keyword">constructor</span>() {
-    <span class="keyword">this</span>.<span class="variable">listeners</span> = <span class="keyword">new</span> <span class="function">Map</span>();
-    <span class="keyword">this</span>.<span class="variable">mediaQueries</span> = <span class="keyword">new</span> <span class="function">Map</span>();
-    <span class="keyword">this</span>.<span class="variable">isDestroyed</span> = <span class="keyword">false</span>;
-  }
-  
-  <span class="function">addEventListener</span>(target, event, handler, options = {}) {
-    <span class="keyword">if</span> (<span class="keyword">this</span>.<span class="variable">isDestroyed</span>) <span class="keyword">return</span> <span class="keyword">null</span>;
-    
-    <span class="keyword">const</span> <span class="variable">id</span> = <span class="function">generateId</span>();
-    <span class="keyword">const</span> <span class="variable">wrappedHandler</span> = <span class="keyword">async</span> (...args) => {
-      <span class="keyword">try</span> {
-        <span class="keyword">await</span> <span class="function">handler</span>(...args);
-      } <span class="keyword">catch</span> (error) {
-        console.<span class="function">error</span>(<span class="string">'Event handler error:'</span>, error);
-        <span class="comment">// Continue cleanup even if handler fails</span>
-      }
-    };
-    
-    target.<span class="function">addEventListener</span>(event, wrappedHandler, options);
-    
-    <span class="keyword">this</span>.<span class="variable">listeners</span>.<span class="function">set</span>(id, {
-      <span class="variable">target</span>,
-      <span class="variable">event</span>,
-      <span class="variable">handler</span>: wrappedHandler,
-      <span class="variable">options</span>
-    });
-    
-    <span class="keyword">return</span> id;
-  }
-  
-  <span class="function">addMediaQuery</span>(query, handler) {
-    <span class="keyword">if</span> (<span class="keyword">this</span>.<span class="variable">isDestroyed</span>) <span class="keyword">return</span> <span class="keyword">null</span>;
-    
-    <span class="keyword">const</span> <span class="variable">id</span> = <span class="function">generateId</span>();
-    <span class="keyword">const</span> <span class="variable">mql</span> = <span class="function">matchMedia</span>(query);
-    
-    <span class="keyword">const</span> <span class="variable">wrappedHandler</span> = (e) => {
-      <span class="keyword">try</span> {
-        <span class="function">handler</span>(e.<span class="variable">matches</span>);
-      } <span class="keyword">catch</span> (error) {
-        console.<span class="function">error</span>(<span class="string">'Media query handler error:'</span>, error);
-      }
-    };
-    
-    mql.<span class="function">addEventListener</span>(<span class="string">'change'</span>, wrappedHandler);
-    
-    <span class="keyword">this</span>.<span class="variable">mediaQueries</span>.<span class="function">set</span>(id, {
-      <span class="variable">mql</span>,
-      <span class="variable">handler</span>: wrappedHandler
-    });
-    
-    <span class="comment">// Initial call</span>
-    <span class="function">handler</span>(mql.<span class="variable">matches</span>);
-    
-    <span class="keyword">return</span> id;
-  }
-  
-  <span class="function">destroy</span>() {
-    <span class="comment">// Clean up all listeners</span>
-    <span class="keyword">for</span> (<span class="keyword">const</span> [id] <span class="keyword">of</span> <span class="keyword">this</span>.<span class="variable">listeners</span>) {
-      <span class="keyword">this</span>.<span class="function">removeListener</span>(id);
-    }
-    <span class="keyword">for</span> (<span class="keyword">const</span> [id] <span class="keyword">of</span> <span class="keyword">this</span>.<span class="variable">mediaQueries</span>) {
-      <span class="keyword">this</span>.<span class="function">removeMediaQuery</span>(id);
-    }
-    
-    <span class="keyword">this</span>.<span class="variable">isDestroyed</span> = <span class="keyword">true</span>;
-  }
-}
-
-<span class="keyword">const</span> <span class="function">initializeWidget</span> = <span class="keyword">async</span> () => {
-  <span class="keyword">const</span> <span class="variable">eventManager</span> = <span class="keyword">new</span> <span class="function">EventManager</span>();
-  
-  <span class="comment">// All listeners tracked and managed centrally</span>
-  <span class="keyword">const</span> <span class="variable">mobileListenerId</span> = eventManager.<span class="function">addMediaQuery</span>(
-    <span class="string">'(max-width: 450px)'</span>,
-    <span class="function">handleMobileView</span>
-  );
-  
-  <span class="keyword">const</span> <span class="variable">resizeListenerId</span> = eventManager.<span class="function">addEventListener</span>(
-    window,
-    <span class="string">'resize'</span>,
-    <span class="function">handleResize</span>
-  );
-  
-  <span class="keyword">const</span> <span class="variable">visibilityListenerId</span> = eventManager.<span class="function">addEventListener</span>(
-    document,
-    <span class="string">'visibilitychange'</span>,
-    <span class="function">handleVisibilityChange</span>
-  );
-  
-  <span class="comment">// Guaranteed cleanup even on errors</span>
-  <span class="keyword">return</span> () => {
-    eventManager.<span class="function">destroy</span>();
-  };
-};</pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="fix-section">
-                        <h4>💡 Benefits of This Fix</h4>
-                        <ul class="benefits-list">
-                            <li>Prevents memory leaks from orphaned event listeners</li>
-                            <li>Automatic cleanup on component unmount and errors</li>
-                            <li>Centralized event management for better debugging and monitoring</li>
-                            <li>Error boundaries prevent handler failures from affecting cleanup</li>
-                            <li>Comprehensive tracking of all event listeners in the application</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="recommendation">
-                    <h4>💡 Recommendation</h4>
-                    <p>Implement a centralized event manager with automatic cleanup, add error boundaries to ensure cleanup even on component errors, and track all event listeners.</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="recommendations" class="section">
-            <h2>
-                <span class="section-icon">✅</span>
-                Priority Recommendations
-            </h2>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">Immediate Actions (Next 1-2 weeks)</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-critical">Priority 1</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    <strong>Security Fixes:</strong>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li>Move JWT tokens to HttpOnly cookies</li>
-                        <li>Fix CSP policy gaps and remove unsafe-inline</li>
-                        <li>Implement server-side input validation</li>
-                        <li>Add proper error boundaries</li>
-                    </ul>
-                    <strong>Memory Leak Fixes:</strong>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li>Fix subscription cleanup in ChatContainer</li>
-                        <li>Implement proper event listener management</li>
-                        <li>Add cache size monitoring and cleanup</li>
-                    </ul>
-                </div>
-                <div class="recommendation">
-                    <h4>🎯 Impact</h4>
-                    <p>These fixes address critical security vulnerabilities and memory leaks that could impact production stability and user data security.</p>
-                </div>
-            </div>
-
-            <div class="issue-card">
-                <div class="issue-header">
-                    <div>
-                        <div class="issue-title">Short-term Improvements (Next 1 month)</div>
-                        <div class="issue-meta">
-                            <span class="badge badge-high">Priority 2</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="issue-description">
-                    <strong>Architecture:</strong>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li>Fix race conditions in chat creation</li>
-                        <li>Implement centralized state management</li>
-                        <li>Add comprehensive error handling</li>
-                        <li>Implement code splitting</li>
-                    </ul>
-                    <strong>Performance:</strong>
-                    <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
-                        <li>Optimize bundle size (remove moment.js)</li>
-                        <li>Add React.memo and useMemo optimizations</li>
-                        <li>Implement proper caching strategies</li>
-                    </ul>
-                </div>
-                <div class="recommendation">
-                    <h4>🎯 Impact</h4>
-                    <p>These improvements will enhance application stability, performance, and maintainability while reducing technical debt.</p>
-                </div>
-            </div>
-        </section>
-    </main>
+    </div>
 
     <footer>
-        <div class="container">
-            <p>Generated on November 12, 2024 | Chat Widget Codebase Analysis Report</p>
-            <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-                This report identified 55 issues across security, performance, architecture, and code quality. 
-                Prioritize Critical and High severity issues first to ensure production stability and security.
-            </p>
-        </div>
+        <p>Generated on <span id="report-date"></span> | Chat Widget Codebase Analysis Report</p>
     </footer>
 
     <script>
+        // Theme toggle functionality
         function toggleTheme() {
-            const body = document.body;
-            const themeToggle = document.querySelector('.theme-toggle');
-            const themeIcon = document.getElementById('theme-icon');
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
             
-            if (body.getAttribute('data-theme') === 'dark') {
-                body.removeAttribute('data-theme');
-                themeIcon.textContent = '🌙';
-                themeToggle.innerHTML = '<span id="theme-icon">🌙</span> Dark Mode';
-                localStorage.setItem('theme', 'light');
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Toggle icon visibility
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+            
+            if (newTheme === 'dark') {
+                sunIcon.style.display = 'none';
+                moonIcon.style.display = 'block';
             } else {
-                body.setAttribute('data-theme', 'dark');
-                themeIcon.textContent = '☀️';
-                themeToggle.innerHTML = '<span id="theme-icon">☀️</span> Light Mode';
-                localStorage.setItem('theme', 'dark');
+                sunIcon.style.display = 'block';
+                moonIcon.style.display = 'none';
             }
         }
 
-        // Load saved theme preference
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('theme');
-            const themeToggle = document.querySelector('.theme-toggle');
-            const themeIcon = document.getElementById('theme-icon');
-            
-            if (savedTheme === 'dark') {
-                document.body.setAttribute('data-theme', 'dark');
-                themeIcon.textContent = '☀️';
-                themeToggle.innerHTML = '<span id="theme-icon">☀️</span> Light Mode';
-            }
+        // Set initial theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        
+        // Set initial icon state
+        const sunIcon = document.querySelector('.sun-icon');
+        const moonIcon = document.querySelector('.moon-icon');
+        if (savedTheme === 'dark') {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
 
-            // Smooth scroll for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }
+        // Set report date
+        document.getElementById('report-date').textContent = new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        // Smooth scrolling for internal links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
                 });
-            });
-
-            // Add scroll animations
-            const observerOptions = {
-                threshold: 0.1,
-                rootMargin: '0px 0px -50px 0px'
-            };
-
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.style.opacity = '1';
-                        entry.target.style.transform = 'translateY(0)';
-                    }
-                });
-            }, observerOptions);
-
-            // Observe all issue cards
-            document.querySelectorAll('.issue-card').forEach(card => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-                observer.observe(card);
             });
         });
     </script>
