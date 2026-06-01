@@ -152,7 +152,11 @@ export function initChatWidget(config = {}) {
     uri: graphqlHttpUrl || import.meta.env.VITE_GRAPHQL_HTTP_URL 
   });
 
-  const authLink = setContext(async (_, { headers }) => {
+  const authLink = setContext(async (operation, { headers }) => {
+    if (operation.operationName === 'consumerLogin') {
+      return { headers };
+    }
+
     let token = null;
     
     // Try to get token from secure storage first
@@ -188,36 +192,33 @@ export function initChatWidget(config = {}) {
 
   const wsLink = new GraphQLWsLink(createClient({
     url: graphqlWsUrl || import.meta.env.VITE_GRAPHQL_WS_URL,
-    options: {
-      reconnect: true,
-      connectionParams: async () => {
-        let authToken = null;
-        
-        // Try to get token from secure storage first
+    connectionParams: async () => {
+      let authToken = null;
+      
+      // Try to get token from secure storage first
+      try {
+        authToken = await secureStore.get("token");
+        console.log('Widget: Auth token retrieved successfully from secure storage for WebSocket');
+      } catch (error) {
+        console.error('Widget: Failed to retrieve auth token from secure storage for WebSocket:', error);
+        // Fallback to regular storage
         try {
-          authToken = await secureStore.get("token");
-          console.log('Widget: Auth token retrieved successfully from secure storage for WebSocket');
-        } catch (error) {
-          console.error('Widget: Failed to retrieve auth token from secure storage for WebSocket:', error);
-          // Fallback to regular storage
-          try {
-            authToken = store("token");
-            console.log('Widget: Auth token retrieved from fallback storage for WebSocket');
-          } catch (fallbackError) {
-            console.error('Widget: Failed to retrieve auth token from fallback storage for WebSocket:', fallbackError);
-            authToken = null;
-          }
+          authToken = store("token");
+          console.log('Widget: Auth token retrieved from fallback storage for WebSocket');
+        } catch (fallbackError) {
+          console.error('Widget: Failed to retrieve auth token from fallback storage for WebSocket:', fallbackError);
+          authToken = null;
         }
-        
-        // Ensure authToken is a string and not null/undefined
-        if (!authToken || typeof authToken !== 'string') {
-          console.log('Widget: No valid auth token available for WebSocket connection');
-          return {};
-        }
-        
-        console.log('Widget: Adding auth token to WebSocket connection params');
-        return { authToken };
       }
+      
+      // Ensure authToken is a string and not null/undefined
+      if (!authToken || typeof authToken !== 'string') {
+        console.log('Widget: No valid auth token available for WebSocket connection');
+        return {};
+      }
+      
+      console.log('Widget: Adding authorization header to WebSocket connection params');
+      return { authorization: `Bearer ${authToken}` };
     }
   }));
 
@@ -436,6 +437,9 @@ export function initChatWidget(config = {}) {
         try {
           const decodedToken = jwtDecode(token);
           store('websiteId', decodedToken.user_id)
+          if (decodedToken.email) {
+            store('consumerKey', decodedToken.email);
+          }
           
           // Store token securely
           try {

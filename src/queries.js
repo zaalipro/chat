@@ -9,6 +9,8 @@ import { gql } from '@apollo/client'
     missed
     headline
     ipAddress
+    contractId
+    agentId
     customerName
   }
 `
@@ -106,11 +108,6 @@ export const GET_CHAT = gql`
   query ($chatId: UUID!) {
     chat(id: $chatId) {
       ...ChatFragment
-      contract {
-        agent {
-          id
-        }
-      }
     }
   }
   ${chatFragment}
@@ -144,8 +141,8 @@ export const CREATE_MESSAGE = gql`
 `
 
 export const CHAT_STATUS_SUBSCRIPTION = gql`
-  subscription onChatChanged($contractId: UUID, $status: String) {
-    chatChanged(contractId: $contractId, status: $status) {
+  subscription onChatChanged($chatId: UUID, $contractId: UUID, $status: String) {
+    chatChanged(chatId: $chatId, contractId: $contractId, status: $status) {
       operation
       record {
         ...ChatFragment
@@ -190,9 +187,10 @@ export const UPDATE_CHAT_MISSED = gql`
   mutation UpdateChatMissed($chatId: UUID!) {
     updateChat(input: {
       id: $chatId
-      patch: {
-        missed: true
-      }
+        patch: {
+          status: MISSED
+          missed: true
+        }
     }) {
       chat {
         ...ChatFragment

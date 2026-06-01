@@ -5,7 +5,8 @@
 export const CHAT_STATUS = {
   ACTIVE: 'ACTIVE',
   STARTED: 'STARTED',
-  FINISHED: 'FINISHED'
+  FINISHED: 'FINISHED',
+  MISSED: 'MISSED'
 };
 
 export const CONTRACT_STATUS = {
@@ -17,7 +18,8 @@ export const getDisplayStatus = (enumStatus) => {
   const statusMap = {
     'STARTED': 'Started',
     'FINISHED': 'Finished',
-    'ACTIVE': 'Active'
+    'ACTIVE': 'Active',
+    'MISSED': 'Missed'
   };
   return statusMap[enumStatus] || 'Started';
 };

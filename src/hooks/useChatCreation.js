@@ -3,13 +3,17 @@ import { useMutation } from '@apollo/client';
 import { CREATE_CHAT } from '../queries';
 import { detectIPAddress } from '../utils';
 import { processResults, logChatCreation } from '../utils/chatUtils';
+import store from 'store2';
 
 export const useChatCreation = () => {
   const [creating, setCreating] = useState(false);
   const [createChat] = useMutation(CREATE_CHAT);
 
   const createSingle = async (contract, form, ipAddress) => {
-    const key = crypto.randomUUID();
+    const key = store('consumerKey');
+    if (!key) {
+      throw new Error('Missing chat session key. Please refresh and try again.');
+    }
     
     const response = await createChat({
       variables: {
@@ -25,7 +29,10 @@ export const useChatCreation = () => {
   };
 
   const createMultiple = async (contracts, form, ipAddress) => {
-    const key = crypto.randomUUID();
+    const key = store('consumerKey');
+    if (!key) {
+      throw new Error('Missing chat session key. Please refresh and try again.');
+    }
     
     const promises = contracts.map(contract =>
       createChat({

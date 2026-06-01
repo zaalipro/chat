@@ -26,7 +26,7 @@ const ChatContainer = ({ chat }) => {
 
   // Subscribe to chat status changes with proper cleanup
   const { data: chatStatusData, unsubscribe: unsubscribeChatStatus } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { contractId: chat.contractId },
+    variables: { chatId: chat.id },
     shouldResubscribe: true,
     onError: (error) => {
       console.error('Chat status subscription error:', error);

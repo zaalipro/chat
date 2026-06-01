@@ -1,6 +1,7 @@
 // Chat utility functions with simple names
 export const createActiveChat = (chat) => ({
   id: chat.id,
+  contractId: chat.contractId,
   status: chat.status,
   customerName: chat.customerName,
   headline: chat.headline,

@@ -15,7 +15,13 @@ import GlobalStyles from './components/styled/design-system/GlobalStyles';
 
 const httpLink = createHttpLink({ uri: import.meta.env.VITE_GRAPHQL_HTTP_URL })
 
-const authLink = setContext(async (_, { headers }) => {
+const AUTH_ENTRYPOINTS = new Set(['consumerLogin']);
+
+const authLink = setContext(async (operation, { headers }) => {
+  if (AUTH_ENTRYPOINTS.has(operation.operationName)) {
+    return { headers };
+  }
+
   let token = null;
   
   // Try to get token from secure storage first

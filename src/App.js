@@ -210,7 +210,7 @@ const AppContent = () => {
 // ✅ OPTIMIZED App COMPONENT WITH PERFORMANCE MONITORING
 const App = ({ error }) => {
   // websiteId from local storage, managed by React state for re-rendering.
-  const [websiteId, setWebsiteId] = useState(store('websiteId'));
+  const [websiteId, setWebsiteId] = useState(() => (store('activeChat') ? store('websiteId') : null));
   // Flag to indicate when a login attempt is in progress.
   const [isLoggingIn, setLoggingIn] = useState(false);
   // Holds any error that occurs during login.
@@ -218,6 +218,7 @@ const App = ({ error }) => {
   // Gets the Apollo Client instance from the context provided by ApolloProvider.
   const client = useApolloClient();
   const startTime = React.useRef(Date.now());
+  const loginAttemptedRef = React.useRef(false);
 
   // Initialize CSP integration and performance monitoring on app startup
   useEffect(() => {
@@ -287,6 +288,9 @@ const App = ({ error }) => {
         
         // Store websiteId in regular localStorage (non-sensitive)
         store('websiteId', newWebsiteId);
+        if (decodedToken.email) {
+          store('consumerKey', decodedToken.email);
+        }
         
         // Store token securely with encryption
         try {
@@ -320,10 +324,11 @@ const App = ({ error }) => {
     // It runs if showing the create chat screen, no websiteId exists,
     // a login is not already in progress, and there has been no previous login error.
     // This prevents infinite loops on login failure.
-    if (showCreate && !websiteId && !isLoggingIn && !loginError) {
+    if (showCreate && !isLoggingIn && !loginError && !loginAttemptedRef.current) {
+      loginAttemptedRef.current = true;
       retryLogin();
     }
-  }, [websiteId, isLoggingIn, loginError, retryLogin]); // Added retryLogin to dependencies
+  }, [isLoggingIn, loginError, retryLogin]); // Added retryLogin to dependencies
 
   // If there's a generic error passed as a prop, display it.
   if (error) {

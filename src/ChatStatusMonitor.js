@@ -71,7 +71,6 @@ const ChatStatusMonitor = ({
         <ChatSubscription
           key={chat.id}
           chatId={chat.id}
-          contractId={chat.contract?.id}
           onChatStarted={(chatData) => {
             // Clear timeout for this chat since it's now started
             clearChatTimeout(timeoutsRef.current, chat.id);
@@ -92,10 +91,13 @@ const ChatStatusMonitor = ({
 };
 
 // Individual chat subscription component
-const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
+const ChatSubscription = ({ chatId, onChatStarted, onError }) => {
   const [hasNotifiedStarted, setHasNotifiedStarted] = useState(false);
   
   const handleChatStarted = useCallback((chatData) => {
+    if (chatData?.id !== chatId) {
+      return;
+    }
     if (!hasNotifiedStarted && chatData && chatData.status === CHAT_STATUS.STARTED) {
       console.log(`Chat ${chatId} status changed to started - notifying parent`);
       setHasNotifiedStarted(true);
@@ -106,7 +108,7 @@ const ChatSubscription = ({ chatId, contractId, onChatStarted, onError }) => {
   }, [chatId, onChatStarted, hasNotifiedStarted]);
 
   const { data, error, unsubscribe } = useSubscription(CHAT_STATUS_SUBSCRIPTION, {
-    variables: { contractId: contractId },
+    variables: { chatId },
     onData: ({ data: subscriptionData }) => {
       const chatData = subscriptionData?.chatChanged?.record;
       handleChatStarted(chatData);
