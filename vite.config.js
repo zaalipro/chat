@@ -8,6 +8,10 @@ import { SecureCSPBuilder } from './src/utils/secure-csp.js'
 const secureCspPlugin = {
   name: 'vite-plugin-secure-csp',
   transformIndexHtml(html) {
+    if (process.env.NODE_ENV !== 'production') {
+      return html;
+    }
+
     // Initialize secure CSP builder
     const cspBuilder = new SecureCSPBuilder({
       enableNonce: true,
@@ -158,23 +162,8 @@ export default defineConfig({
   server: {
     port: 3006,
     host: 'localhost',
-    // Add secure CSP headers to development server
     headers: {
-      // Initialize CSP builder for development
-      'Content-Security-Policy': (() => {
-        const cspBuilder = new SecureCSPBuilder({
-          enableNonce: false, // Disable nonce in development headers for simplicity
-          enableReporting: false
-        });
-
-        // Build secure CSP policy for development
-        return cspBuilder.buildPolicy({
-          graphqlHttpUrl: 'ws://localhost:3006',
-          graphqlWsUrl: 'wss://localhost:3006'
-        });
-      })(),
       'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
       'X-XSS-Protection': '1; mode=block'
     }
   },
@@ -202,14 +191,15 @@ export default defineConfig({
     exclude: []
   },
   optimizeDeps: {
+    entries: ['index.html'],
     esbuildOptions: {
       loader: {
         '.js': 'jsx',
       },
     },
     // ✅ DEPENDENCY OPTIMIZATION
-    include: ['react', 'react-dom', 'styled-components'],
-    exclude: ['moment', 'axios', 'formik', 'yup'] // Use dynamic imports
+    include: ['react', 'react-dom', 'styled-components', 'formik', 'hoist-non-react-statics'],
+    exclude: ['moment', 'axios', 'yup'] // Use dynamic imports
   },
   test: {
     globals: true,

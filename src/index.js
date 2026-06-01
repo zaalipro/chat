@@ -12,7 +12,6 @@ import secureStore from './utils/crypto';
 import { jwtDecode } from 'jwt-decode'
 import ThemeProvider from './components/styled/design-system/ThemeProvider';
 import GlobalStyles from './components/styled/design-system/GlobalStyles';
-import { WebsiteProvider } from './context/WebsiteContext';
 
 const httpLink = createHttpLink({ uri: import.meta.env.VITE_GRAPHQL_HTTP_URL })
 
@@ -52,36 +51,33 @@ const authLink = setContext(async (_, { headers }) => {
 
 const wsLink = new GraphQLWsLink(createClient({
   url: import.meta.env.VITE_GRAPHQL_WS_URL,
-  options: {
-    reconnect: true,
-    connectionParams: async () => {
-      let authToken = null;
-      
-      // Try to get token from secure storage first
+  connectionParams: async () => {
+    let authToken = null;
+    
+    // Try to get token from secure storage first
+    try {
+      authToken = await secureStore.get("token");
+      console.log('Auth token retrieved successfully from secure storage for WebSocket');
+    } catch (error) {
+      console.error('Failed to retrieve auth token from secure storage for WebSocket:', error);
+      // Fallback to regular storage
       try {
-        authToken = await secureStore.get("token");
-        console.log('Auth token retrieved successfully from secure storage for WebSocket');
-      } catch (error) {
-        console.error('Failed to retrieve auth token from secure storage for WebSocket:', error);
-        // Fallback to regular storage
-        try {
-          authToken = store("token");
-          console.log('Auth token retrieved from fallback storage for WebSocket');
-        } catch (fallbackError) {
-          console.error('Failed to retrieve auth token from fallback storage for WebSocket:', fallbackError);
-          authToken = null;
-        }
+        authToken = store("token");
+        console.log('Auth token retrieved from fallback storage for WebSocket');
+      } catch (fallbackError) {
+        console.error('Failed to retrieve auth token from fallback storage for WebSocket:', fallbackError);
+        authToken = null;
       }
-      
-      // Ensure authToken is a string and not null/undefined
-      if (!authToken || typeof authToken !== 'string') {
-        console.log('No valid auth token available for WebSocket connection');
-        return {};
-      }
-      
-      console.log('Adding auth token to WebSocket connection params');
-      return { authToken };
     }
+    
+    // Ensure authToken is a string and not null/undefined
+    if (!authToken || typeof authToken !== 'string') {
+      console.log('No valid auth token available for WebSocket connection');
+      return {};
+    }
+    
+    console.log('Adding authorization header to WebSocket connection params');
+    return { authorization: `Bearer ${authToken}` };
   }
 }));
 
@@ -110,9 +106,7 @@ const ClientApp = ({ error }) => (
           </div>
         </div>
       }>
-        <WebsiteProvider>
-          <App error={error} />
-        </WebsiteProvider>
+        <App error={error} />
       </Suspense>
     </ThemeProvider>
   </ApolloProvider>
@@ -141,6 +135,9 @@ const renderApp = async (token, error, targetElement = null) => {
       try {
         const decodedToken = jwtDecode(token);
         store('websiteId', decodedToken.user_id)
+        if (decodedToken.email) {
+          store('consumerKey', decodedToken.email);
+        }
         
         // Store token securely
         try {
